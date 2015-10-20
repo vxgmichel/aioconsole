@@ -9,9 +9,9 @@ from . import compat
 class InteractiveEventLoop(asyncio.SelectorEventLoop):
     """Event loop running a python console."""
 
-    def __init__(self, selector=None, banner=None, stop=True):
+    def __init__(self, selector=None, local=None, banner=None, stop=True):
         super().__init__(selector=selector)
-        coro = code.interact(banner=banner, stop=stop, loop=self)
+        coro = code.interact(local=local, banner=banner, stop=stop, loop=self)
         self.console = asyncio.async(coro, loop=self)
 
     def close(self):
@@ -23,7 +23,10 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
         def __del__(self):
             if self.console.done():
                 self.console.exception()
-            super().__del__()
+            try:
+                super().__del__()
+            except AttributeError:
+                pass
 
 
 class InteractiveEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
