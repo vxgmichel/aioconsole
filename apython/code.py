@@ -1,22 +1,33 @@
 """Provide an asynchronous equivalent to the python console."""
 
 import sys
+import code
+import codeop
 import signal
 import asyncio
-from codeop import CommandCompiler
-from code import InteractiveConsole
+import functools
 
 from . import input
+from . import compat
 from . import execute
 
+EXTRA_MESSAGE = """\
+---
+This interpreter is running in an asyncio event loop.
+It allows you to wait for coroutines using the 'yield from' syntax.
+Try: {} asyncio.sleep(1, result=3, loop=loop)
+---""".format('await' if compat.PY35 else 'yield from')
 
-class AsynchronousCompiler(CommandCompiler):
+
+class AsynchronousCompiler(codeop.CommandCompiler):
 
     def __init__(self):
-        self.compiler = execute.compile_for_aexec
+        self.compiler = functools.partial(
+            execute.compile_for_aexec,
+            dont_imply_dedent=True)
 
 
-class AsynchronousConsole(InteractiveConsole):
+class AsynchronousConsole(code.InteractiveConsole):
 
     def __init__(self, locals=None, filename="<console>", *, loop=None):
         super().__init__(locals, filename)
@@ -55,21 +66,34 @@ class AsynchronousConsole(InteractiveConsole):
     def resetbuffer(self):
         self.buffer = []
 
+    def handle_sigint(self, task):
+        task.cancel()
+        if task._fut_waiter._loop is not self.loop:
+            task._wakeup(task._fut_waiter)
+
+    def add_sigint_handler(self):
+        task = asyncio.Task.current_task(loop=self.loop)
+        try:
+            self.loop.add_signal_handler(
+                signal.SIGINT, self.handle_sigint, task)
+        except NotImplementedError:
+            def callback(*args):
+                self.loop.call_soon_threadsafe(self.handle_sigint, task)
+            signal.signal(signal.SIGINT, callback)
+
+    def remove_sigint_handler(self):
+        try:
+            self.loop.remove_signal_handler(signal.SIGINT)
+        except NotImplementedError:
+            signal.signal(signal.SIGINT, signal.default_int_handler)
+
     @asyncio.coroutine
     def interact(self, banner=None, stop=True):
-        task = asyncio.Task.current_task(loop=self.loop)
-
-        def handle_keyboard_interrupt(signal, frame):
-            self.loop.call_soon_threadsafe(task.cancel)
-            if task._fut_waiter._loop is not self.loop:
-                self.loop.call_soon_threadsafe(task._wakeup, task._fut_waiter)
         try:
-            signal.signal(signal.SIGINT, handle_keyboard_interrupt)
+            self.add_sigint_handler()
             yield from self._interact(banner)
         finally:
-            def callback(signal, frame):
-                raise KeyboardInterrupt
-            signal.signal(signal.SIGINT, callback)
+            self.remove_sigint_handler()
             if stop:
                 self.loop.stop()
 
@@ -89,12 +113,7 @@ class AsynchronousConsole(InteractiveConsole):
                 'or "license" for more information.')
         if banner is None:
             msg = "Python %s on %s\n%s\n%s\n"
-            extra = """\
----
-This interpreter is running in an asyncio event loop.
-It allows you to wait for coroutines using the 'yield from' syntax.
-Try: yield from asyncio.sleep(1, result=3, loop=loop)
----"""
+            extra = EXTRA_MESSAGE
             self.write(msg % (sys.version, sys.platform, cprt, extra))
         elif banner:
             self.write("%s\n" % str(banner))
