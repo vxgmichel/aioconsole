@@ -38,6 +38,12 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.locals.setdefault('asyncio', asyncio)
         self.locals.setdefault('loop', self.loop)
 
+    def get_default_banner(self):
+        cprt = ('Type "help", "copyright", "credits" '
+                'or "license" for more information.')
+        msg = "Python %s on %s\n%s\n%s"
+        return msg % (sys.version, sys.platform, cprt, EXTRA_MESSAGE)
+
     @asyncio.coroutine
     def runsource(self, source, filename="<ainput>", symbol="single"):
         try:
@@ -109,14 +115,9 @@ class AsynchronousConsole(code.InteractiveConsole):
         except AttributeError:
             sys.ps2 = "... "
         # Print banner
-        cprt = ('Type "help", "copyright", "credits" '
-                'or "license" for more information.')
         if banner is None:
-            msg = "Python %s on %s\n%s\n%s\n"
-            extra = EXTRA_MESSAGE
-            self.write(msg % (sys.version, sys.platform, cprt, extra))
-        elif banner:
-            self.write("%s\n" % str(banner))
+            banner = self.get_default_banner()
+        self.write("%s\n" % str(banner))
         # Run loop
         more = 0
         while 1:
