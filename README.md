@@ -21,7 +21,7 @@ Requirements
 Installation
 ------------
 
-    This will install the package and the `apython` script.
+This will install the package and the `apython` script.
 
     $ python setup.py install
     $ apython -h
@@ -32,7 +32,7 @@ Asynchronous console example
 ----------------------------
 
 The [example directory] includes a [slightly modified version] of the [echo server from the asyncio documentation].
-It runs an echo server on port 8888 but doesn't print anything and save the received message in `loop.history` instead.
+It runs an echo server on port 8888 but doesn't print anything and save the received messages in `loop.history` instead.
 
 It runs fine without any `apython` related stuff:
 
