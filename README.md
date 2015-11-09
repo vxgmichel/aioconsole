@@ -146,7 +146,7 @@ The `history` command defined earlier can be found in the list. Note that it has
       --pattern PATTERN, -p PATTERN
                             pattern to filter hostnames
 
-An example:
+Example usage of the `history` command:
 
     >>> history
     No message in the history
@@ -162,7 +162,7 @@ An example:
       0. Hello!
       1. Bye!
 
-[example/cli]: example/cli
+[example/cli.py]: example/cli.py
 [ArgumentParser]: https://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser
 [argparse]: https://docs.python.org/dev/library/argparse.html
 
