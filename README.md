@@ -162,7 +162,7 @@ An example:
       0. Hello!
       1. Bye!
 
-[example.cli]: example.cli
+[example/cli]: example/cli
 [ArgumentParser]: https://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser
 [argparse]: https://docs.python.org/dev/library/argparse.html
 
