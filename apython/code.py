@@ -14,8 +14,8 @@ from . import execute
 EXTRA_MESSAGE = """\
 ---
 This interpreter is running in an asyncio event loop.
-It allows you to wait for coroutines using the 'yield from' syntax.
-Try: {} asyncio.sleep(1, result=3, loop=loop)
+It allows you to wait for coroutines using the '{0}' syntax.
+Try: {0} asyncio.sleep(1, result=3, loop=loop)
 ---""".format('await' if compat.PY35 else 'yield from')
 
 
