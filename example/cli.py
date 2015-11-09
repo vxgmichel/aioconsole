@@ -31,7 +31,7 @@ def schedule_cli():
                         help='pattern to filter hostnames')
     commands = {'history': (get_history, parser)}
     cli = AsynchronousCli(commands, prog='echo')
-    asyncio.ensure_future(cli.interact())
+    asyncio.async(cli.interact())
 
 
 if __name__ == '__main__':
