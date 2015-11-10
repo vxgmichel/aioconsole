@@ -32,15 +32,15 @@ Asynchronous console example
 ----------------------------
 
 The [example directory] includes a [slightly modified version] of the [echo server from the asyncio documentation].
-It runs an echo server on port 8888 but doesn't print anything and save the received messages in `loop.history` instead.
+It runs an echo server on a given port but doesn't print anything and save the received messages in `loop.history` instead.
 
 It runs fine without any `apython` related stuff:
 
-    $ python3 -m example.echo
+    $ python3 -m example.echo 8888
 
 In order to access the program while it's running, simply use `apython` instead:
 
-    $ apython -m example.echo
+    $ apython -m example.echo 8888
     Python 3.5.0 (default, Sep 16 2015, 13:06:03)
     [GCC 4.8.4] on linux
     Type "help", "copyright", "credits" or "license" for more information.
@@ -113,7 +113,7 @@ The arguments of the parser will be passed as keywords arguments to the coroutin
 
 Let's run the command line interface:
 
-    $ python3 example.cli
+    $ python3 example.cli 8888
     Welcome to the CLI interface of echo!
     Try:
     * 'help' to display the help message

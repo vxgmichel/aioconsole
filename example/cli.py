@@ -35,5 +35,6 @@ def schedule_cli():
 
 
 if __name__ == '__main__':
+    import sys
     schedule_cli()
-    main()
+    main(*sys.argv[1:])
