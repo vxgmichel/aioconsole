@@ -10,8 +10,8 @@ from . import code
 
 class AsynchronousCli(code.AsynchronousConsole):
 
-    def __init__(self, commands, *, prog=None, loop=None):
-        super().__init__(loop=loop)
+    def __init__(self, commands, streams=None, *, prog=None, loop=None):
+        super().__init__(streams=streams, loop=loop)
         self.prog = prog
         self.commands = dict(commands)
         self.commands['help'] = (
@@ -22,6 +22,10 @@ class AsynchronousCli(code.AsynchronousConsole):
             self.list_command,
             argparse.ArgumentParser(
                 description='Display the command list.'))
+        self.commands['exit'] = (
+            self.exit_command,
+            argparse.ArgumentParser(
+                description='Exit the interface.'))
         for key, (corofunc, parser) in self.commands.items():
             parser.prog = key
 
@@ -34,7 +38,7 @@ class AsynchronousCli(code.AsynchronousConsole):
         return msg
 
     @asyncio.coroutine
-    def help_command(self):
+    def help_command(self, reader, writer):
         return """\
 Type 'help' to display this message.
 Type 'list' to display the command list.
@@ -42,12 +46,16 @@ Type '<command> -h' to display
 the help message of <command>."""
 
     @asyncio.coroutine
-    def list_command(self):
+    def list_command(self, reader, writer):
         msg = 'List of commands:'
         for key, (corofunc, parser) in sorted(self.commands.items()):
             usage = parser.format_usage().replace('usage: ', '')[:-1]
             msg += '\n * ' + usage
         return msg
+
+    @asyncio.coroutine
+    def exit_command(self, reader, writer):
+        raise SystemExit
 
     @asyncio.coroutine
     def runsource(self, source, filename=None):
@@ -60,13 +68,14 @@ the help message of <command>."""
             return False
         if name not in self.commands:
             self.write("Command '{0}' does not exist.\n".format(name))
+            yield from self.flush()
             return False
         corofunc, parser = self.commands[name]
         try:
             namespace = parser.parse_args(args)
         except SystemExit:
             return False
-        coro = corofunc(**vars(namespace))
+        coro = corofunc(self.reader, self.writer, **vars(namespace))
         try:
             result = yield from coro
         except SystemExit:
@@ -74,24 +83,21 @@ the help message of <command>."""
         except:
             self.showtraceback()
         else:
-            self.write(str(result) + '\n')
+            if result is not None:
+                self.write(str(result) + '\n')
+        yield from self.flush()
         return False
-
-
-@asyncio.coroutine
-def interact(banner=None, local=None, stop=True, *, loop=None):
-    console = AsynchronousConsole(local, loop=loop)
-    yield from console.interact(banner, stop)
 
 
 if __name__ == "__main__":
 
     @asyncio.coroutine
-    def dice(faces):
+    def dice(reader, writer, faces):
         for _ in range(3):
             yield from asyncio.sleep(0.33)
-            print('.', end='', flush=True)
-        print()
+            writer.write('.')
+            yield from writer.drain()
+        writer.write('\n')
         return random.randint(1, faces)
 
     parser = argparse.ArgumentParser(description='Throw a dice.')
