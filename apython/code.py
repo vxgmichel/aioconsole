@@ -29,11 +29,21 @@ class AsynchronousCompiler(codeop.CommandCompiler):
 
 class AsynchronousConsole(code.InteractiveConsole):
 
-    def __init__(self, locals=None, filename="<console>", *, loop=None):
+    def __init__(self, streams=None, locals=None, filename="<console>",
+                 *, loop=None):
         super().__init__(locals, filename)
         self.compile = AsynchronousCompiler()
         if loop is None:
             loop = asyncio.get_event_loop()
+        if streams is None:
+            self.streams = input.get_standard_streams(use_stderr=True,
+                                                      loop=loop)
+        elif isinstance(streams, tuple):
+            self.streams = asyncio.coroutine(lambda: streams)()
+        else:
+            self.streams = streams
+        self.reader = None
+        self.writer = None
         self.loop = loop
         self.locals.setdefault('asyncio', asyncio)
         self.locals.setdefault('loop', self.loop)
@@ -61,13 +71,12 @@ class AsynchronousConsole(code.InteractiveConsole):
     @asyncio.coroutine
     def runcode(self, code):
         try:
-            yield from execute.aexec(code, self.locals)
+            yield from execute.aexec(code, self.locals, self.writer)
         except SystemExit:
             raise
         except:
             self.showtraceback()
-        else:
-            yield
+        yield from self.flush()
 
     def resetbuffer(self):
         self.buffer = []
@@ -94,12 +103,22 @@ class AsynchronousConsole(code.InteractiveConsole):
             signal.signal(signal.SIGINT, signal.default_int_handler)
 
     @asyncio.coroutine
-    def interact(self, banner=None, stop=True):
+    def interact(self, banner=None, stop=True, handle_sigint=True):
         try:
-            self.add_sigint_handler()
-            yield from self._interact(banner)
+            if self.streams is not None:
+                self.reader, self.writer = yield from self.streams
         finally:
-            self.remove_sigint_handler()
+            self.streams = None
+        try:
+            if handle_sigint:
+                self.add_sigint_handler()
+            yield from self._interact(banner)
+        except SystemExit:
+            if stop:
+                raise
+        finally:
+            if handle_sigint:
+                self.remove_sigint_handler()
             if stop:
                 self.loop.stop()
 
@@ -130,11 +149,13 @@ class AsynchronousConsole(code.InteractiveConsole):
                     line = yield from self.raw_input(prompt)
                 except EOFError:
                     self.write("\n")
+                    yield from self.flush()
                     break
                 else:
                     more = yield from self.push(line)
             except asyncio.CancelledError:
                 self.write("\nKeyboardInterrupt\n")
+                yield from self.flush()
                 self.resetbuffer()
                 more = 0
 
@@ -149,13 +170,32 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     @asyncio.coroutine
     def raw_input(self, prompt=""):
-        return (yield from input.ainput(prompt, loop=self.loop))
+        self.write(prompt)
+        yield from self.flush()
+        data = (yield from self.reader.readline())
+        try:
+            data = data.decode()
+        except UnicodeDecodeError:
+            if b'\xff\xf4\xff\xfd\x06' in data:
+                raise SystemExit
+            data = '\n'
+        if not data.endswith('\n'):
+            raise EOFError()
+        return data
+
+    def write(self, data):
+        return self.writer.write(data.encode())
+
+    @asyncio.coroutine
+    def flush(self):
+        self.writer.drain()
 
 
 @asyncio.coroutine
-def interact(banner=None, local=None, stop=True, *, loop=None):
-    console = AsynchronousConsole(local, loop=loop)
-    yield from console.interact(banner, stop)
+def interact(banner=None, streams=None, local=None, stop=True,
+             handle_sigint=True, *, loop=None):
+    console = AsynchronousConsole(streams, local, loop=loop)
+    yield from console.interact(banner, stop, handle_sigint)
 
 
 if __name__ == "__main__":
