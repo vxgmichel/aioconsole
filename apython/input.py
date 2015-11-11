@@ -7,69 +7,6 @@ import asyncio
 from . import compat
 
 
-class InputPipeProtocol(asyncio.BaseProtocol):
-    """Protocol for the standard input pipe."""
-
-    def __init__(self, *, loop=None):
-        super().__init__()
-        self._loop = loop
-        self.reset_waiter()
-
-    def reset_waiter(self, future=None):
-        if future and not future.cancelled():
-            future.exception()
-        self.waiter = asyncio.Future(loop=self._loop)
-        self.waiter.add_done_callback(self.reset_waiter)
-
-    def data_received(self, data):
-        self.waiter.set_result(data.decode().strip('\n'))
-
-    def eof_received(self):
-        self.waiter.set_exception(EOFError("EOF when reading a line"))
-
-
-class StdinPipe:
-    """Provide a *read* coroutine at class level to read from stdin."""
-    instances = {}
-
-    @classmethod
-    def get_instance(cls, loop):
-        """Get the instance corresponding to the given loop."""
-        if cls.instances.get(loop) is None:
-            cls.instances[loop] = cls(loop)
-        return cls.instances[loop]
-
-    @classmethod
-    def read(cls, *, loop=None):
-        """Read from the stdin pipe."""
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        instance = cls.get_instance(loop)
-        return (yield from instance._read())
-
-    def __init__(self, loop):
-        """Initialize."""
-        self.loop = loop
-        self.transport = None
-        self.protocol = None
-
-    @asyncio.coroutine
-    def _read(self):
-        """Read from the stdin pipe."""
-        if self.transport is None:
-            protocol = lambda: InputPipeProtocol(loop=self.loop)
-            coro = self.loop.connect_read_pipe(protocol, sys.stdin)
-            self.transport, self.protocol = yield from coro
-        return (yield from self.protocol.waiter)
-
-    if compat.PY34:
-        def __del__(self):
-            """Make sure the transports don't close the pipe."""
-            for instance in self.instances.values():
-                if instance.transport:
-                    instance.transport._pipe = None
-
-
 @asyncio.coroutine
 def ainput(prompt=None, *, loop=None):
     """Asynchronous equivalent to *input*."""
@@ -85,6 +22,79 @@ def ainput(prompt=None, *, loop=None):
         future = StdinPipe.read(loop=loop)
         print(prompt, end='', flush=True)
     return (yield from future)
+
+
+class SafeStreamReaderProtocol(asyncio.StreamReaderProtocol):
+    def connection_made(self, transport):
+        if self._stream_reader._transport is not None:
+            return
+        super().connection_made(transport)
+
+
+class SafeStreamReader(asyncio.StreamReader):
+    if compat.PY34:
+        def __del__(self):
+            if self._transport and self._transport._fileno < 3:
+                self._transport._pipe = None
+
+
+class SafeStreamWriter(asyncio.StreamWriter):
+    if compat.PY34:
+        def __del__(self):
+            if self._transport and self._transport._fileno < 3:
+                self._transport._pipe = None
+
+    def write(self, data):
+        if isinstance(data, str):
+            data = data.encode()
+        super().write(data)
+
+
+@asyncio.coroutine
+def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    reader = SafeStreamReader(loop=loop)
+    protocol = SafeStreamReaderProtocol(reader, loop=loop)
+    yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
+    write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
+    transport, _ = yield from write_connect
+    loop.remove_reader(transport._fileno)
+    writer = SafeStreamWriter(transport, protocol, reader, loop)
+    return reader, writer
+
+
+@asyncio.coroutine
+def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    if cache.get(loop) is None:
+        out = sys.stderr if use_stderr else sys.stdout
+        connection = open_pipe_connection(sys.stdin, out, loop=loop)
+        cache[loop] = yield from connection
+    return cache[loop]
+
+
+@asyncio.coroutine
+def ainput(prompt=None, *, loop=None):
+    """Asynchronous equivalent to *input*."""
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    if prompt is None:
+        prompt = ''
+    try:
+        sys.stdin.fileno()
+    except io.UnsupportedOperation:
+        future = loop.run_in_executor(None, input, prompt)
+    else:
+        reader, writer = yield from get_standard_streams(loop=loop)
+        future = reader.readline()
+        writer.write(prompt.encode())
+        yield from writer.drain()
+    data = (yield from future).decode()
+    if not data.endswith('\n'):
+            raise EOFError()
+    return data
 
 
 if __name__ == '__main__':
