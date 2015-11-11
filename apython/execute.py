@@ -1,5 +1,6 @@
 """Provide an asynchronous equivalent *to exec*."""
 
+import sys
 import ast
 import codeop
 import asyncio
@@ -19,10 +20,13 @@ def full_update(dct, values):
     dct.update(values)
 
 
-def exec_result(obj, filename="<aexec>", symbol="single"):
+def exec_result(obj, local, stream):
     """Reproduce default exec behavior (print and builtins._)"""
-    code = compile('result', filename, symbol)
-    exec(code, {'result': obj})
+    local['_'] = obj
+    if obj is not None:
+        writer = lambda arg: stream.write(arg.encode())
+        writer.write = writer
+        print(obj, file=writer)
 
 
 def make_tree(statement, filename="<aexec>", symbol="single", local={}):
@@ -73,7 +77,7 @@ def compile_for_aexec(source, filename="<aexec>", mode="single",
 
 
 @asyncio.coroutine
-def aexec(source, local=None):
+def aexec(source, local=None, stream=None):
     """Asynchronous equivalent to *exec*.
 
     Support the *yield from* syntax.
@@ -85,5 +89,5 @@ def aexec(source, local=None):
     for tree in source:
         coro = make_coroutine_from_tree(tree, local=local)
         result, new_local = yield from coro
-        exec_result(result)
+        exec_result(result, new_local, stream)
         full_update(local, new_local)
