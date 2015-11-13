@@ -24,9 +24,7 @@ def exec_result(obj, local, stream):
     """Reproduce default exec behavior (print and builtins._)"""
     local['_'] = obj
     if obj is not None:
-        writer = lambda arg: stream.write(arg.encode())
-        writer.write = writer
-        print(obj, file=writer)
+        print(obj, file=stream)
 
 
 def make_tree(statement, filename="<aexec>", symbol="single", local={}):

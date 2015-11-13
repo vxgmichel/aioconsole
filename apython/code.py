@@ -2,6 +2,7 @@
 
 import sys
 import code
+import pydoc
 import codeop
 import signal
 import asyncio
@@ -47,6 +48,17 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.loop = loop
         self.locals.setdefault('asyncio', asyncio)
         self.locals.setdefault('loop', self.loop)
+        self.locals.setdefault('print', self.print)
+        self.locals.setdefault('help', self.help)
+
+    @functools.wraps(print)
+    def print(self, *args, **kwargs):
+        kwargs.setdefault('file', self)
+        print(*args, **kwargs)
+
+    @functools.wraps(help)
+    def help(self, obj):
+        self.print(pydoc.render_doc(obj))
 
     def get_default_banner(self):
         cprt = ('Type "help", "copyright", "credits" '
@@ -71,7 +83,7 @@ class AsynchronousConsole(code.InteractiveConsole):
     @asyncio.coroutine
     def runcode(self, code):
         try:
-            yield from execute.aexec(code, self.locals, self.writer)
+            yield from execute.aexec(code, self.locals, self)
         except SystemExit:
             raise
         except:
