@@ -24,21 +24,21 @@ def ainput(prompt=None, *, loop=None):
     return (yield from future)
 
 
-class SafeStreamReaderProtocol(asyncio.StreamReaderProtocol):
+class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
     def connection_made(self, transport):
         if self._stream_reader._transport is not None:
             return
         super().connection_made(transport)
 
 
-class SafeStreamReader(asyncio.StreamReader):
+class StandardStreamReader(asyncio.StreamReader):
     if compat.PY34:
         def __del__(self):
             if self._transport and self._transport._fileno < 3:
                 self._transport._pipe = None
 
 
-class SafeStreamWriter(asyncio.StreamWriter):
+class StandardStreamWriter(asyncio.StreamWriter):
     if compat.PY34:
         def __del__(self):
             if self._transport and self._transport._fileno < 3:
@@ -50,17 +50,63 @@ class SafeStreamWriter(asyncio.StreamWriter):
         super().write(data)
 
 
+class NonFileStreamReader:
+
+    def __init__(self, stream, *, loop=None):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        self.loop = loop
+        self.stream = stream
+
+    @asyncio.coroutine
+    def readline(self):
+        data = yield from self.loop.run_in_executor(None, self.stream.readline)
+        if isinstance(data, str):
+            data = data.encode()
+        return data
+
+    @asyncio.coroutine
+    def read(self, n=-1):
+        data = yield from self.loop.run_in_executor(None, self.stream.read, n)
+        if isinstance(data, str):
+            data = data.encode()
+        return data
+
+
+class NonFileStreamWriter:
+
+    def __init__(self, stream, *, loop=None):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        self.loop = loop
+        self.stream = stream
+
+    def write(self, data):
+        if isinstance(data, bytes):
+            data = data.decode()
+        self.stream.write(data)
+
+    @asyncio.coroutine
+    def drain(self):
+        try:
+            flush = self.stream.flush
+        except AttributeError:
+            pass
+        else:
+            yield from self.loop.run_in_executor(None, flush)
+
+
 @asyncio.coroutine
 def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
-    reader = SafeStreamReader(loop=loop)
-    protocol = SafeStreamReaderProtocol(reader, loop=loop)
+    reader = StandardStreamReader(loop=loop)
+    protocol = StandardStreamReaderProtocol(reader, loop=loop)
     yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
     write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
     transport, _ = yield from write_connect
     loop.remove_reader(transport._fileno)
-    writer = SafeStreamWriter(transport, protocol, reader, loop)
+    writer = StandardStreamWriter(transport, protocol, reader, loop)
     return reader, writer
 
 
@@ -68,11 +114,25 @@ def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
 def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
-    if cache.get(loop) is None:
-        out = sys.stderr if use_stderr else sys.stdout
-        connection = open_pipe_connection(sys.stdin, out, loop=loop)
-        cache[loop] = yield from connection
-    return cache[loop]
+    stdin, stdout = sys.stdin, sys.stderr if use_stderr else sys.stdout
+    key = loop, stdin, stdout
+    if cache.get(key) is None:
+        connection = create_standard_streams(stdin, stdout, loop=loop)
+        cache[key] = yield from connection
+    return cache[key]
+
+
+@asyncio.coroutine
+def create_standard_streams(stdin, stdout, loop):
+    try:
+        sys.stdin.fileno(), sys.stdout.fileno()
+    except io.UnsupportedOperation:
+        reader = NonFileStreamReader(stdin, loop=loop)
+        writer = NonFileStreamWriter(stdout, loop=loop)
+    else:
+        future = open_pipe_connection(stdin, stdout, loop=loop)
+        reader, writer = yield from future
+    return reader, writer
 
 
 @asyncio.coroutine
@@ -82,16 +142,14 @@ def ainput(prompt=None, *, loop=None):
         loop = asyncio.get_event_loop()
     if prompt is None:
         prompt = ''
-    try:
-        sys.stdin.fileno()
-    except io.UnsupportedOperation:
-        future = loop.run_in_executor(None, input, prompt)
-    else:
-        reader, writer = yield from get_standard_streams(loop=loop)
-        future = reader.readline()
-        writer.write(prompt.encode())
-        yield from writer.drain()
-    data = (yield from future).decode()
+    # Get streams
+    reader, writer = yield from get_standard_streams(loop=loop)
+    # Write prompt
+    writer.write(prompt.encode())
+    yield from writer.drain()
+    # Get data
+    data = (yield from reader.readline()).decode()
+    # Return or raise EOF
     if not data.endswith('\n'):
             raise EOFError()
     return data
