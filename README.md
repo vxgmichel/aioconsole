@@ -73,9 +73,9 @@ So we can access the `history` of received messages:
     >>> sum(loop.history.values(), [])
     []
 
-Let's send a message to the server using a `telnet` client:
+Let's send a message to the server using a `netcat` client:
 
-    $ telnet localhost 8888
+    $ nc localhost 8888
     Trying 127.0.0.1...
     Connected to localhost.
     Escape character is '^]'.
