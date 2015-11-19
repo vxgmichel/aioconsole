@@ -8,7 +8,7 @@ import signal
 import asyncio
 import functools
 
-from . import input
+from . import stream
 from . import compat
 from . import execute
 
@@ -37,8 +37,8 @@ class AsynchronousConsole(code.InteractiveConsole):
         if loop is None:
             loop = asyncio.get_event_loop()
         if streams is None:
-            self.streams = input.get_standard_streams(use_stderr=True,
-                                                      loop=loop)
+            self.streams = stream.get_standard_streams(use_stderr=True,
+                                                       loop=loop)
         elif isinstance(streams, tuple):
             self.streams = asyncio.coroutine(lambda: streams)()
         else:

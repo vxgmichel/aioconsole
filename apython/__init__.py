@@ -4,7 +4,7 @@ It also includes an interactive event loop, and a command line interface.
 """
 
 from .execute import aexec
-from .input import ainput
+from .stream import ainput
 from .code import interact
 from .events import InteractiveEventLoop, InteractiveEventLoopPolicy
 from .events import set_interactive_policy, run_console
