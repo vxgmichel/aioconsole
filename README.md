@@ -180,7 +180,7 @@ as:
 commands = {'history': (get_history, parser)}
 ```
 
-where `get_history` is a coroutine and `parser` an [ArgumentParser]from the
+where `get_history` is a coroutine and `parser` an [ArgumentParser] from the
 [argparse] module.  The arguments of the parser will be passed as keywords
 arguments to the coroutine.
 
@@ -197,7 +197,7 @@ Try:
 
 The `help` and `list` commands are generated automatically:
 
-```
+```none
 >>> help
 Type 'help' to display this message.
 Type 'list' to display the command list.
@@ -214,7 +214,7 @@ List of commands:
 The `history` command defined earlier can be found in the list. Note that it
 has an `help` option and a `pattern` argument:
 
-```
+```none
 >>> history -h
 usage: history [-h] [--pattern PATTERN]
 
@@ -228,7 +228,7 @@ optional arguments:
 
 Example usage of the `history` command:
 
-```
+```none
 >>> history
 No message in the history
 >>> # A few messages later
