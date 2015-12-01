@@ -16,7 +16,7 @@ asynchronous python console.''')
                         help='run a python module')
     parser.add_argument('filename', metavar='FILE', nargs='?',
                         help='python file or module to run')
-    parser.add_argument('arg', metavar='ARG', nargs='*',
+    parser.add_argument('arg', metavar='ARG', nargs=argparse.REMAINDER,
                         help='extra arguments')
     namespace = parser.parse_args(args)
     if namespace.module and not namespace.filename:
