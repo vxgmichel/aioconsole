@@ -42,8 +42,7 @@ class AsynchronousCli(code.AsynchronousConsole):
         return """\
 Type 'help' to display this message.
 Type 'list' to display the command list.
-Type '<command> -h' to display
-the help message of <command>."""
+Type '<command> -h' to display the help message of <command>."""
 
     @asyncio.coroutine
     def list_command(self, reader, writer):
