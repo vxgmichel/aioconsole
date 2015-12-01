@@ -34,8 +34,8 @@ $ apython -h
 usage: apython [-h] [-m] [FILE] ...
 ```
 
-Asynchronous console example
-----------------------------
+Asynchronous console
+--------------------
 
 The [example directory] includes a [slightly modified version] of the
 [echo server from the asyncio documentation]. It runs an echo server on a
@@ -48,8 +48,8 @@ It runs fine without any `apython` related stuff:
 $ python3 -m example.echo 8888
 ```
 
-In order to access the program while it's running, simply use `apython`
-instead:
+In order to access the program while it's running, simply replace `python3`
+with `apython`:
 
 ```bash
 $ apython -m example.echo 8888
@@ -167,8 +167,9 @@ $ apython -m apython.server 8888
 [asyncio.start_server]: https://docs.python.org/3.4/library/asyncio-stream.html#asyncio.start_server
 [apython.server]: apython/server.py
 
-Asynchronous CLI example
-------------------------
+
+Command line interfaces
+-----------------------
 
 The package also provides an `AsychronousCli` object. It is initialized with a
 dictionary of commands and can be scheduled with the coroutine
@@ -187,7 +188,7 @@ arguments to the coroutine.
 Let's run the command line interface:
 
 ```bash
-$ python3 example.cli 8888
+$ python3 -m example.cli --port 8888
 Welcome to the CLI interface of echo!
 Try:
 * 'help' to display the help message
@@ -201,8 +202,7 @@ The `help` and `list` commands are generated automatically:
 >>> help
 Type 'help' to display this message.
 Type 'list' to display the command list.
-Type '<command> -h' to display
-the help message of <command>.
+Type '<command> -h' to display the help message of <command>.
 >>> list
 List of commands:
  * help [-h]
@@ -244,9 +244,44 @@ Host 127.0.0.1:
   1. Bye!
 ```
 
+Just like `asyncio.interact()`, `AsynchronousCli` can be initialized with any
+pair of [streams]. It can be used along with [asyncio.start_server] to serve
+the command line interface. An example of that can also be found in
+[example/cli.py]:
+
+```bash
+$ python3 -m example.cli --port 8888 --serve-cli 8889
+A command line interface is being served on port 8889 ...
+```
+
+It's now possible to access the interface using `netcat`:
+
+```bash
+$ nc localhost 8889
+Welcome to the CLI interface of echo!
+Try:
+ * 'help' to display the help message
+ * 'list' to display the command list.
+>>>
+```
+
+Again, it is fine to run this command with `apython`:
+
+```bash
+$ apython -m example.cli --port 8888 --serve-cli 8889
+```
+
+This example combines:
+- an asynchronous python console running locally
+- an echo server running on port 8888
+- an dedicated interface running on port 8889
+
+
 [example/cli.py]: example/cli.py
 [ArgumentParser]: https://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser
 [argparse]: https://docs.python.org/dev/library/argparse.html
+[streams]: https://docs.python.org/3.4/library/asyncio-stream.html
+[asyncio.start_server]: https://docs.python.org/3.4/library/asyncio-stream.html#asyncio.start_server
 
 
 Contact
