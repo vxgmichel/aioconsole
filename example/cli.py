@@ -57,7 +57,7 @@ def main(args=None):
     else:
         coro = apython.start_interactive_server(make_cli, '', serve_cli)
         asyncio.get_event_loop().run_until_complete(coro)
-        msg = 'A command line interface is being served on port {}'
+        msg = 'A command line interface is being served on port {} ...'
         print(msg.format(serve_cli))
     return echo.main(port)
 
