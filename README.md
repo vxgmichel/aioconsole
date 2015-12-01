@@ -5,7 +5,8 @@ An asynchronous python console.
 
 It provides asynchronous equivalents to [input], [exec] and [code.interact].
 
-It also includes an interactive event loop and an asynchronous command line interface.
+It also includes an interactive event loop and an asynchronous command line
+interface.
 
 [input]: https://docs.python.org/3/library/functions.html#input
 [exec]: https://docs.python.org/3/library/functions.html#exec
@@ -31,8 +32,10 @@ This will install the package and the `apython` script.
 Asynchronous console example
 ----------------------------
 
-The [example directory] includes a [slightly modified version] of the [echo server from the asyncio documentation].
-It runs an echo server on a given port but doesn't print anything and save the received messages in `loop.history` instead.
+The [example directory] includes a [slightly modified version] of the
+[echo server from the asyncio documentation]. It runs an echo server on a given
+port but doesn't print anything and save the received messages in `loop.history`
+instead.
 
 It runs fine without any `apython` related stuff:
 
@@ -51,7 +54,8 @@ In order to access the program while it's running, simply use `apython` instead:
     ---
     >>>
 
-This looks like the standard python console, with an extra message. It suggests using the `await` syntax (`yield from` for python 3.4):
+This looks like the standard python console, with an extra message. It suggests
+using the `await` syntax (`yield from` for python 3.4):
 
     >>> await asyncio.sleep(1, result=3, loop=loop)
     # Wait one second...
@@ -103,13 +107,17 @@ The console also supports `Ctrl-C` and `Ctrl-D` signals:
 Asynchronous CLI example
 ------------------------
 
-The package also provides an `AsychronousCli` object. It is initialized with a dictionary of commands and can be scheduled with the coroutine `async_cli.interact()`.
-A dedicated command line interface to the echo server is defined in [example/cli.py] In this case, the command dictonary is defined as:
+The package also provides an `AsychronousCli` object. It is initialized with a
+dictionary of commands and can be scheduled with the coroutine
+`async_cli.interact()`.  A dedicated command line interface to the echo server
+is defined in [example/cli.py] In this case, the command dictonary is defined
+as:
 
     commands = {'history': (get_history, parser)}
 
-where `get_history` is a coroutine and `parser` an [ArgumentParser]from the [argparse] module.
-The arguments of the parser will be passed as keywords arguments to the coroutine.
+where `get_history` is a coroutine and `parser` an [ArgumentParser]from the
+[argparse] module.  The arguments of the parser will be passed as keywords
+arguments to the coroutine.
 
 Let's run the command line interface:
 
@@ -134,7 +142,8 @@ The `help` and `list` commands are generated automatically:
      * list [-h]
     >>>
 
-The `history` command defined earlier can be found in the list. Note that it has an `help` option and a `pattern` argument:
+The `history` command defined earlier can be found in the list. Note that it has
+an `help` option and a `pattern` argument:
 
     >>> history -h
     usage: history [-h] [--pattern PATTERN]
