@@ -1,14 +1,14 @@
 apython
 =======
 
-Asynchronous python console and interfaces.
+Asynchronous console and interfaces.
 
 This package provides:
  - asynchronous equivalents to [input], [exec] and [code.interact]
  - an interactive loop running the asynchronous python console
  - a way to customize and run command line interface using [argparse]
  - [stream] support to serve interfaces instead of using standard streams
- - the `apython` script to access asyncio code at runtime without modifiying
+ - the `apython` script to access asyncio code at runtime without modifying
    the sources
 
 [input]: https://docs.python.org/3/library/functions.html#input
@@ -53,7 +53,7 @@ with `apython`:
 
 ```bash
 $ apython -m example.echo 8888
-Python 3.5.0 (default, Sep 16 2015, 13:06:03)
+Python 3.5.0 (default, Sep 7 2015, 14:12:03)
 [GCC 4.8.4] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 ---
@@ -105,7 +105,7 @@ Hello!
 Connection closed by foreign host.
 ```
 
-The echo server behaves correctly. It is now possible to retreive the message:
+The echo server behaves correctly. It is now possible to retrieve the message:
 
 ```python
 >>> sum(loop.history.values(), [])
@@ -136,7 +136,7 @@ Then connect using `netcat`:
 
 ```bash
 $ nc localhost 8888
-Python 3.5.0 (default, Sep 16 2015, 13:06:03)
+Python 3.5.0 (default, Sep 7 2015, 14:12:03)
 [GCC 4.8.4] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 ---
@@ -154,10 +154,16 @@ Great! Anyone can now forkbomb your machine:
 >>> os.system(':(){ :|:& };:')
 ```
 
-Note that it's fine to combine this server with the `apython` script:
+Note that it's still possible to combine the previous example with the
+`apython` script to access the server locally while it outrageously
+compromises your computer safety:
 
 ```bash
 $ apython -m apython.server 8888
+Python 3.5.0 (default, Sep 7 2015, 14:12:03)
+[GCC 4.8.4] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+[...]
 ```
 
 [example directory]: example
@@ -246,8 +252,8 @@ Host 127.0.0.1:
 
 Just like `asyncio.interact()`, `AsynchronousCli` can be initialized with any
 pair of [streams]. It can be used along with [asyncio.start_server] to serve
-the command line interface. An example of that can also be found in
-[example/cli.py]:
+the command line interface. [example/cli.py] provides this functionality
+through the `--serve-cli` option:
 
 ```bash
 $ python3 -m example.cli --port 8888 --serve-cli 8889
@@ -265,13 +271,17 @@ Try:
 >>>
 ```
 
-Again, it is fine to run this command with `apython`:
+Again, it is fine to run the example with `apython` instead:
 
 ```bash
 $ apython -m example.cli --port 8888 --serve-cli 8889
+Python 3.5.0 (default, Sep 7 2015, 14:12:03)
+[GCC 4.8.4] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+[...]
 ```
 
-This example combines:
+Hence, the example above combines:
 - an asynchronous python console running locally
 - an echo server running on port 8888
 - an dedicated interface running on port 8889
