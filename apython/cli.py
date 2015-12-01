@@ -1,4 +1,5 @@
 
+import os
 import sys
 import runpy
 import argparse
@@ -31,14 +32,18 @@ def main(args=None):
 
     try:
         sys._argv = sys.argv
+        sys._path = sys.path
         if namespace.module:
             sys.argv = args[1:]
+            sys.path.insert(0, '')
             events.set_interactive_policy()
             runpy.run_module(namespace.filename,
                              run_name='__main__',
                              alter_sys=True)
         elif namespace.filename:
             sys.argv = args
+            path = os.path.dirname(os.path.abspath(namespace.filename))
+            sys.path.insert(0, path)
             events.set_interactive_policy()
             runpy.run_path(namespace.filename,
                            run_name='__main__')
@@ -46,6 +51,7 @@ def main(args=None):
             events.run_console()
     finally:
         sys.argv = sys._argv
+        sys.path = sys._path
 
 
 if __name__ == '__main__':
