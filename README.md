@@ -154,7 +154,7 @@ Great! Anyone can now forkbomb your machine:
 >>> os.system(':(){ :|:& };:')
 ```
 
-Note that it's still possible to combine the previous example with the
+It is still possible to combine the previous example with the
 `apython` script to access the server locally while it outrageously
 compromises your computer safety:
 
@@ -180,7 +180,7 @@ Command line interfaces
 The package also provides an `AsychronousCli` object. It is initialized with a
 dictionary of commands and can be scheduled with the coroutine
 `async_cli.interact()`.  A dedicated command line interface to the echo server
-is defined in [example/cli.py] In this case, the command dictonary is defined
+is defined in [example/cli.py]. In this case, the command dictonary is defined
 as:
 
 ```python
