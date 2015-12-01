@@ -1,16 +1,20 @@
 apython
 =======
 
-An asynchronous python console.
+Asynchronous python console and interfaces.
 
-It provides asynchronous equivalents to [input], [exec] and [code.interact].
-
-It also includes an interactive event loop and an asynchronous command line
-interface.
+This package provides:
+ - asynchronous equivalents to [input], [exec] and [code.interact]
+ - an interactive loop running the asynchronous python console
+ - a way to customize and run command line interface using [argparse]
+ - [stream] support to serve interfaces instead of using standard streams
+ - the `apython` script to access asyncio code at runtime without modifiying
+   the sources
 
 [input]: https://docs.python.org/3/library/functions.html#input
 [exec]: https://docs.python.org/3/library/functions.html#exec
 [code.interact]: https://docs.python.org/2/library/code.html#code.interact
+[stream]: https://docs.python.org/3.4/library/asyncio-stream.html
 
 
 Requirements
@@ -26,22 +30,23 @@ This will install the package and the `apython` script.
 
     $ python setup.py install
     $ apython -h
-    usage: apython [-h] [-m] [FILE] [ARG [ARG ...]]
+    usage: apython [-h] [-m] [FILE] ...
 
 
 Asynchronous console example
 ----------------------------
 
 The [example directory] includes a [slightly modified version] of the
-[echo server from the asyncio documentation]. It runs an echo server on a given
-port but doesn't print anything and save the received messages in `loop.history`
-instead.
+[echo server from the asyncio documentation]. It runs an echo server on a
+given port but doesn't print anything and save the received messages in
+`loop.history` instead.
 
 It runs fine without any `apython` related stuff:
 
     $ python3 -m example.echo 8888
 
-In order to access the program while it's running, simply use `apython` instead:
+In order to access the program while it's running, simply use `apython`
+instead:
 
     $ apython -m example.echo 8888
     Python 3.5.0 (default, Sep 16 2015, 13:06:03)
@@ -54,8 +59,8 @@ In order to access the program while it's running, simply use `apython` instead:
     ---
     >>>
 
-This looks like the standard python console, with an extra message. It suggests
-using the `await` syntax (`yield from` for python 3.4):
+This looks like the standard python console, with an extra message. It
+suggests using the `await` syntax (`yield from` for python 3.4):
 
     >>> await asyncio.sleep(1, result=3, loop=loop)
     # Wait one second...
@@ -99,10 +104,43 @@ The console also supports `Ctrl-C` and `Ctrl-D` signals:
     >>> # Ctrl-D
     $
 
+All this is implemented by setting `InteractiveEventLoop` as default event
+loop. It simply is a selector loop that schedules `apython.interact()`
+coroutine when it's created. `apython.interact()` supports any [stream object]
+so it can be used along with [asyncio.start_server] to serve the python
+console.  The [apython.server] module does exactly that:
+
+    $ python3 -m apython.server 8888
+	The python console is being served on port 8888 ...
+
+Then connect using `netcat`:
+
+    $ nc localhost 8888
+	Python 3.5.0 (default, Sep 16 2015, 13:06:03)
+    [GCC 4.8.4] on linux
+    Type "help", "copyright", "credits" or "license" for more information.
+    ---
+    This interpreter is running in an asyncio event loop.
+    It allows you to wait for coroutines using the 'await' syntax.
+    Try: await asyncio.sleep(1, result=3, loop=loop)
+    ---
+    >>>
+
+Great! Anyone can now forkbomb your machine:
+
+    >>> import os
+	>>> os.system(':(){ :|:& };:')
+
+Note that it's fine to combine this server with the `apython` script:
+
+    $ apython -m apython.server 8888
+
 [example directory]: example
 [slightly modified version]: example/echo.py
 [echo server from the asyncio documentation]: https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-server-using-streams
-
+[stream object]: https://docs.python.org/3.4/library/asyncio-stream.html
+[asyncio.start_server]: https://docs.python.org/3.4/library/asyncio-stream.html#asyncio.start_server
+[apython.server]: apython/server.py
 
 Asynchronous CLI example
 ------------------------
@@ -142,8 +180,8 @@ The `help` and `list` commands are generated automatically:
      * list [-h]
     >>>
 
-The `history` command defined earlier can be found in the list. Note that it has
-an `help` option and a `pattern` argument:
+The `history` command defined earlier can be found in the list. Note that it
+has an `help` option and a `pattern` argument:
 
     >>> history -h
     usage: history [-h] [--pattern PATTERN]
