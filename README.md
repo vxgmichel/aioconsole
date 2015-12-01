@@ -20,7 +20,7 @@ This package provides:
 Requirements
 ------------
 
-- python >= 3.4
+ - python >= 3.4
 
 
 Installation
@@ -28,10 +28,11 @@ Installation
 
 This will install the package and the `apython` script.
 
-    $ python setup.py install
-    $ apython -h
-    usage: apython [-h] [-m] [FILE] ...
-
+```bash
+$ python setup.py install
+$ apython -h
+usage: apython [-h] [-m] [FILE] ...
+```
 
 Asynchronous console example
 ----------------------------
@@ -43,66 +44,82 @@ given port but doesn't print anything and save the received messages in
 
 It runs fine without any `apython` related stuff:
 
-    $ python3 -m example.echo 8888
+```bash
+$ python3 -m example.echo 8888
+```
 
 In order to access the program while it's running, simply use `apython`
 instead:
 
-    $ apython -m example.echo 8888
-    Python 3.5.0 (default, Sep 16 2015, 13:06:03)
-    [GCC 4.8.4] on linux
-    Type "help", "copyright", "credits" or "license" for more information.
-    ---
-    This interpreter is running in an asyncio event loop.
-    It allows you to wait for coroutines using the 'await' syntax.
-    Try: await asyncio.sleep(1, result=3, loop=loop)
-    ---
-    >>>
+```bash
+$ apython -m example.echo 8888
+Python 3.5.0 (default, Sep 16 2015, 13:06:03)
+[GCC 4.8.4] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+---
+This interpreter is running in an asyncio event loop.
+It allows you to wait for coroutines using the 'await' syntax.
+Try: await asyncio.sleep(1, result=3, loop=loop)
+---
+>>>
+```
 
 This looks like the standard python console, with an extra message. It
 suggests using the `await` syntax (`yield from` for python 3.4):
 
-    >>> await asyncio.sleep(1, result=3, loop=loop)
-    # Wait one second...
-    3
-    >>>
+```python
+>>> await asyncio.sleep(1, result=3, loop=loop)
+# Wait one second...
+3
+>>>
+```
 
 The `locals` contains a reference to the event loop:
 
-    >>> dir()
-    ['__doc__', '__name__', 'asyncio', 'loop']
-    >>> loop
-    <InteractiveEventLoop running=True closed=False debug=False>
-    >>>
+```python
+>>> dir()
+['__doc__', '__name__', 'asyncio', 'loop']
+>>> loop
+<InteractiveEventLoop running=True closed=False debug=False>
+>>>
+```
 
 So we can access the `history` of received messages:
 
-    >>> loop.history
-    defaultdict(<class 'list'>, {})
-    >>> sum(loop.history.values(), [])
-    []
+```python
+>>> loop.history
+defaultdict(<class 'list'>, {})
+>>> sum(loop.history.values(), [])
+[]
+```
 
 Let's send a message to the server using a `netcat` client:
 
-    $ nc localhost 8888
-    Trying 127.0.0.1...
-    Connected to localhost.
-    Escape character is '^]'.
-    Hello!
-    Hello!
-    Connection closed by foreign host.
+```bash
+$ nc localhost 8888
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Hello!
+Hello!
+Connection closed by foreign host.
+```
 
 The echo server behaves correctly. It is now possible to retreive the message:
 
-    >>> sum(loop.history.values(), [])
-    ['Hello!']
+```python
+>>> sum(loop.history.values(), [])
+['Hello!']
+```
 
 The console also supports `Ctrl-C` and `Ctrl-D` signals:
 
-    >>> ^C
-    KeyboardInterrupt
-    >>> # Ctrl-D
-    $
+```python
+>>> ^C
+KeyboardInterrupt
+>>> # Ctrl-D
+$
+```
 
 All this is implemented by setting `InteractiveEventLoop` as default event
 loop. It simply is a selector loop that schedules `apython.interact()`
@@ -110,30 +127,38 @@ coroutine when it's created. `apython.interact()` supports any [stream object]
 so it can be used along with [asyncio.start_server] to serve the python
 console.  The [apython.server] module does exactly that:
 
-    $ python3 -m apython.server 8888
-	The python console is being served on port 8888 ...
+```bash
+$ python3 -m apython.server 8888
+The python console is being served on port 8888 ...
+```
 
 Then connect using `netcat`:
 
-    $ nc localhost 8888
-	Python 3.5.0 (default, Sep 16 2015, 13:06:03)
-    [GCC 4.8.4] on linux
-    Type "help", "copyright", "credits" or "license" for more information.
-    ---
-    This interpreter is running in an asyncio event loop.
-    It allows you to wait for coroutines using the 'await' syntax.
-    Try: await asyncio.sleep(1, result=3, loop=loop)
-    ---
-    >>>
+```bash
+$ nc localhost 8888
+Python 3.5.0 (default, Sep 16 2015, 13:06:03)
+[GCC 4.8.4] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+---
+This interpreter is running in an asyncio event loop.
+It allows you to wait for coroutines using the 'await' syntax.
+Try: await asyncio.sleep(1, result=3, loop=loop)
+---
+>>>
+```
 
 Great! Anyone can now forkbomb your machine:
 
-    >>> import os
-	>>> os.system(':(){ :|:& };:')
+```python
+>>> import os
+>>> os.system(':(){ :|:& };:')
+```
 
 Note that it's fine to combine this server with the `apython` script:
 
-    $ apython -m apython.server 8888
+```bash
+$ apython -m apython.server 8888
+```
 
 [example directory]: example
 [slightly modified version]: example/echo.py
@@ -151,7 +176,9 @@ dictionary of commands and can be scheduled with the coroutine
 is defined in [example/cli.py] In this case, the command dictonary is defined
 as:
 
-    commands = {'history': (get_history, parser)}
+```python
+commands = {'history': (get_history, parser)}
+```
 
 where `get_history` is a coroutine and `parser` an [ArgumentParser]from the
 [argparse] module.  The arguments of the parser will be passed as keywords
@@ -159,55 +186,63 @@ arguments to the coroutine.
 
 Let's run the command line interface:
 
-    $ python3 example.cli 8888
-    Welcome to the CLI interface of echo!
-    Try:
-    * 'help' to display the help message
-    * 'list' to display the command list.
-    >>>
+```bash
+$ python3 example.cli 8888
+Welcome to the CLI interface of echo!
+Try:
+* 'help' to display the help message
+* 'list' to display the command list.
+>>>
+```
 
 The `help` and `list` commands are generated automatically:
 
-    >>> help
-    Type 'help' to display this message.
-    Type 'list' to display the command list.
-    Type '<command> -h' to display
-    the help message of <command>.
-    >>> list
-    List of commands:
-     * help [-h]
-     * history [-h] [--pattern PATTERN]
-     * list [-h]
-    >>>
+```
+>>> help
+Type 'help' to display this message.
+Type 'list' to display the command list.
+Type '<command> -h' to display
+the help message of <command>.
+>>> list
+List of commands:
+ * help [-h]
+ * history [-h] [--pattern PATTERN]
+ * list [-h]
+>>>
+```
 
 The `history` command defined earlier can be found in the list. Note that it
 has an `help` option and a `pattern` argument:
 
-    >>> history -h
-    usage: history [-h] [--pattern PATTERN]
+```
+>>> history -h
+usage: history [-h] [--pattern PATTERN]
 
-    Display the message history
+Display the message history
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      --pattern PATTERN, -p PATTERN
-                            pattern to filter hostnames
+optional arguments:
+  -h, --help            show this help message and exit
+  --pattern PATTERN, -p PATTERN
+                        pattern to filter hostnames
+```
 
 Example usage of the `history` command:
 
-    >>> history
-    No message in the history
-    >>> # A few messages later
-    >>> history
-    Host 127.0.0.1:
-      0. Hello!
-      1. Bye!
-    Host 192.168.0.3
-      0. Sup!
-    >>> history -p 127.*
-    Host 127.0.0.1:
-      0. Hello!
-      1. Bye!
+```
+>>> history
+No message in the history
+>>> # A few messages later
+>>> history
+Host 127.0.0.1:
+  0. Hello!
+  1. Bye!
+Host 192.168.0.3
+  0. Sup!
+>>> history -p 127.*
+Host 127.0.0.1:
+  0. Hello!
+  1. Bye!
+```
 
 [example/cli.py]: example/cli.py
 [ArgumentParser]: https://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser
