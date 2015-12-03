@@ -16,7 +16,8 @@ def handle_connect(reader, writer, factory):
 @asyncio.coroutine
 def start_interactive_server(factory, host='', port=8000, *, loop=None):
     callback = lambda reader, writer: handle_connect(reader, writer, factory)
-    yield from asyncio.start_server(callback, host, port, loop=loop)
+    server = yield from asyncio.start_server(callback, host, port, loop=loop)
+    return server
 
 
 def run(port=8000):
