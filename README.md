@@ -130,7 +130,7 @@ coroutine when it's created.
 Serving the console
 -------------------
 
-Moreover, `apython.interact()` supports any [stream object] so it can be used
+Moreover, `apython.interact()` supports [stream objects] so it can be used
 along with [asyncio.start_server] to serve the python console. The
 `apython.start_interactive_server` coroutine does exactly that. A backdoor can
 be introduced by simply adding the following line in the program:
@@ -174,10 +174,10 @@ Great! Anyone can now forkbomb your machine:
 [example directory]: example
 [slightly modified version]: example/echo.py
 [echo server from the asyncio documentation]: https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-server-using-streams
-[stream object]: https://docs.python.org/3.4/library/asyncio-stream.html
+[stream objects]: https://docs.python.org/3.4/library/asyncio-stream.html
 [asyncio.start_server]: https://docs.python.org/3.4/library/asyncio-stream.html#asyncio.start_server
 [apython.server]: apython/server.py
-[eventlet.backdoor]: http://eventlet.net/doc/modules/backdoor.html#backdoor-python-interactive-interpreter-within-a-running-process
+[eventlet.backdoor module]: http://eventlet.net/doc/modules/backdoor.html#backdoor-python-interactive-interpreter-within-a-running-process
 
 
 Command line interfaces
@@ -262,8 +262,8 @@ Serving interfaces
 
 Just like `asyncio.interact()`, `AsynchronousCli` can be initialized with any
 pair of [streams]. It can be used along with [asyncio.start_server] to serve
-the command line interface. Our [example][example/cli.py] provides this functionality
-through the `--serve-cli` option:
+the command line interface. The previous [example][example/cli.py] provides
+this functionality through the `--serve-cli` option:
 
 ```bash
 $ python3 -m example.cli 8888 --serve-cli 8889
