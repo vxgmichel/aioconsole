@@ -28,6 +28,8 @@ class AsynchronousCli(code.AsynchronousConsole):
                 description='Exit the interface.'))
         for key, (corofunc, parser) in self.commands.items():
             parser.prog = key
+            parser.print_help = lambda file=sys.stderr, *, self=parser: \
+                type(parser).print_help(self, file)
 
     def get_default_banner(self):
         prog = self.prog or sys.argv[0].split('/')[-1]
