@@ -39,20 +39,21 @@ Asynchronous console
 
 The [example directory] includes a [slightly modified version] of the
 [echo server from the asyncio documentation]. It runs an echo server on a
-given port but doesn't print anything and save the received messages in
-`loop.history` instead.
+given port and save the received messages in `loop.history`.
 
 It runs fine without any `apython` related stuff:
 
 ```bash
 $ python3 -m example.echo 8888
+The echo service is being served on 127.0.0.1:8888
 ```
 
 In order to access the program while it's running, simply replace `python3`
-with `apython`:
+with `apython` and redirect `stdout` so the console is not polluted by `print`
+statements (`apython` uses `stderr`):
 
 ```bash
-$ apython -m example.echo 8888
+$ apython -m example.echo 8888 > echo.log
 Python 3.5.0 (default, Sep 7 2015, 14:12:03)
 [GCC 4.8.4] on linux
 Type "help", "copyright", "credits" or "license" for more information.
@@ -123,13 +124,29 @@ $
 
 All this is implemented by setting `InteractiveEventLoop` as default event
 loop. It simply is a selector loop that schedules `apython.interact()`
-coroutine when it's created. `apython.interact()` supports any [stream object]
-so it can be used along with [asyncio.start_server] to serve the python
-console.  The [apython.server] module does exactly that:
+coroutine when it's created.
+
+
+Serving the console
+-------------------
+
+Moreover, `apython.interact()` supports any [stream object] so it can be used
+along with [asyncio.start_server] to serve the python console. The
+`apython.start_interactive_server` coroutine does exactly that. A backdoor can
+be introduced by simply adding the following line in the program:
+
+```python
+server = await apython.start_interactive_server(host='localhost', port=8000)
+```
+
+This is actually very similar to the [eventlet.backdoor module]. It is also
+possible to use the `--serve` option so it is not necessary to modify the
+code:
 
 ```bash
-$ python3 -m apython.server 8888
-The python console is being served on port 8888 ...
+$ apython --serve :8889 -m example.echo 8888
+The console is being served on 0.0.0.0:8889
+The echo service is being served on 127.0.0.1:8888
 ```
 
 Then connect using `netcat`:
@@ -154,24 +171,13 @@ Great! Anyone can now forkbomb your machine:
 >>> os.system(':(){ :|:& };:')
 ```
 
-It is still possible to combine the previous example with the
-`apython` script to access the server locally while it outrageously
-compromises your computer safety:
-
-```bash
-$ apython -m apython.server 8888
-Python 3.5.0 (default, Sep 7 2015, 14:12:03)
-[GCC 4.8.4] on linux
-Type "help", "copyright", "credits" or "license" for more information.
-[...]
-```
-
 [example directory]: example
 [slightly modified version]: example/echo.py
 [echo server from the asyncio documentation]: https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-server-using-streams
 [stream object]: https://docs.python.org/3.4/library/asyncio-stream.html
 [asyncio.start_server]: https://docs.python.org/3.4/library/asyncio-stream.html#asyncio.start_server
 [apython.server]: apython/server.py
+[eventlet.backdoor]: http://eventlet.net/doc/modules/backdoor.html#backdoor-python-interactive-interpreter-within-a-running-process
 
 
 Command line interfaces
@@ -194,7 +200,7 @@ arguments to the coroutine.
 Let's run the command line interface:
 
 ```bash
-$ python3 -m example.cli --port 8888
+$ python3 -m example.cli 8888 > cli.log
 Welcome to the CLI interface of echo!
 Try:
 * 'help' to display the help message
@@ -250,14 +256,19 @@ Host 127.0.0.1:
   1. Bye!
 ```
 
+
+Serving interfaces
+------------------
+
 Just like `asyncio.interact()`, `AsynchronousCli` can be initialized with any
 pair of [streams]. It can be used along with [asyncio.start_server] to serve
-the command line interface. [example/cli.py] provides this functionality
+the command line interface. Our [example][example/cli.py] provides this functionality
 through the `--serve-cli` option:
 
 ```bash
-$ python3 -m example.cli --port 8888 --serve-cli 8889
-A command line interface is being served on port 8889 ...
+$ python3 -m example.cli 8888 --serve-cli 8889
+The command line interface is being served on 127.0.0.1:8889
+The echo service is being served on 127.0.0.1:8888
 ```
 
 It's now possible to access the interface using `netcat`:
@@ -271,21 +282,15 @@ Try:
 >>>
 ```
 
-Again, it is fine to run the example with `apython` instead:
+It is also possible to combine the example with the `apython` script to add
+an extra access for debugging:
 
 ```bash
-$ apython -m example.cli --port 8888 --serve-cli 8889
-Python 3.5.0 (default, Sep 7 2015, 14:12:03)
-[GCC 4.8.4] on linux
-Type "help", "copyright", "credits" or "license" for more information.
-[...]
+$ apython --serve 8887 -m example.cli 8888 --serve-cli 8889
+The console is being served on 127.0.0.1:8887
+The command line interface is being served on 127.0.0.1:8889
+The echo service is being served on 127.0.0.1:8888
 ```
-
-Hence, the example above combines:
-- an asynchronous python console running locally
-- an echo server running on port 8888
-- an dedicated interface running on port 8889
-
 
 [example/cli.py]: example/cli.py
 [ArgumentParser]: https://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser
