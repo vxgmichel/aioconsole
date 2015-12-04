@@ -10,7 +10,7 @@ from .events import InteractiveEventLoop, InteractiveEventLoopPolicy
 from .events import set_interactive_policy, run_console
 from .command import AsynchronousCli
 from .server import start_interactive_server
-from .cli import main
+from .main import main
 
 __all__ = ['aexec', 'ainput', 'AsynchronousConsole', 'interact',
            'InteractiveEventLoop', 'InteractiveEventLoopPolicy',

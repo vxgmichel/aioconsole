@@ -9,8 +9,9 @@ from . import code
 @asyncio.coroutine
 def handle_connect(reader, writer, factory, banner=None):
     streams = reader, writer
-    cli = factory(streams=streams)
-    yield from cli.interact(banner=banner, stop=False, handle_sigint=False)
+    interface = factory(streams=streams)
+    yield from interface.interact(banner=banner, stop=False,
+                                  handle_sigint=False)
     writer.close()
 
 
