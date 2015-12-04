@@ -3,7 +3,10 @@
 import fnmatch
 import asyncio
 import argparse
+
 import apython
+from apython.server import parse_server, print_server
+
 from . import echo
 
 
@@ -35,31 +38,35 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description="Run the echo server and a command line interface.")
     parser.add_argument(
-        '--port',
-        '-p',
-        type=int,
-        default=8000,
-        help='port for the echo server, default is 8000')
+        'server',
+        metavar='[HOST:]PORT',
+        type=str,
+        help='interface for the echo server, default host is localhost')
     parser.add_argument(
         '--serve-cli',
-        metavar='PORT',
-        type=int,
-        help='serve the command line interface on the given port '
+        metavar='[HOST:]PORT',
+        type=str,
+        help='serve the command line interface on the given host+port '
         'instead of using the standard streams')
     namespace = parser.parse_args(args)
-    return namespace.port, namespace.serve_cli
+    host, port = parse_server(namespace.server, parser)
+    if namespace.serve_cli is not None:
+        serve_cli = parse_server(namespace.serve_cli, parser)
+    else:
+        serve_cli = None
+    return host, port, serve_cli
 
 
 def main(args=None):
-    port, serve_cli = parse_args(args)
-    if not serve_cli:
-        asyncio.async(make_cli().interact())
+    host, port, serve_cli = parse_args(args)
+    if serve_cli:
+        cli_host, cli_port = serve_cli
+        coro = apython.start_interactive_server(make_cli, cli_host, cli_port)
+        server = asyncio.get_event_loop().run_until_complete(coro)
+        print_server(server, 'command line interface')
     else:
-        coro = apython.start_interactive_server(make_cli, '', serve_cli)
-        asyncio.get_event_loop().run_until_complete(coro)
-        msg = 'A command line interface is being served on port {} ...'
-        print(msg.format(serve_cli))
-    return echo.main(port)
+        asyncio.async(make_cli().interact())
+    return echo.run(host, port)
 
 if __name__ == '__main__':
     main()
