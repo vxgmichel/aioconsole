@@ -204,9 +204,9 @@ class AsynchronousConsole(code.InteractiveConsole):
 
 
 @asyncio.coroutine
-def interact(banner=None, streams=None, local=None, stop=True,
+def interact(banner=None, streams=None, locals=None, stop=True,
              handle_sigint=True, *, loop=None):
-    console = AsynchronousConsole(streams, local, loop=loop)
+    console = AsynchronousConsole(streams, locals, loop=loop)
     yield from console.interact(banner, stop, handle_sigint)
 
 

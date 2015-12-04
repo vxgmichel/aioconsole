@@ -1,28 +1,48 @@
 """Provide an interactive event loop class."""
 
 import asyncio
+import functools
 
 from . import code
 from . import compat
+from . import server
 
 
 class InteractiveEventLoop(asyncio.SelectorEventLoop):
     """Event loop running a python console."""
 
-    def __init__(self, selector=None, local=None, banner=None, stop=True):
+    console_class = code.AsynchronousConsole
+
+    def __init__(self, selector=None, locals=None, banner=None, serve=None):
+        self.console = None
+        self.console_task = None
+        self.console_server = None
         super().__init__(selector=selector)
-        coro = code.interact(local=local, banner=banner, stop=stop, loop=self)
-        self.console = asyncio.async(coro, loop=self)
+        # Factory
+        self.factory = lambda streams: self.console_class(
+            streams, locals=locals, loop=self)
+        # Local console
+        if serve is None:
+            self.console = self.factory(None)
+            coro = self.console.interact(banner, stop=True, handle_sigint=True)
+            self.console_task = asyncio.async(coro, loop=self)
+        # Serving console
+        else:
+            host, port = serve
+            coro = server.start_interactive_server(
+                self.factory, host=host, port=port, banner=banner, loop=self)
+            self.console_server = self.run_until_complete(coro)
+            server.print_server(self.console_server)
 
     def close(self):
-        if not self.is_running():
-            asyncio.Future.cancel(self.console)
+        if self.console_task and not self.is_running():
+            asyncio.Future.cancel(self.console_task)
         super().close()
 
     if compat.PY34:
         def __del__(self):
-            if self.console.done():
-                self.console.exception()
+            if self.console_task and self.console_task.done():
+                self.console_task.exception()
             try:
                 super().__del__()
             except AttributeError:
@@ -31,20 +51,29 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
 
 class InteractiveEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Policy to use the interactive event loop by default."""
-    _loop_factory = InteractiveEventLoop
+
+    def __init__(self, serve=None):
+        self.serve = serve
+        super().__init__()
+
+    @property
+    def _loop_factory(self):
+        return functools.partial(InteractiveEventLoop, serve=self.serve)
 
 
-def set_interactive_policy():
+def set_interactive_policy(serve=None):
     """Use an interactive event loop by default."""
-    asyncio.set_event_loop_policy(InteractiveEventLoopPolicy())
+    asyncio.set_event_loop_policy(InteractiveEventLoopPolicy(serve))
 
 
-def run_console(selector=None):
+def run_console(selector=None, locals=None, banner=None, serve=None):
     """Run the interactive event loop."""
-    loop = InteractiveEventLoop(selector=selector)
+    loop = InteractiveEventLoop(selector, locals, banner, serve)
     asyncio.set_event_loop(loop)
-    loop.run_forever()
-
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
 
 if __name__ == '__main__':
     run_console()
