@@ -31,7 +31,7 @@ This will install the package and the `apython` script.
 ```bash
 $ python setup.py install
 $ apython -h
-usage: apython [-h] [-m] [FILE] ...
+usage: apython [-h] [--serve [HOST:]PORT] [-m] [FILE] ...
 ```
 
 Asynchronous console
