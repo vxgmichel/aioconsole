@@ -14,6 +14,13 @@ if compat.PY35:
 CORO_CODE = CORO_DEF + 'return (None, locals())\n'
 
 
+def make_arg(key, annotation=None):
+    """Make an ast function argument."""
+    arg = ast.arg(key, annotation)
+    arg.lineno, arg.col_offset = 0, 0
+    return arg
+
+
 def full_update(dct, values):
     """Fully update a dictionary."""
     dct.clear()
@@ -45,7 +52,7 @@ def make_coroutine_from_tree(tree, filename="<aexec>", symbol="single",
                              local={}):
     """Make a coroutine from a tree structure."""
     dct = {}
-    tree.body[0].args.args = [ast.arg(key, None) for key in local]
+    tree.body[0].args.args = list(map(make_arg, local))
     exec(compile(tree, filename, symbol), dct)
     return asyncio.coroutine(dct[CORO_NAME])(**local)
 
