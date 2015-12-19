@@ -32,7 +32,7 @@ def main(args):
     if ':' not in server:
         return run(port=int(server))
     host, port = server.split(':')
-    return main(host, int(port))
+    return run(host, int(port))
 
 if __name__ == '__main__':
     import sys
