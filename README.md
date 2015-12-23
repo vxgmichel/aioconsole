@@ -75,7 +75,7 @@ suggests using the `await` syntax (`yield from` for python 3.4):
 >>>
 ```
 
-The `locals` contains a reference to the event loop:
+The `locals` contain a reference to the event loop:
 
 ```python
 >>> dir()
@@ -98,12 +98,8 @@ Let's send a message to the server using a `netcat` client:
 
 ```bash
 $ nc localhost 8888
-Trying 127.0.0.1...
-Connected to localhost.
-Escape character is '^]'.
 Hello!
 Hello!
-Connection closed by foreign host.
 ```
 
 The echo server behaves correctly. It is now possible to retrieve the message:
