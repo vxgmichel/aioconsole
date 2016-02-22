@@ -61,6 +61,18 @@ class NonFileStreamReader:
         self.eof = not data
         return data
 
+    if compat.PY35:
+        @asyncio.coroutine
+        def __aiter__(self):
+            return self
+
+        @asyncio.coroutine
+        def __anext__(self):
+            val = yield from self.readline()
+            if val == b'':
+                raise StopAsyncIteration
+            return val
+
 
 class NonFileStreamWriter:
 
