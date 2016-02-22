@@ -7,23 +7,6 @@ import asyncio
 from . import compat
 
 
-@asyncio.coroutine
-def ainput(prompt=None, *, loop=None):
-    """Asynchronous equivalent to *input*."""
-    if loop is None:
-        loop = asyncio.get_event_loop()
-    if prompt is None:
-        prompt = ''
-    try:
-        sys.stdin.fileno()
-    except io.UnsupportedOperation:
-        future = loop.run_in_executor(None, input, prompt)
-    else:
-        future = StdinPipe.read(loop=loop)
-        print(prompt, end='', flush=True)
-    return (yield from future)
-
-
 class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
     def connection_made(self, transport):
         if self._stream_reader._transport is not None:
@@ -111,18 +94,6 @@ def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
 
 
 @asyncio.coroutine
-def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
-    if loop is None:
-        loop = asyncio.get_event_loop()
-    stdin, stdout = sys.stdin, sys.stderr if use_stderr else sys.stdout
-    key = loop, stdin, stdout
-    if cache.get(key) is None:
-        connection = create_standard_streams(stdin, stdout, loop=loop)
-        cache[key] = yield from connection
-    return cache[key]
-
-
-@asyncio.coroutine
 def create_standard_streams(stdin, stdout, loop):
     try:
         sys.stdin.fileno(), sys.stdout.fileno()
@@ -133,6 +104,18 @@ def create_standard_streams(stdin, stdout, loop):
         future = open_pipe_connection(stdin, stdout, loop=loop)
         reader, writer = yield from future
     return reader, writer
+
+
+@asyncio.coroutine
+def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    stdin, stdout = sys.stdin, sys.stderr if use_stderr else sys.stdout
+    key = loop, stdin, stdout
+    if cache.get(key) is None:
+        connection = create_standard_streams(stdin, stdout, loop=loop)
+        cache[key] = yield from connection
+    return cache[key]
 
 
 @asyncio.coroutine
