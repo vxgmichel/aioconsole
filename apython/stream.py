@@ -40,12 +40,17 @@ class NonFileStreamReader:
             loop = asyncio.get_event_loop()
         self.loop = loop
         self.stream = stream
+        self.eof = False
+
+    def at_eof(self):
+        return self.eof
 
     @asyncio.coroutine
     def readline(self):
         data = yield from self.loop.run_in_executor(None, self.stream.readline)
         if isinstance(data, str):
             data = data.encode()
+        self.eof = not data
         return data
 
     @asyncio.coroutine
@@ -53,6 +58,7 @@ class NonFileStreamReader:
         data = yield from self.loop.run_in_executor(None, self.stream.read, n)
         if isinstance(data, str):
             data = data.encode()
+        self.eof = not data
         return data
 
 
