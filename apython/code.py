@@ -200,7 +200,7 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     @asyncio.coroutine
     def flush(self):
-        self.writer.drain()
+        yield from self.writer.drain()
 
 
 @asyncio.coroutine
