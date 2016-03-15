@@ -148,7 +148,7 @@ The echo service is being served on 127.0.0.1:8888
 Then connect using `netcat`:
 
 ```bash
-$ nc localhost 8888
+$ nc localhost 8889
 Python 3.5.0 (default, Sep 7 2015, 14:12:03)
 [GCC 4.8.4] on linux
 Type "help", "copyright", "credits" or "license" for more information.
