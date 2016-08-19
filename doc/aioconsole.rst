@@ -25,7 +25,7 @@ aioconsole_ is available on PyPI_ and GitHub_.
 Both of the following commands install the ``aioconsole`` package
 and the ``apython`` script.
 
-.. code:: console
+.. sourcecode:: console
 
     $ pip3 install aioconsole   # from PyPI
     $ python3 setup.py install  # or from the sources
@@ -42,7 +42,7 @@ a given port and save the received messages in ``loop.history``.
 
 It runs fine and doesn't use any ``aioconsole`` function:
 
-.. code:: console
+.. sourcecode:: console
 
     $ python3 -m example.echo 8888
     The echo service is being served on 127.0.0.1:8888
@@ -51,7 +51,7 @@ In order to access the program while it’s running, simply replace
 ``python3`` with ``apython`` and redirect ``stdout`` so the console is
 not polluted by ``print`` statements (``apython`` uses ``stderr``):
 
-.. code:: console
+.. sourcecode:: console
 
     $ apython -m example.echo 8888 > echo.log
     Python 3.5.0 (default, Sep 7 2015, 14:12:03)
@@ -67,7 +67,7 @@ not polluted by ``print`` statements (``apython`` uses ``stderr``):
 This looks like the standard python console, with an extra message. It
 suggests using the ``await`` syntax (``yield from`` for python 3.4):
 
-.. code:: python3
+.. sourcecode:: python3
 
     >>> await asyncio.sleep(1, result=3, loop=loop)
     # Wait one second...
@@ -76,7 +76,7 @@ suggests using the ``await`` syntax (``yield from`` for python 3.4):
 
 The ``locals`` contain a reference to the event loop:
 
-.. code:: python3
+.. sourcecode:: python3
 
     >>> dir()
     ['__doc__', '__name__', 'asyncio', 'loop']
@@ -86,7 +86,7 @@ The ``locals`` contain a reference to the event loop:
 
 So we can access the ``history`` of received messages:
 
-.. code:: python3
+.. sourcecode:: python3
 
     >>> loop.history
     defaultdict(<class 'list'>, {})
@@ -95,7 +95,7 @@ So we can access the ``history`` of received messages:
 
 Let’s send a message to the server using a ``netcat`` client:
 
-.. code:: console
+.. sourcecode:: console
 
     $ nc localhost 8888
     Hello!
@@ -104,14 +104,14 @@ Let’s send a message to the server using a ``netcat`` client:
 The echo server behaves correctly. It is now possible to retrieve the
 message:
 
-.. code:: python3
+.. sourcecode:: python3
 
     >>> sum(loop.history.values(), [])
     ['Hello!']
 
 The console also supports ``Ctrl-C`` and ``Ctrl-D`` signals:
 
-.. code:: python3
+.. sourcecode:: python3
 
     >>> ^C
     KeyboardInterrupt
@@ -132,7 +132,7 @@ The ``aioconsole.start_interactive_server`` coroutine does exactly that. A
 backdoor can be introduced by simply adding the following line in the
 program:
 
-.. code:: python3
+.. sourcecode:: python3
 
     server = await aioconsole.start_interactive_server(
         host='localhost', port=8000)
@@ -141,7 +141,7 @@ This is actually very similar to the `eventlet.backdoor module`_. It is
 also possible to use the ``--serve`` option so it is not necessary to
 modify the code:
 
-.. code:: console
+.. sourcecode:: console
 
     $ apython --serve :8889 -m example.echo 8888
     The console is being served on 0.0.0.0:8889
@@ -149,7 +149,7 @@ modify the code:
 
 Then connect using ``netcat``:
 
-.. code:: console
+.. sourcecode:: console
 
     $ nc localhost 8889
     Python 3.5.0 (default, Sep 7 2015, 14:12:03)
@@ -164,7 +164,7 @@ Then connect using ``netcat``:
 
 Great! Anyone can now forkbomb your machine:
 
-.. code:: python3
+.. sourcecode:: python3
 
     >>> import os
     >>> os.system(':(){ :|:& };:')
@@ -179,7 +179,7 @@ coroutine ``async_cli.interact()``. A dedicated command line interface
 to the echo server is defined in `example/cli.py`_. In this case, the
 command dictonary is defined as:
 
-.. code:: python3
+.. sourcecode:: python3
 
     commands = {'history': (get_history, parser)}
 
@@ -189,7 +189,7 @@ as keywords arguments to the coroutine.
 
 Let’s run the command line interface:
 
-.. code:: console
+.. sourcecode:: console
 
     $ python3 -m example.cli 8888 > cli.log
     Welcome to the CLI interface of echo!
@@ -200,7 +200,7 @@ Let’s run the command line interface:
 
 The ``help`` and ``list`` commands are generated automatically:
 
-.. code:: console
+.. sourcecode:: console
 
     >>> help
     Type 'help' to display this message.
@@ -216,7 +216,7 @@ The ``help`` and ``list`` commands are generated automatically:
 The ``history`` command defined earlier can be found in the list. Note
 that it has an ``help`` option and a ``pattern`` argument:
 
-.. code:: console
+.. sourcecode:: console
 
     >>> history -h
     usage: history [-h] [--pattern PATTERN]
@@ -230,7 +230,7 @@ that it has an ``help`` option and a ``pattern`` argument:
 
 Example usage of the ``history`` command:
 
-.. code:: console
+.. sourcecode:: console
 
     >>> history
     No message in the history
@@ -256,7 +256,7 @@ with any pair of `streams`_. It can be used along with
 previous `example`_ provides this functionality through the
 ``--serve-cli`` option:
 
-.. code:: console
+.. sourcecode:: console
 
     $ python3 -m example.cli 8888 --serve-cli 8889
     The command line interface is being served on 127.0.0.1:8889
@@ -264,7 +264,7 @@ previous `example`_ provides this functionality through the
 
 It’s now possible to access the interface using ``netcat``:
 
-.. code:: console
+.. sourcecode:: console
 
     $ nc localhost 8889
     Welcome to the CLI interface of echo!
@@ -276,7 +276,7 @@ It’s now possible to access the interface using ``netcat``:
 It is also possible to combine the example with the ``apython`` script
 to add an extra access for debugging:
 
-.. code:: console
+.. sourcecode:: console
 
     $ apython --serve 8887 -m example.cli 8888 --serve-cli 8889
     The console is being served on 127.0.0.1:8887

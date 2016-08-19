@@ -25,7 +25,7 @@ aioconsole_ is available on PyPI_ and GitHub_.
 Both of the following commands install the ``aioconsole`` package
 and the ``apython`` script.
 
-.. code:: console
+.. sourcecode:: console
 
     $ pip3 install aioconsole   # from PyPI
     $ python3 setup.py install  # or from the sources
@@ -51,7 +51,7 @@ Simple usage
 
 The following example demonstrates the use of ``await`` inside the console:
 
-.. code:: console
+.. sourcecode:: python3
 
     $ apython
     Python 3.5.0 (default, Sep 7 2015, 14:12:03)
