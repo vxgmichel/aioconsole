@@ -22,4 +22,6 @@ setup(
 
     author="Vincent Michel",
     author_email="vxgmichel@gmail.com",
+    url='https://github.com/vxgmichel/aioconsole',
+    download_url='http://pypi.python.org/pypi/aioconsole',
 )
