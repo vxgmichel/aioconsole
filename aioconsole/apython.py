@@ -10,11 +10,10 @@ from . import server
 
 def parse_args(args):
     parser = argparse.ArgumentParser(prog='apython', description='''\
-Asynchronous python console.
-
-Run the given python file or module with the default event loop policy changed
-to use an interactive event loop. If no argument is given, it runs an
-asynchronous python console.''')
+Run the given python file or module with a modified asyncio policy replacing
+the default event loop with an interactive loop.
+If no argument is given, it simply runs an asynchronous python console.
+''')
     parser.add_argument('--serve', metavar='[HOST:]PORT',
                         help='serve a console on the given interface instead')
     parser.add_argument('-m', dest='module', action='store_true',
