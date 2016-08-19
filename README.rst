@@ -46,7 +46,7 @@ The following command installs the package and the ``apython`` script.
 Simple usage
 ------------
 
-The following example demonstrate the use of ``await`` inside the console:
+The following example demonstrates the use of ``await`` inside the console:
 
 .. code:: console
 
