@@ -12,7 +12,7 @@ Programming Language :: Python :: 3.3
 setup(
     name="aioconsole",
     version="0.1.0",
-    packages=["apython"],
+    packages=["aioconsole"],
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
 
     license="GPLv3",
