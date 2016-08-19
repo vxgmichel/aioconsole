@@ -21,7 +21,7 @@ Requirements
 Installation
 ------------
 
-This will install the package and the ``apython`` script.
+The following command installs the package and the ``apython`` script.
 
 .. code:: console
 
