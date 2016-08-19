@@ -131,7 +131,8 @@ program:
 
 .. code:: python3
 
-    server = await aioconsole.start_interactive_server(host='localhost', port=8000)
+    server = await aioconsole.start_interactive_server(
+        host='localhost', port=8000)
 
 This is actually very similar to the `eventlet.backdoor module`_. It is
 also possible to use the ``--serve`` option so it is not necessary to
