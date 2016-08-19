@@ -17,7 +17,7 @@ setup(
 
     license="GPLv3",
     classifiers=CLASSIFIERS,
-    description="Asynchronous python console and interfaces",
+    description="Asynchronous console and interfaces for asyncio",
     long_description=README,
 
     author="Vincent Michel",

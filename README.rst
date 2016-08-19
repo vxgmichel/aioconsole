@@ -1,9 +1,9 @@
 aioconsole
 ==========
 
-Asynchronous console and interfaces.
+Asynchronous console and interfaces for asyncio
 
-This package provides:
+aioconsole_ provides:
 
 * asynchronous equivalents to `input`_, `exec`_ and `code.interact`_
 * an interactive loop running the asynchronous python console
@@ -21,11 +21,14 @@ Requirements
 Installation
 ------------
 
-The following command installs the package and the ``apython`` script.
+aioconsole_ is available on PyPI_ and GitHub_.
+Both of the following commands install the ``aioconsole`` package
+and the ``apython`` script.
 
 .. code:: console
 
-    $ python setup.py install
+    $ pip3 install aioconsole   # from PyPI
+    $ python3 setup.py install  # or from the sources
     $ apython -h
     usage: apython [-h] [--serve [HOST:]PORT] [-m] [FILE] ...
 
@@ -76,6 +79,8 @@ Contact
 
 Vincent Michel: vxgmichel@gmail.com
 
+.. _aioconsole: https://pypi.python.org/pypi/aioconsole
+.. _GitHub: https://github.com/vxgmichel/aioconsole
 .. _input: https://docs.python.org/3/library/functions.html#input
 .. _exec: https://docs.python.org/3/library/functions.html#exec
 .. _code.interact: https://docs.python.org/2/library/code.html#code.interact
@@ -83,3 +88,4 @@ Vincent Michel: vxgmichel@gmail.com
 .. _stream: https://docs.python.org/3.4/library/asyncio-stream.html
 .. _example directory: https://github.com/vxgmichel/aioconsole/blob/master/example
 .. _documentation: http://pythonhosted.org/aioconsole
+.. _PyPI: aioconsole_
