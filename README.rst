@@ -1,5 +1,5 @@
-apython
-=======
+aioconsole
+==========
 
 Asynchronous console and interfaces.
 
@@ -33,7 +33,7 @@ The `example directory`_ includes a `slightly modified version`_ of the
 `echo server from the asyncio documentation`_. It runs an echo server on
 a given port and save the received messages in ``loop.history``.
 
-It runs fine without any ``apython`` related stuff:
+It runs fine and doesn't use any ``aioconsole`` function:
 
 .. code:: bash
 
@@ -51,7 +51,7 @@ not polluted by ``print`` statements (``apython`` uses ``stderr``):
     [GCC 4.8.4] on linux
     Type "help", "copyright", "credits" or "license" for more information.
     ---
-    This interpreter is running in an asyncio event loop.
+    This console is running in an asyncio event loop.
     It allows you to wait for coroutines using the 'await' syntax.
     Try: await asyncio.sleep(1, result=3, loop=loop)
     ---
@@ -113,20 +113,20 @@ The console also supports ``Ctrl-C`` and ``Ctrl-D`` signals:
 
 All this is implemented by setting ``InteractiveEventLoop`` as default
 event loop. It simply is a selector loop that schedules
-``apython.interact()`` coroutine when it’s created.
+``aioconsole.interact()`` coroutine when it’s created.
 
 Serving the console
 -------------------
 
-Moreover, ``apython.interact()`` supports `stream objects`_ so it can be
+Moreover, ``aioconsole.interact()`` supports `stream objects`_ so it can be
 used along with `asyncio.start\_server`_ to serve the python console.
-The ``apython.start_interactive_server`` coroutine does exactly that. A
+The ``aioconsole.start_interactive_server`` coroutine does exactly that. A
 backdoor can be introduced by simply adding the following line in the
 program:
 
 .. code:: python
 
-    server = await apython.start_interactive_server(host='localhost', port=8000)
+    server = await aioconsole.start_interactive_server(host='localhost', port=8000)
 
 This is actually very similar to the `eventlet.backdoor module`_. It is
 also possible to use the ``--serve`` option so it is not necessary to
@@ -147,7 +147,7 @@ Then connect using ``netcat``:
     [GCC 4.8.4] on linux
     Type "help", "copyright", "credits" or "license" for more information.
     ---
-    This interpreter is running in an asyncio event loop.
+    This console is running in an asyncio event loop.
     It allows you to wait for coroutines using the 'await' syntax.
     Try: await asyncio.sleep(1, result=3, loop=loop)
     ---
