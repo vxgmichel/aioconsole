@@ -1,14 +1,13 @@
-
-import os
+#!/usr/bin/env python3
 from setuptools import setup
 
+README = open("README.rst").read()
 
-def safe_read(fname):
-    try:
-        return open(os.path.join(os.path.dirname(__file__), fname)).read()
-    except IOError:
-        return ""
-
+CLASSIFIERS = """\
+Programming Language :: Python
+Programming Language :: Python :: 3
+Programming Language :: Python :: 3.3
+""".splitlines()
 
 setup(
     name="aioconsole",
@@ -16,16 +15,10 @@ setup(
     packages=["apython"],
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
 
-    classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-    ],
-
-
     license="GPLv3",
+    classifiers=CLASSIFIERS,
     description="Asynchronous python console and interfaces",
-    long_description=safe_read("README.md"),
+    long_description=README,
 
     author="Vincent Michel",
     author_email="vxgmichel@gmail.com",
