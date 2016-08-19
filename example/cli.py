@@ -4,8 +4,8 @@ import fnmatch
 import asyncio
 import argparse
 
-import apython
-from apython.server import parse_server, print_server
+from aioconsole import AsynchronousCli, start_interactive_server
+from aioconsole.server import parse_server, print_server
 
 from . import echo
 
@@ -31,7 +31,7 @@ def make_cli(streams=None):
     parser.add_argument('--pattern', '-p', type=str,
                         help='pattern to filter hostnames')
     commands = {'history': (get_history, parser)}
-    return apython.AsynchronousCli(commands, streams, prog='echo')
+    return AsynchronousCli(commands, streams, prog='echo')
 
 
 def parse_args(args=None):
@@ -61,7 +61,7 @@ def main(args=None):
     host, port, serve_cli = parse_args(args)
     if serve_cli:
         cli_host, cli_port = serve_cli
-        coro = apython.start_interactive_server(make_cli, cli_host, cli_port)
+        coro = start_interactive_server(make_cli, cli_host, cli_port)
         server = asyncio.get_event_loop().run_until_complete(coro)
         print_server(server, 'command line interface')
     else:

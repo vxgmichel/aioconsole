@@ -10,7 +10,8 @@ from . import server
 
 def parse_args(args):
     parser = argparse.ArgumentParser(prog='apython', description='''\
-Asynchronous python interpreter.
+Asynchronous python console.
+
 Run the given python file or module with the default event loop policy changed
 to use an interactive event loop. If no argument is given, it runs an
 asynchronous python console.''')
@@ -30,7 +31,7 @@ asynchronous python console.''')
     return namespace
 
 
-def main(args=None):
+def run_apython(args=None):
     if args is None:
         args = sys.argv[1:]
     namespace = parse_args(args)
@@ -60,4 +61,4 @@ def main(args=None):
 
 
 if __name__ == '__main__':
-    main()
+    run_apython()
