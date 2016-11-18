@@ -1,6 +1,15 @@
 aioconsole
 ==========
 
+.. image:: https://readthedocs.org/projects/aioconsole/badge/?version=latest
+    :target: http://aioconsole.readthedocs.io/
+
+.. image:: https://img.shields.io/pypi/v/aioconsole.svg
+    :target: https://pypi.python.org/pypi/aioconsole
+
+.. image:: https://img.shields.io/pypi/pyversions/aioconsole.svg
+    :target: https://pypi.python.org/pypi/aioconsole
+
 Asynchronous console and interfaces for asyncio
 
 aioconsole_ provides:
@@ -87,5 +96,5 @@ Vincent Michel: vxgmichel@gmail.com
 .. _argparse: https://docs.python.org/dev/library/argparse.html
 .. _stream: https://docs.python.org/3.4/library/asyncio-stream.html
 .. _example directory: https://github.com/vxgmichel/aioconsole/blob/master/example
-.. _documentation: http://pythonhosted.org/aioconsole
+.. _documentation: http://aioconsole.readthedocs.io/
 .. _PyPI: aioconsole_
