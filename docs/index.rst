@@ -1,6 +1,15 @@
 aioconsole
 ==========
 
+.. image:: https://readthedocs.org/projects/aioconsole/badge/?version=latest
+    :target: http://aioconsole.readthedocs.io/
+
+.. image:: https://img.shields.io/pypi/v/aioconsole.svg
+    :target: https://pypi.python.org/pypi/aioconsole
+
+.. image:: https://img.shields.io/pypi/pyversions/aioconsole.svg
+    :target: https://pypi.python.org/pypi/aioconsole
+
 Asynchronous console and interfaces for asyncio
 
 aioconsole_ provides:
