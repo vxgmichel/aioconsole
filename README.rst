@@ -2,13 +2,20 @@ aioconsole
 ==========
 
 .. image:: https://readthedocs.org/projects/aioconsole/badge/?version=latest
-    :target: http://aioconsole.readthedocs.io/
+   :target: http://aioconsole.readthedocs.io/
+   :alt:
+
+.. image:: https://travis-ci.org/vxgmichel/aioconsole.svg?branch=master
+   :target: https://travis-ci.org/vxgmichel/aioconsole
+   :alt:
 
 .. image:: https://img.shields.io/pypi/v/aioconsole.svg
-    :target: https://pypi.python.org/pypi/aioconsole
+   :target: https://pypi.python.org/pypi/aioconsole
+   :alt:
 
 .. image:: https://img.shields.io/pypi/pyversions/aioconsole.svg
-    :target: https://pypi.python.org/pypi/aioconsole
+   :target: https://pypi.python.org/pypi/aioconsole
+   :alt:
 
 Asynchronous console and interfaces for asyncio
 
