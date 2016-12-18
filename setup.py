@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
+
+import sys
 from setuptools import setup
+
+TESTING = any(x in sys.argv for x in ['test', 'pytest'])
 
 README = open("README.rst").read()
 
@@ -16,6 +20,9 @@ setup(
     version="0.1.2",
     packages=["aioconsole"],
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
+
+    setup_requires=['pytest-runner' if TESTING else ''],
+    tests_require=['pytest', 'pytest-asyncio', 'pytest-cov'],
 
     license="GPLv3",
     classifiers=CLASSIFIERS,
