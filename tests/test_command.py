@@ -65,6 +65,17 @@ Try:
  * 'list' to display the command list.
 [Hello!] """),
 
+    'wrong_command': (
+        'hellooo\n',
+        """\
+Welcome to the CLI interface of hello!
+Try:
+ * 'help' to display the help message
+ * 'list' to display the command list.
+[Hello!] Command 'hellooo' does not exist.
+[Hello!] \n"""),
+
+
 }
 
 
