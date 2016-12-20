@@ -154,12 +154,3 @@ def ainput(prompt=None, *, loop=None):
     if not data.endswith('\n'):
             raise EOFError()
     return data
-
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(ainput(">>> "))
-    print(repr(result))
-    result = loop.run_until_complete(ainput(">>> "))
-    print(repr(result))
-    loop.close()

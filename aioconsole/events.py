@@ -74,6 +74,3 @@ def run_console(selector=None, locals=None, banner=None, serve=None):
         loop.run_forever()
     except KeyboardInterrupt:
         pass
-
-if __name__ == '__main__':
-    run_console()

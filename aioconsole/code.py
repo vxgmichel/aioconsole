@@ -211,8 +211,3 @@ def interact(banner=None, streams=None, locals=None, stop=True,
              handle_sigint=True, *, loop=None):
     console = AsynchronousConsole(streams, locals, loop=loop)
     yield from console.interact(banner, stop, handle_sigint)
-
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(interact())

@@ -67,10 +67,3 @@ def parse_args(args=None):
         help='default is localhost:8000')
     namespace = parser.parse_args(args)
     return parse_server(namespace.server, parser)
-
-
-def main(args=None):
-    run(*parse_args(args))
-
-if __name__ == '__main__':
-    main()

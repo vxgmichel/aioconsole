@@ -57,7 +57,3 @@ def run_apython(args=None):
     finally:
         sys.argv = sys._argv
         sys.path = sys._path
-
-
-if __name__ == '__main__':
-    run_apython()
