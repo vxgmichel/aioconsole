@@ -200,7 +200,10 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     @asyncio.coroutine
     def flush(self):
-        yield from self.writer.drain()
+        try:
+            yield from self.writer.drain()
+        except ConnectionResetError:
+            pass
 
 
 @asyncio.coroutine
