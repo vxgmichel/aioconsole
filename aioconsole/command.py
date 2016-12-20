@@ -88,23 +88,3 @@ Type '<command> -h' to display the help message of <command>."""
                 self.write(str(result) + '\n')
         yield from self.flush()
         return False
-
-
-if __name__ == "__main__":
-
-    @asyncio.coroutine
-    def dice(reader, writer, faces):
-        for _ in range(3):
-            yield from asyncio.sleep(0.33)
-            writer.write('.')
-            yield from writer.drain()
-        writer.write('\n')
-        return random.randint(1, faces)
-
-    parser = argparse.ArgumentParser(description='Throw a dice.')
-    parser.add_argument('--faces', '-f', metavar='N', type=int,
-                        default=6, help='Number of faces')
-    cli = AsynchronousCli({'dice': (dice, parser)})
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(cli.interact())
