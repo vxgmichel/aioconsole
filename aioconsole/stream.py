@@ -17,14 +17,14 @@ class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
 class StandardStreamReader(asyncio.StreamReader):
     if compat.PY34:
         def __del__(self):
-            if self._transport and self._transport._fileno < 3:
+            if self._transport and self._transport.get_extra_info('pipe').fileno() < 3:
                 self._transport._pipe = None
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
     if compat.PY34:
         def __del__(self):
-            if self._transport and self._transport._fileno < 3:
+            if self._transport and self._transport.get_extra_info('pipe').fileno() < 3:
                 self._transport._pipe = None
 
     def write(self, data):
@@ -106,7 +106,7 @@ def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
     yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
     write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
     transport, _ = yield from write_connect
-    loop.remove_reader(transport._fileno)
+    loop.remove_reader(transport.get_extra_info('pipe').fileno())
     writer = StandardStreamWriter(transport, protocol, reader, loop)
     return reader, writer
 
