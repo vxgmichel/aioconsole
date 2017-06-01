@@ -114,8 +114,10 @@ def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
 @asyncio.coroutine
 def create_standard_streams(stdin, stdout, loop):
     try:
+        if sys.platform == 'win32':
+            raise OSError
         sys.stdin.fileno(), sys.stdout.fileno()
-    except io.UnsupportedOperation:
+    except OSError:
         reader = NonFileStreamReader(stdin, loop=loop)
         writer = NonFileStreamWriter(stdout, loop=loop)
     else:
