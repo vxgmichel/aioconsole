@@ -17,7 +17,7 @@ Programming Language :: Python :: 3.6
 
 setup(
     name="aioconsole",
-    version="0.1.2",
+    version="0.1.3dev0",
     packages=["aioconsole"],
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
 
