@@ -22,7 +22,7 @@ setup(
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
 
     setup_requires=['pytest-runner' if TESTING else ''],
-    tests_require=['pytest', 'pytest-asyncio', 'pytest-cov'],
+    tests_require=['pytest', 'pytest-asyncio<0.6', 'pytest-cov'],
 
     license="GPLv3",
     classifiers=CLASSIFIERS,
