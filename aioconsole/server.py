@@ -25,6 +25,18 @@ def start_interactive_server(factory=code.AsynchronousConsole,
     return server
 
 
+@asyncio.coroutine
+def start_console_server(host='localhost', port=8000,
+                         locals=None, filename="<console>", banner=None,
+                         *, loop=None):
+    factory = lambda streams: code.AsynchronousConsole(
+        streams, locals, filename)
+    server = yield from asyncio.start_console_server(
+        factory, host, port, banner, loop=loop)
+    return server
+
+
+
 def print_server(server, name='console'):
     interface = '{}:{}'.format(*server.sockets[0].getsockname())
     print('The {} is being served on {}'.format(name, interface))

@@ -13,7 +13,7 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
 
     console_class = code.AsynchronousConsole
 
-    def __init__(self, selector=None, locals=None, banner=None, serve=None):
+    def __init__(self, *, selector=None, locals=None, banner=None, serve=None):
         self.console = None
         self.console_task = None
         self.console_server = None
@@ -52,23 +52,23 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
 class InteractiveEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Policy to use the interactive event loop by default."""
 
-    def __init__(self, serve=None):
-        self.serve = serve
+    def __init__(self, *, locals=None, banner=None, serve=None):
+        self._loop_factory = functools.partial(
+            InteractiveEventLoop, locals=locals, banner=banner, serve=serve)
         super().__init__()
 
-    @property
-    def _loop_factory(self):
-        return functools.partial(InteractiveEventLoop, serve=self.serve)
 
-
-def set_interactive_policy(serve=None):
+def set_interactive_policy(*, locals=None, banner=None, serve=None):
     """Use an interactive event loop by default."""
-    asyncio.set_event_loop_policy(InteractiveEventLoopPolicy(serve))
+    policy = InteractiveEventLoopPolicy(
+        locals=locals, banner=banner, serve=serve)
+    asyncio.set_event_loop_policy(policy)
 
 
-def run_console(selector=None, locals=None, banner=None, serve=None):
+def run_console(*, locals=None, banner=None, serve=None):
     """Run the interactive event loop."""
-    loop = InteractiveEventLoop(selector, locals, banner, serve)
+    loop = InteractiveEventLoop(
+        locals=locals, banner=banner, serve=serve)
     asyncio.set_event_loop(loop)
     try:
         loop.run_forever()

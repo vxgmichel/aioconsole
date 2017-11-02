@@ -14,9 +14,9 @@ Run the given python file or module with a modified asyncio policy replacing
 the default event loop with an interactive loop.
 If no argument is given, it simply runs an asynchronous python console.
 ''')
-    parser.add_argument('--serve', metavar='[HOST:]PORT',
+    parser.add_argument('--serve', '-s', metavar='[HOST:]PORT',
                         help='serve a console on the given interface instead')
-    parser.add_argument('-m', dest='module', action='store_true',
+    parser.add_argument('--module', '-m', dest='module', action='store_true',
                         help='run a python module')
     parser.add_argument('filename', metavar='FILE', nargs='?',
                         help='python file or module to run')
@@ -41,7 +41,7 @@ def run_apython(args=None):
         if namespace.module:
             sys.argv = [None] + namespace.args
             sys.path.insert(0, '')
-            events.set_interactive_policy(namespace.serve)
+            events.set_interactive_policy(serve=namespace.serve)
             runpy.run_module(namespace.filename,
                              run_name='__main__',
                              alter_sys=True)
@@ -49,7 +49,7 @@ def run_apython(args=None):
             sys.argv = [None] + namespace.args
             path = os.path.dirname(os.path.abspath(namespace.filename))
             sys.path.insert(0, path)
-            events.set_interactive_policy(namespace.serve)
+            events.set_interactive_policy(serve=namespace.serve)
             runpy.run_path(namespace.filename,
                            run_name='__main__')
         else:
