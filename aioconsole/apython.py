@@ -81,10 +81,13 @@ def run_apython_in_subprocess(args=None):
     process = subprocess.Popen(
         proc_args + args,
         bufsize=0,
-        stdin=subprocess.PIPE)
+        universal_newlines=True,
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     while True:
         try:
-            raw = input() + os.linesep
+            prompt = wait_for_prompt(process.stderr, sys.stderr)
+            raw = input(prompt) + os.linesep
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
         except EOFError:
@@ -92,7 +95,23 @@ def run_apython_in_subprocess(args=None):
             process.wait()
             return
         else:
-            process.stdin.write(raw.encode())
+            process.stdin.write(raw)
+
+
+def wait_for_prompt(src, dest, targets='.>', current='\n'):
+    while True:
+        # Prompt detection
+        if current.endswith('\n'):
+            current = reference = src.read(1)
+            while current.endswith(reference) and reference in targets:
+                current += src.read(1)
+            if len(current) > 1 and current.endswith(' '):
+                return current
+        # Regular read
+        else:
+            current = src.read(1)
+        # Write
+        dest.write(current)
 
 
 if __name__ == '__main__':
