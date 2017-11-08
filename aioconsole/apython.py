@@ -2,6 +2,7 @@
 import os
 import sys
 import runpy
+import ctypes
 import signal
 import argparse
 import subprocess
@@ -87,12 +88,13 @@ def run_apython_in_subprocess(args=None):
     while True:
         try:
             prompt = wait_for_prompt(process.stderr, sys.stderr)
-            raw = input(prompt) + os.linesep
+            raw = input_with_stderr_prompt(prompt) + os.linesep
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
         except EOFError:
             process.stdin.close()
             process.wait()
+            sys.stderr.write(process.stderr.read())
             return
         else:
             process.stdin.write(raw)
@@ -103,8 +105,9 @@ def wait_for_prompt(src, dest, targets='.>', current='\n'):
         # Prompt detection
         if current.endswith('\n'):
             current = reference = src.read(1)
-            while current.endswith(reference) and reference in targets:
-                current += src.read(1)
+            if reference in targets:
+                while current.endswith(reference):
+                    current += src.read(1)
             if len(current) > 1 and current.endswith(' '):
                 return current
         # Regular read
@@ -112,6 +115,18 @@ def wait_for_prompt(src, dest, targets='.>', current='\n'):
             current = src.read(1)
         # Write
         dest.write(current)
+
+
+def input_with_stderr_prompt(prompt=''):
+    api = ctypes.pythonapi
+    call_readline = api.PyOS_Readline
+    call_readline.restype = ctypes.c_char_p
+    fin = ctypes.c_void_p.in_dll(api, 'stdin')
+    ferr = ctypes.c_void_p.in_dll(api, 'stderr')
+    result = call_readline(fin, ferr, prompt.encode())
+    if len(result) == 0:
+        raise EOFError
+    return result.decode().rstrip('\n')
 
 
 if __name__ == '__main__':
