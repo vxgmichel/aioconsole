@@ -17,7 +17,7 @@ Run the given python file or module with a modified asyncio policy replacing
 the default event loop with an interactive loop.
 If no argument is given, it simply runs an asynchronous python console.
 ''')
-    parser.add_argument('--serve', '-s', metavar='[HOST:]PORT',
+    parser.add_argument('--serve', '-s', metavar='[HOST:] PORT',
                         help='serve a console on the given interface instead')
     parser.add_argument('--module', '-m', dest='module', action='store_true',
                         help='run a python module')
