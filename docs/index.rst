@@ -109,7 +109,7 @@ So we can access the ``history`` of received messages:
     >>> sum(loop.history.values(), [])
     []
 
-Let’s send a message to the server using a ``netcat`` client:
+Let’s send a message to the server using a netcat_ client:
 
 .. sourcecode:: console
 
@@ -163,11 +163,11 @@ modify the code:
     The console is being served on 0.0.0.0:8889
     The echo service is being served on 127.0.0.1:8888
 
-Then connect using ``netcat``:
+Then connect using netcat_ and optionally, rlwrap_:
 
 .. sourcecode:: console
 
-    $ nc localhost 8889
+    $ rlwrap nc localhost 8889
     Python 3.5.0 (default, Sep 7 2015, 14:12:03)
     [GCC 4.8.4] on linux
     Type "help", "copyright", "credits" or "license" for more information.
@@ -278,11 +278,11 @@ previous `example`_ provides this functionality through the
     The command line interface is being served on 127.0.0.1:8889
     The echo service is being served on 127.0.0.1:8888
 
-It’s now possible to access the interface using ``netcat``:
+It’s now possible to access the interface using netcat_:
 
 .. sourcecode:: console
 
-    $ nc localhost 8889
+    $ rlwrap nc localhost 8889
     Welcome to the CLI interface of echo!
     Try:
      * 'help' to display the help message
@@ -325,3 +325,5 @@ Vincent Michel: vxgmichel@gmail.com
 .. _slightly modified version: `example/echo.py`_
 .. _example: `example/cli.py`_
 .. _PyPI: aioconsole_
+.. _netcat: https://linux.die.net/man/1/nc
+.. _rlwrap: https://linux.die.net/man/1/rlwrap
