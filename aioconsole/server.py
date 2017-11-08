@@ -1,7 +1,6 @@
 """Serve the python console using socket communication."""
 
 import asyncio
-import argparse
 
 from . import code
 
@@ -66,16 +65,3 @@ def parse_server(server, parser=None):
             raise ValueError(msg)
         parser.error(msg)
     return host, port
-
-
-def parse_args(args=None):
-    parser = argparse.ArgumentParser(
-        description="Serve the python console.")
-    parser.add_argument(
-        'server',
-        metavar='[HOST:]PORT',
-        type=str,
-        default=8000,
-        help='default is localhost:8000')
-    namespace = parser.parse_args(args)
-    return parse_server(namespace.server, parser)
