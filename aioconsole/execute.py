@@ -1,6 +1,5 @@
 """Provide an asynchronous equivalent *to exec*."""
 
-import sys
 import ast
 import codeop
 import asyncio

@@ -193,7 +193,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             data = '\n'
         if not data.endswith('\n'):
             raise EOFError()
-        return data
+        return data.rstrip('\n')
 
     def write(self, data):
         return self.writer.write(data.encode())
