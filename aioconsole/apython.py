@@ -54,7 +54,8 @@ def run_apython(args=None):
     if readline and namespace.readline and not namespace.serve:
         if rlcompleter:
             readline.parse_and_bind("tab: complete")
-        return run_apython_in_subprocess(args)
+        code = run_apython_in_subprocess(args)
+        sys.exit(code)
 
     try:
         sys._argv = sys.argv
@@ -81,8 +82,11 @@ def run_apython(args=None):
 
 
 def run_apython_in_subprocess(args=None):
+    # Get arguments
     if args is None:
         args = sys.argv[1:]
+
+    # Create subprocess
     proc_args = [sys.executable, '-m', 'aioconsole', '--no-readline']
     process = subprocess.Popen(
         proc_args + args,
@@ -90,7 +94,9 @@ def run_apython_in_subprocess(args=None):
         universal_newlines=True,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    while True:
+
+    # Loop over prompts
+    while process.poll() is None:
         try:
             prompt = wait_for_prompt(process.stderr, sys.stderr)
             raw = input_with_stderr_prompt(prompt) + os.linesep
@@ -98,26 +104,35 @@ def run_apython_in_subprocess(args=None):
             process.send_signal(signal.SIGINT)
         except EOFError:
             process.stdin.close()
-            process.wait()
-            sys.stderr.write(process.stderr.read())
-            return
         else:
             process.stdin.write(raw)
 
+    # Clean up
+    sys.stderr.write(process.stderr.read())
+    return process.returncode
 
-def wait_for_prompt(src, dest, targets='.>', current='\n'):
+
+def wait_for_prompt(src, dest, targets='.>', current=os.linesep):
+
+    # Read exactly one byte
+    def read_one():
+        value = src.read(1)
+        if value:
+            return value
+        raise EOFError
+
     while True:
         # Prompt detection
-        if current.endswith('\n'):
-            current = reference = src.read(1)
+        if current.endswith(os.linesep[-1]):
+            current = reference = read_one()
             if reference in targets:
                 while current.endswith(reference):
-                    current += src.read(1)
+                    current += read_one()
             if len(current) > 1 and current.endswith(' '):
                 return current
         # Regular read
         else:
-            current = src.read(1)
+            current = read_one()
         # Write
         dest.write(current)
 
@@ -131,7 +146,7 @@ def input_with_stderr_prompt(prompt=''):
     result = call_readline(fin, ferr, prompt.encode())
     if len(result) == 0:
         raise EOFError
-    return result.decode().rstrip('\n')
+    return result.decode().rstrip(os.linesep)
 
 
 if __name__ == '__main__':
