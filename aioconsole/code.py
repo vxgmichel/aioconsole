@@ -181,7 +181,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         return more
 
     @asyncio.coroutine
-    def raw_input(self, prompt=""):
+    def raw_input(self, prompt=''):
         self.write(prompt)
         yield from self.flush()
         data = (yield from self.reader.readline())
@@ -192,7 +192,7 @@ class AsynchronousConsole(code.InteractiveConsole):
                 raise SystemExit
             data = '\n'
         if not data.endswith('\n'):
-            raise EOFError()
+            raise EOFError
         return data.rstrip('\n')
 
     def write(self, data):

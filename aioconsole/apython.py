@@ -99,7 +99,7 @@ def run_apython_in_subprocess(args=None):
     while process.poll() is None:
         try:
             prompt = wait_for_prompt(process.stderr, sys.stderr)
-            raw = input_with_stderr_prompt(prompt) + os.linesep
+            raw = input_with_stderr_prompt(prompt) + '\n'
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
         except EOFError:
@@ -112,7 +112,7 @@ def run_apython_in_subprocess(args=None):
     return process.returncode
 
 
-def wait_for_prompt(src, dest, targets='.>', current=os.linesep):
+def wait_for_prompt(src, dest, targets='.>', current='\n'):
 
     # Read exactly one byte
     def read_one():
@@ -123,7 +123,7 @@ def wait_for_prompt(src, dest, targets='.>', current=os.linesep):
 
     while True:
         # Prompt detection
-        if current.endswith(os.linesep[-1]):
+        if current.endswith('\n'):
             current = reference = read_one()
             if reference in targets:
                 while current.endswith(reference):
@@ -146,7 +146,7 @@ def input_with_stderr_prompt(prompt=''):
     result = call_readline(fin, ferr, prompt.encode())
     if len(result) == 0:
         raise EOFError
-    return result.decode().rstrip(os.linesep)
+    return result.decode().rstrip('\n')
 
 
 if __name__ == '__main__':

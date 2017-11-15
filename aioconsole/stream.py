@@ -154,5 +154,5 @@ def ainput(prompt=None, *, loop=None):
     data = (yield from reader.readline()).decode()
     # Return or raise EOF
     if not data.endswith('\n'):
-            raise EOFError()
-    return data
+        raise EOFError
+    return data.rstrip('\n')
