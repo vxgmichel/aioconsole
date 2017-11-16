@@ -139,11 +139,18 @@ def wait_for_prompt(src, dest, targets='.>', current='\n'):
 
 def input_with_stderr_prompt(prompt=''):
     api = ctypes.pythonapi
+    # Get standard streams
+    try:
+        fin = ctypes.c_void_p.in_dll(api, 'stdin')
+        ferr = ctypes.c_void_p.in_dll(api, 'stderr')
+    # Cygwin fallback
+    except ValueError:
+        return input(prompt)
+    # Call readline
     call_readline = api.PyOS_Readline
     call_readline.restype = ctypes.c_char_p
-    fin = ctypes.c_void_p.in_dll(api, 'stdin')
-    ferr = ctypes.c_void_p.in_dll(api, 'stderr')
     result = call_readline(fin, ferr, prompt.encode())
+    # Decode result
     if len(result) == 0:
         raise EOFError
     return result.decode().rstrip('\n')
