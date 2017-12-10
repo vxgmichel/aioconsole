@@ -145,6 +145,7 @@ def input_with_stderr_prompt(prompt=''):
         ferr = ctypes.c_void_p.in_dll(api, 'stderr')
     # Cygwin fallback
     except ValueError:
+        raise
         return input(prompt)
     # Call readline
     call_readline = api.PyOS_Readline

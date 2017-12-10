@@ -7,6 +7,7 @@ import codeop
 import signal
 import asyncio
 import functools
+import traceback
 
 from . import stream
 from . import compat
@@ -16,7 +17,7 @@ EXTRA_MESSAGE = """\
 ---
 This console is running in an asyncio event loop.
 It allows you to wait for coroutines using the '{0}' syntax.
-Try: {0} asyncio.sleep(1, result=3, loop=loop)
+Try: {0} asyncio.sleep(1, result=3)
 ---""".format('await' if compat.PY35 else 'yield from')
 
 
@@ -204,6 +205,38 @@ class AsynchronousConsole(code.InteractiveConsole):
             yield from self.writer.drain()
         except ConnectionResetError:
             pass
+
+    # Re-implement showtraceback and showsyntaxerror
+    # to ignore sys.excepthook (set by ubuntu apport for instance)
+
+    def showtraceback(self):
+        sys.last_type, sys.last_value, last_tb = ei = sys.exc_info()
+        sys.last_traceback = last_tb
+        try:
+            lines = traceback.format_exception(ei[0], ei[1], last_tb.tb_next)
+            self.write(''.join(lines))
+        finally:
+            last_tb = ei = None
+
+    def showsyntaxerror(self, filename=None):
+        type, value, tb = sys.exc_info()
+        sys.last_type = type
+        sys.last_value = value
+        sys.last_traceback = tb
+        if filename and type is SyntaxError:
+            # Work hard to stuff the correct filename in the exception
+            try:
+                msg, (dummy_filename, lineno, offset, line) = value.args
+            except ValueError:
+                # Not the format we expect; leave it alone
+                pass
+            else:
+                # Stuff in the right filename
+                value = SyntaxError(msg, (filename, lineno, offset, line))
+                sys.last_value = value
+        lines = traceback.format_exception_only(type, value)
+        self.write(''.join(lines))
+
 
 
 @asyncio.coroutine
