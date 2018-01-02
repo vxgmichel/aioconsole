@@ -4,15 +4,16 @@ import pytest
 
 from aioconsole import apython
 
+
 @pytest.fixture(params=['Darwin', 'Linux'])
 def platform(request):
     return request.param
+
 
 @patch('aioconsole.apython.ctypes')
 @patch('aioconsole.apython.platform')
 def test_input_with_stderr_prompt_darwin(m_platform, m_ctypes, platform):
     m_platform.system.return_value = platform
-
 
     if platform == 'Darwin':
         stdin = '__stdinp'
