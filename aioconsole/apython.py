@@ -5,7 +5,6 @@ import sys
 import runpy
 import ctypes
 import signal
-import platform
 import argparse
 import subprocess
 
@@ -142,7 +141,7 @@ def input_with_stderr_prompt(prompt=''):
     api = ctypes.pythonapi
     # Get standard streams
     try:
-        if platform.system() == 'Darwin':
+        if sys.platform == 'darwin':
             stdin = '__stdinp'
             stderr = '__stderrp'
         else:

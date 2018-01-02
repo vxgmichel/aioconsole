@@ -11,11 +11,11 @@ def platform(request):
 
 
 @patch('aioconsole.apython.ctypes')
-@patch('aioconsole.apython.platform')
-def test_input_with_stderr_prompt_darwin(m_platform, m_ctypes, platform):
-    m_platform.system.return_value = platform
+@patch('aioconsole.apython.sys')
+def test_input_with_stderr_prompt_darwin(m_sys, m_ctypes, platform):
+    m_sys.platform = platform
 
-    if platform == 'Darwin':
+    if platform == 'darwin':
         stdin = '__stdinp'
         stderr = '__stderrp'
     else:
