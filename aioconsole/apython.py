@@ -5,6 +5,7 @@ import sys
 import runpy
 import ctypes
 import signal
+import platform
 import argparse
 import subprocess
 
@@ -141,8 +142,14 @@ def input_with_stderr_prompt(prompt=''):
     api = ctypes.pythonapi
     # Get standard streams
     try:
-        fin = ctypes.c_void_p.in_dll(api, 'stdin')
-        ferr = ctypes.c_void_p.in_dll(api, 'stderr')
+        if platform.system() == 'Darwin':
+            stdin = '__stdinp'
+            stderr = '__stderrp'
+        else:
+            stdin = 'stdin'
+            stderr = 'stderr'
+        fin = ctypes.c_void_p.in_dll(api, stdin)
+        ferr = ctypes.c_void_p.in_dll(api, stderr)
     # Cygwin fallback
     except ValueError:
         raise
