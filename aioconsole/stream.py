@@ -1,10 +1,20 @@
 """Provide an asychronous equivalent to *input*."""
 
-import io
 import sys
 import asyncio
 
 from . import compat
+
+
+def protect_standard_streams(stream):
+    if stream._transport is None:
+        return
+    try:
+        fileno = stream._transport.get_extra_info('pipe').fileno()
+    except (ValueError, OSError):
+        return
+    if fileno < 3:
+        stream._transport._pipe = None
 
 
 class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
@@ -15,17 +25,15 @@ class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
 
 
 class StandardStreamReader(asyncio.StreamReader):
+
     if compat.PY34:
-        def __del__(self):
-            if self._transport and self._transport.get_extra_info('pipe').fileno() < 3:
-                self._transport._pipe = None
+        __del__ = protect_standard_streams
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
+
     if compat.PY34:
-        def __del__(self):
-            if self._transport and self._transport.get_extra_info('pipe').fileno() < 3:
-                self._transport._pipe = None
+        __del__ = protect_standard_streams
 
     def write(self, data):
         if isinstance(data, str):
