@@ -139,19 +139,19 @@ def wait_for_prompt(src, dest, targets='.>', current='\n'):
 
 def input_with_stderr_prompt(prompt=''):
     api = ctypes.pythonapi
+    # Cross-platform compatibility
+    if sys.platform == 'darwin':
+        stdin = '__stdinp'
+        stderr = '__stderrp'
+    else:
+        stdin = 'stdin'
+        stderr = 'stderr'
     # Get standard streams
     try:
-        if sys.platform == 'darwin':
-            stdin = '__stdinp'
-            stderr = '__stderrp'
-        else:
-            stdin = 'stdin'
-            stderr = 'stderr'
         fin = ctypes.c_void_p.in_dll(api, stdin)
         ferr = ctypes.c_void_p.in_dll(api, stderr)
     # Cygwin fallback
     except ValueError:
-        raise
         return input(prompt)
     # Call readline
     call_readline = api.PyOS_Readline
