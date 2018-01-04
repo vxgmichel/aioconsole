@@ -114,7 +114,6 @@ def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
     yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
     write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
     transport, _ = yield from write_connect
-    loop.remove_reader(transport.get_extra_info('pipe').fileno())
     writer = StandardStreamWriter(transport, protocol, reader, loop)
     return reader, writer
 
