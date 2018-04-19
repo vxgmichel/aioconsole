@@ -60,6 +60,7 @@ Type '<command> -h' to display the help message of <command>."""
 
     @asyncio.coroutine
     def runsource(self, source, filename=None):
+        # Parse the source
         if source.strip().endswith('\\'):
             return True
         source = source.replace('\\\n', '')
@@ -67,20 +68,32 @@ Type '<command> -h' to display the help message of <command>."""
             name, *args = source.split()
         except ValueError:
             return False
+
+        # Get the command
         if name not in self.commands:
             self.write("Command '{0}' does not exist.\n".format(name))
             yield from self.flush()
             return False
         corofunc, parser = self.commands[name]
+
+        # Patch print_message so the parser prints to our console
+        parser._print_message = lambda message, file=None: \
+            message and self.write(message)
+
+        # Parse arguments
         try:
             namespace = parser.parse_args(args)
         except SystemExit:
             return False
+
+        # Run the coroutine
         coro = corofunc(self.reader, self.writer, **vars(namespace))
         try:
             result = yield from coro
         except SystemExit:
             raise
+
+        # Prompt the traceback or result
         except:
             self.showtraceback()
         else:
