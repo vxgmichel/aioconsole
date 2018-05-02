@@ -66,8 +66,8 @@ Simple usage
 ------------
 
 The following example demonstrates the use of ``await`` inside the console:
-
-.. sourcecode:: python3
+    
+.. sourcecode:: console
 
     $ apython
     Python 3.5.0 (default, Sep 7 2015, 14:12:03)
@@ -78,6 +78,9 @@ The following example demonstrates the use of ``await`` inside the console:
     It allows you to wait for coroutines using the 'await' syntax.
     Try: await asyncio.sleep(1, result=3, loop=loop)
     ---
+    
+.. sourcecode:: python3
+
     >>> await asyncio.sleep(1, result=3)
     # Wait one second...
     3
