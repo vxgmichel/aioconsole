@@ -4,6 +4,7 @@ import sys
 import random
 import asyncio
 import argparse
+import shlex
 
 from . import code
 
@@ -65,7 +66,7 @@ Type '<command> -h' to display the help message of <command>."""
             return True
         source = source.replace('\\\n', '')
         try:
-            name, *args = source.split()
+            name, *args = shlex.split(source)
         except ValueError:
             return False
 
