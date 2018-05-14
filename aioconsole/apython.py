@@ -2,6 +2,7 @@
 
 import os
 import sys
+import ast
 import runpy
 import ctypes
 import signal
@@ -27,8 +28,13 @@ def parse_args(args=None):
         help='run a python module')
     parser.add_argument(
         '--no-readline', dest='readline', action='store_false',
-        help='Force readline disabling')
+        help='force readline disabling')
     parser.add_argument(
+        '--banner', help='provide a custom banner')
+    parser.add_argument(
+        '--locals', type=ast.literal_eval,
+        help='provide custom locals as a dictionary')
+    group.add_argument(
         'filename', metavar='FILE', nargs='?',
         help='python file or module to run')
     parser.add_argument(
@@ -63,19 +69,28 @@ def run_apython(args=None):
         if namespace.module:
             sys.argv = [None] + namespace.args
             sys.path.insert(0, '')
-            events.set_interactive_policy(serve=namespace.serve)
-            runpy.run_module(namespace.filename,
+            events.set_interactive_policy(
+                locals=namespace.locals,
+                banner=namespace.banner,
+                serve=namespace.serve)
+            runpy.run_module(namespace.module,
                              run_name='__main__',
                              alter_sys=True)
         elif namespace.filename:
             sys.argv = [None] + namespace.args
             path = os.path.dirname(os.path.abspath(namespace.filename))
             sys.path.insert(0, path)
-            events.set_interactive_policy(serve=namespace.serve)
+            events.set_interactive_policy(
+                locals=namespace.locals,
+                banner=namespace.banner,
+                serve=namespace.serve)
             runpy.run_path(namespace.filename,
                            run_name='__main__')
         else:
-            events.run_console(serve=namespace.serve)
+            events.run_console(
+                locals=namespace.locals,
+                banner=namespace.banner,
+                serve=namespace.serve)
     finally:
         sys.argv = sys._argv
         sys.path = sys._path
