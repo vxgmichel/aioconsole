@@ -17,15 +17,24 @@ Run the given python file or module with a modified asyncio policy replacing
 the default event loop with an interactive loop.
 If no argument is given, it simply runs an asynchronous python console."""
 
+USAGE = """\
+usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
+               [--banner BANNER] [--locals LOCALS]
+               [-m MODULE | FILE] ...
+""".split('usage: ')[1]
+
 
 def parse_args(args=None):
-    parser = argparse.ArgumentParser(prog='apython', description=DESCRIPTION)
+    parser = argparse.ArgumentParser(
+        prog='apython',
+        description=DESCRIPTION,
+        usage=USAGE)
+
+    # Options
+
     parser.add_argument(
         '--serve', '-s', metavar='[HOST:] PORT',
         help='serve a console on the given interface instead')
-    parser.add_argument(
-        '--module', '-m', dest='module', action='store_true',
-        help='run a python module')
     parser.add_argument(
         '--no-readline', dest='readline', action='store_false',
         help='force readline disabling')
@@ -34,15 +43,25 @@ def parse_args(args=None):
     parser.add_argument(
         '--locals', type=ast.literal_eval,
         help='provide custom locals as a dictionary')
+
+    # Input
+
+    group = parser.add_mutually_exclusive_group()
+
+    group.add_argument(
+        '-m', dest='module',
+        help='run a python module')
     group.add_argument(
         'filename', metavar='FILE', nargs='?',
-        help='python file or module to run')
+        help='python file to run')
+
+    # Extra arguments
+
     parser.add_argument(
         'args', metavar='ARGS', nargs=argparse.REMAINDER,
         help='extra arguments')
+
     namespace = parser.parse_args(args)
-    if namespace.module and not namespace.filename:
-        parser.error('A python module is required.')
     if namespace.serve is not None:
         namespace.serve = server.parse_server(namespace.serve, parser)
     return namespace
