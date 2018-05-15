@@ -13,7 +13,10 @@ Programming Language :: Python :: 3
 Programming Language :: Python :: 3.4
 Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
+Programming Language :: Python :: 3.7
 """.splitlines()
+
+pytest_asyncio_version = '==0.8' if sys.version_info.minor == 7 else '<0.6'
 
 setup(
     name="aioconsole",
@@ -22,7 +25,9 @@ setup(
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
 
     setup_requires=['pytest-runner' if TESTING else ''],
-    tests_require=['pytest', 'pytest-asyncio<0.6', 'pytest-cov'],
+    tests_require=['pytest',
+                   'pytest-asyncio{}'.format(pytest_asyncio_version),
+                   'pytest-cov'],
 
     license="GPLv3",
     classifiers=CLASSIFIERS,

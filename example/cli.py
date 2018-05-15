@@ -65,7 +65,7 @@ def main(args=None):
         server = asyncio.get_event_loop().run_until_complete(coro)
         print_server(server, 'command line interface')
     else:
-        asyncio.async(make_cli().interact())
+        asyncio.ensure_future(make_cli().interact())
     return echo.run(host, port)
 
 if __name__ == '__main__':
