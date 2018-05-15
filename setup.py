@@ -16,8 +16,6 @@ Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 """.splitlines()
 
-pytest_asyncio_version = '==0.8' if sys.version_info.minor == 7 else '<0.6'
-
 setup(
     name="aioconsole",
     version="0.1.8.dev0",
@@ -26,7 +24,8 @@ setup(
 
     setup_requires=['pytest-runner' if TESTING else ''],
     tests_require=['pytest',
-                   'pytest-asyncio{}'.format(pytest_asyncio_version),
+                   'pytest-asyncio<0.6;python_version=="3.4"',
+                   'pytest-asyncio>=0.8;python_version>"3.4"',
                    'pytest-cov'],
 
     license="GPLv3",
