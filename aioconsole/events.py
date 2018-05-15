@@ -25,7 +25,7 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
         if serve is None:
             self.console = self.factory(None)
             coro = self.console.interact(banner, stop=True, handle_sigint=True)
-            self.console_task = asyncio.async(coro, loop=self)
+            self.console_task = asyncio.ensure_future(coro, loop=self)
         # Serving console
         else:
             host, port = serve
