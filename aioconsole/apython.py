@@ -12,6 +12,8 @@ import subprocess
 from . import events
 from . import server
 
+ZERO_WIDTH_SPACE = '\u200b'
+
 DESCRIPTION = """\
 Run the given python file or module with a modified asyncio policy replacing
 the default event loop with an interactive loop.
@@ -37,12 +39,15 @@ def parse_args(args=None):
         help='serve a console on the given interface instead')
     parser.add_argument(
         '--no-readline', dest='readline', action='store_false',
-        help='force readline disabling')
+        help='disable readline support')
     parser.add_argument(
         '--banner', help='provide a custom banner')
     parser.add_argument(
         '--locals', type=ast.literal_eval,
         help='provide custom locals as a dictionary')
+    parser.add_argument(
+        '--prompt-control', metavar='PC',
+        help=argparse.SUPPRESS)
 
     # Input
 
@@ -79,7 +84,7 @@ def run_apython(args=None):
     if readline and namespace.readline and not namespace.serve:
         if rlcompleter:
             readline.parse_and_bind("tab: complete")
-        code = run_apython_in_subprocess(args)
+        code = run_apython_in_subprocess(args, namespace.prompt_control)
         sys.exit(code)
 
     try:
@@ -91,7 +96,8 @@ def run_apython(args=None):
             events.set_interactive_policy(
                 locals=namespace.locals,
                 banner=namespace.banner,
-                serve=namespace.serve)
+                serve=namespace.serve,
+                prompt_control=namespace.prompt_control)
             runpy.run_module(namespace.module,
                              run_name='__main__',
                              alter_sys=True)
@@ -102,26 +108,33 @@ def run_apython(args=None):
             events.set_interactive_policy(
                 locals=namespace.locals,
                 banner=namespace.banner,
-                serve=namespace.serve)
+                serve=namespace.serve,
+                prompt_control=namespace.prompt_control)
             runpy.run_path(namespace.filename,
                            run_name='__main__')
         else:
             events.run_console(
                 locals=namespace.locals,
                 banner=namespace.banner,
-                serve=namespace.serve)
+                serve=namespace.serve,
+                prompt_control=namespace.prompt_control)
     finally:
         sys.argv = sys._argv
         sys.path = sys._path
 
 
-def run_apython_in_subprocess(args=None):
+def run_apython_in_subprocess(args, prompt_control):
     # Get arguments
     if args is None:
         args = sys.argv[1:]
+    if prompt_control is None:
+        prompt_control = ZERO_WIDTH_SPACE
 
     # Create subprocess
-    proc_args = [sys.executable, '-m', 'aioconsole', '--no-readline']
+    proc_args = [sys.executable,
+                 '-m', 'aioconsole',
+                 '--no-readline',
+                 '--prompt-control', prompt_control]
     process = subprocess.Popen(
         proc_args + args,
         bufsize=0,
@@ -132,7 +145,8 @@ def run_apython_in_subprocess(args=None):
     # Loop over prompts
     while process.poll() is None:
         try:
-            prompt = wait_for_prompt(process.stderr, sys.stderr)
+            prompt = wait_for_prompt(
+                process.stderr, sys.stderr, prompt_control)
             raw = input_with_stderr_prompt(prompt) + '\n'
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
@@ -146,7 +160,7 @@ def run_apython_in_subprocess(args=None):
     return process.returncode
 
 
-def wait_for_prompt(src, dest, targets='.>', current='\n'):
+def wait_for_prompt(src, dest, prompt_control, current='\n'):
 
     # Read exactly one byte
     def read_one():
@@ -158,12 +172,13 @@ def wait_for_prompt(src, dest, targets='.>', current='\n'):
     while True:
         # Prompt detection
         if current.endswith('\n'):
-            current = reference = read_one()
-            if reference in targets:
-                while current.endswith(reference):
+            current = read_one()
+            if current.startswith(prompt_control):
+                current += read_one()
+                while current[-1] not in (prompt_control, '\n'):
                     current += read_one()
-            if len(current) > 1 and current.endswith(' '):
-                return current
+                if current.endswith(prompt_control):
+                    return current[1:-1]
         # Regular read
         else:
             current = read_one()
