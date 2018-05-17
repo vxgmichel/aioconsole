@@ -32,25 +32,28 @@ class AsynchronousCompiler(codeop.CommandCompiler):
 class AsynchronousConsole(code.InteractiveConsole):
 
     def __init__(self, streams=None, locals=None, filename="<console>",
-                 *, loop=None):
+                 prompt_control=None, *, loop=None):
         super().__init__(locals, filename)
-        self.compile = AsynchronousCompiler()
+        # Process arguments
         if loop is None:
             loop = asyncio.get_event_loop()
         if streams is None:
-            self.streams = stream.get_standard_streams(use_stderr=True,
-                                                       loop=loop)
+            streams = stream.get_standard_streams(use_stderr=True, loop=loop)
         elif isinstance(streams, tuple):
-            self.streams = asyncio.coroutine(lambda: streams)()
-        else:
-            self.streams = streams
+            streams = asyncio.coroutine(lambda x=streams: x)()
+        # Attributes
+        self.streams = streams
+        self.loop = loop
         self.reader = None
         self.writer = None
-        self.loop = loop
+        self.prompt_control = prompt_control
+        self.compile = AsynchronousCompiler()
+        # Populate locals
         self.locals.setdefault('asyncio', asyncio)
         self.locals.setdefault('loop', self.loop)
         self.locals.setdefault('print', self.print)
         self.locals.setdefault('help', self.help)
+        self.locals.setdefault('ainput', self.ainput)
 
     @functools.wraps(print)
     def print(self, *args, **kwargs):
@@ -60,6 +63,19 @@ class AsynchronousConsole(code.InteractiveConsole):
     @functools.wraps(help)
     def help(self, obj):
         self.print(pydoc.render_doc(obj))
+
+    @functools.wraps(stream.ainput)
+    async def ainput(self, prompt='', *, streams=None, use_stderr=False,
+                     loop=None):
+        # Get the console streams by default
+        if streams is None and use_stderr is False:
+            streams = self.reader, self.writer
+        # Wrap the prompt with prompt control characters
+        if self.prompt_control and self.prompt_control not in prompt:
+            prompt = self.prompt_control + prompt + self.prompt_control
+        # Run ainput
+        return await stream.ainput(
+            prompt, streams=streams, use_stderr=use_stderr, loop=loop)
 
     def get_default_banner(self):
         cprt = ('Type "help", "copyright", "credits" '
@@ -117,18 +133,22 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     @asyncio.coroutine
     def interact(self, banner=None, stop=True, handle_sigint=True):
+        # Get the streams
         try:
             if self.streams is not None:
                 self.reader, self.writer = yield from self.streams
         finally:
             self.streams = None
+        # Interact
         try:
             if handle_sigint:
                 self.add_sigint_handler()
             yield from self._interact(banner)
+        # Exit
         except SystemExit:
             if stop:
                 raise
+        # Clean-up
         finally:
             if handle_sigint:
                 self.remove_sigint_handler()
@@ -183,18 +203,7 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     @asyncio.coroutine
     def raw_input(self, prompt=''):
-        self.write(prompt)
-        yield from self.flush()
-        data = (yield from self.reader.readline())
-        try:
-            data = data.decode()
-        except UnicodeDecodeError:
-            if b'\xff\xf4\xff\xfd\x06' in data:
-                raise SystemExit
-            data = '\n'
-        if not data.endswith('\n'):
-            raise EOFError
-        return data.rstrip('\n')
+        return (yield from self.ainput(prompt))
 
     def write(self, data):
         return self.writer.write(data.encode())
