@@ -238,7 +238,6 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.write(''.join(lines))
 
 
-
 @asyncio.coroutine
 def interact(banner=None, streams=None, locals=None, stop=True,
              handle_sigint=True, *, loop=None):

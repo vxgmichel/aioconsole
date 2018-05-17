@@ -1,3 +1,5 @@
+import io
+
 from unittest.mock import patch, call
 
 import pytest
@@ -5,7 +7,7 @@ import pytest
 from aioconsole import apython
 
 
-@pytest.fixture(params=['Darwin', 'Linux'])
+@pytest.fixture(params=['darwin', 'linux'])
 def platform(request):
     return request.param
 
@@ -33,3 +35,11 @@ def test_input_with_stderr_prompt_darwin(m_sys, m_ctypes, platform):
         call(api, stdin),
         call(api, stderr),
     ])
+
+
+def test_basic_apython_usage(capsys):
+    with patch('sys.stdin', new=io.StringIO('1+1\n')):
+        apython.run_apython(['--no-readline', '--banner=test'])
+    out, err = capsys.readouterr()
+    assert out == ''
+    assert err == 'test\n>>> 2\n>>> \n'
