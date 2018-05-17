@@ -27,13 +27,16 @@ def start_interactive_server(factory=code.AsynchronousConsole,
 @asyncio.coroutine
 def start_console_server(host='localhost', port=8000,
                          locals=None, filename="<console>", banner=None,
-                         *, loop=None):
+                         prompt_control=None, *, loop=None):
     factory = lambda streams: code.AsynchronousConsole(
-        streams, locals, filename)
+        streams, locals, filename, prompt_control=prompt_control)
     server = yield from asyncio.start_console_server(
-        factory, host, port, banner, loop=loop)
+        factory,
+        host=host,
+        port=port,
+        banner=banner,
+        loop=loop)
     return server
-
 
 
 def print_server(server, name='console'):

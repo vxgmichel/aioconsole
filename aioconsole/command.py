@@ -11,8 +11,10 @@ from . import code
 
 class AsynchronousCli(code.AsynchronousConsole):
 
-    def __init__(self, commands, streams=None, *, prog=None, loop=None):
-        super().__init__(streams=streams, loop=loop)
+    def __init__(self, commands, streams=None, *, prog=None,
+                 prompt_control=None, loop=None):
+        super().__init__(
+            streams=streams, prompt_control=prompt_control, loop=loop)
         self.prog = prog
         self.commands = dict(commands)
         self.commands['help'] = (
