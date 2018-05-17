@@ -46,7 +46,9 @@ and the ``apython`` script.
     $ pip3 install aioconsole   # from PyPI
     $ python3 setup.py install  # or from the sources
     $ apython -h
-    usage: apython [-h] [--serve [HOST:]PORT] [-m] [FILE] ...
+    usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
+                   [--banner BANNER] [--locals LOCALS]
+                   [-m MODULE | FILE] ...
 
 
 Asynchronous console

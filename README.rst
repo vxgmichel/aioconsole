@@ -46,27 +46,34 @@ and the ``apython`` script.
     $ pip3 install aioconsole   # from PyPI
     $ python3 setup.py install  # or from the sources
     $ apython -h
-    usage: apython [-h] [--serve [HOST:]PORT] [-m] [FILE] ...
+    usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
+                   [--banner BANNER] [--locals LOCALS]
+                   [-m MODULE | FILE] ...
 
     Run the given python file or module with a modified asyncio policy replacing
     the default event loop with an interactive loop. If no argument is given, it
     simply runs an asynchronous python console.
 
     positional arguments:
-      FILE                 python file or module to run
-      ARGS                 extra arguments
+      FILE                  python file to run
+      ARGS                  extra arguments
 
     optional arguments:
-      -h, --help           show this help message and exit
-      --serve [HOST:]PORT  serve a console on the given interface instead
-      -m                   run a python module
+      -h, --help            show this help message and exit
+      --serve [HOST:] PORT, -s [HOST:] PORT
+                            serve a console on the given interface instead
+      --no-readline         force readline disabling
+      --banner BANNER       provide a custom banner
+      --locals LOCALS       provide custom locals as a dictionary
+      -m MODULE             run a python module
+
 
 
 Simple usage
 ------------
 
 The following example demonstrates the use of ``await`` inside the console:
-    
+
 .. sourcecode:: console
 
     $ apython
@@ -78,7 +85,7 @@ The following example demonstrates the use of ``await`` inside the console:
     It allows you to wait for coroutines using the 'await' syntax.
     Try: await asyncio.sleep(1, result=3, loop=loop)
     ---
-    
+
 .. sourcecode:: python3
 
     >>> await asyncio.sleep(1, result=3)
