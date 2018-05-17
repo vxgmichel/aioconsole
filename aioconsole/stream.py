@@ -106,59 +106,75 @@ class NonFileStreamWriter:
 
 
 @asyncio.coroutine
-def open_pipe_connection(pipe_in, pipe_out, *, loop=None):
+def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
-    reader = StandardStreamReader(loop=loop)
-    protocol = StandardStreamReaderProtocol(reader, loop=loop)
+    # Reader
+    in_reader = StandardStreamReader(loop=loop)
+    protocol = StandardStreamReaderProtocol(in_reader, loop=loop)
     yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
-    write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
-    transport, _ = yield from write_connect
-    writer = StandardStreamWriter(transport, protocol, reader, loop)
-    return reader, writer
+    # Out writer
+    out_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
+    out_transport, _ = yield from out_write_connect
+    out_writer = StandardStreamWriter(out_transport, protocol, in_reader, loop)
+    # Err writer
+    err_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_err)
+    err_transport, _ = yield from err_write_connect
+    err_writer = StandardStreamWriter(err_transport, protocol, in_reader, loop)
+    # Return
+    return in_reader, out_writer, err_writer
 
 
 @asyncio.coroutine
-def create_standard_streams(stdin, stdout, loop):
+def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     try:
         if sys.platform == 'win32':
             raise OSError
-        sys.stdin.fileno(), sys.stdout.fileno()
+        stdin.fileno(), stdout.fileno(), stderr.fileno()
     except OSError:
-        reader = NonFileStreamReader(stdin, loop=loop)
-        writer = NonFileStreamWriter(stdout, loop=loop)
+        in_reader = NonFileStreamReader(stdin, loop=loop)
+        out_writer = NonFileStreamWriter(stdout, loop=loop)
+        err_writer = NonFileStreamWriter(stderr, loop=loop)
     else:
-        future = open_pipe_connection(stdin, stdout, loop=loop)
-        reader, writer = yield from future
-    return reader, writer
+        future = open_stantard_pipe_connection(
+            stdin, stdout, stderr, loop=loop)
+        in_reader, out_writer, err_writer = yield from future
+    return in_reader, out_writer, err_writer
 
 
 @asyncio.coroutine
 def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
-    stdin, stdout = sys.stdin, sys.stderr if use_stderr else sys.stdout
-    key = loop, stdin, stdout
+    key = sys.stdin, sys.stdout, sys.stderr
     if cache.get(key) is None:
-        connection = create_standard_streams(stdin, stdout, loop=loop)
+        connection = create_standard_streams(*key, loop=loop)
         cache[key] = yield from connection
-    return cache[key]
+    in_reader, out_writer, err_writer = cache[key]
+    return in_reader, err_writer if use_stderr else out_writer
 
 
 @asyncio.coroutine
-def ainput(prompt=None, *, loop=None):
+def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
     """Asynchronous equivalent to *input*."""
     if loop is None:
         loop = asyncio.get_event_loop()
-    if prompt is None:
-        prompt = ''
-    # Get streams
-    reader, writer = yield from get_standard_streams(loop=loop)
+    # Get standard streams
+    if streams is None:
+        streams = yield from get_standard_streams(
+            use_stderr=use_stderr, loop=loop)
+    reader, writer = streams
     # Write prompt
     writer.write(prompt.encode())
     yield from writer.drain()
     # Get data
-    data = (yield from reader.readline()).decode()
+    data = yield from reader.readline()
+    # Decode data
+    try:
+        data = data.decode()
+    except UnicodeDecodeError:
+        if b'\xff\xf4\xff\xfd\x06' in data:
+            raise SystemExit
     # Return or raise EOF
     if not data.endswith('\n'):
         raise EOFError
