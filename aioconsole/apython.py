@@ -4,15 +4,11 @@ import os
 import sys
 import ast
 import runpy
-import ctypes
-import signal
 import argparse
-import subprocess
 
 from . import events
 from . import server
-
-ZERO_WIDTH_SPACE = '\u200b'
+from . import rlwrap
 
 DESCRIPTION = """\
 Run the given python file or module with a modified asyncio policy replacing
@@ -45,6 +41,9 @@ def parse_args(args=None):
     parser.add_argument(
         '--locals', type=ast.literal_eval,
         help='provide custom locals as a dictionary')
+
+    # Hidden option
+
     parser.add_argument(
         '--prompt-control', metavar='PC',
         help=argparse.SUPPRESS)
@@ -128,88 +127,20 @@ def run_apython_in_subprocess(args, prompt_control):
     if args is None:
         args = sys.argv[1:]
     if prompt_control is None:
-        prompt_control = ZERO_WIDTH_SPACE
+        prompt_control = rlwrap.ZERO_WIDTH_SPACE
+
+    # Check prompt control
+    assert len(prompt_control) == 1
 
     # Create subprocess
     proc_args = [sys.executable,
                  '-m', 'aioconsole',
                  '--no-readline',
                  '--prompt-control', prompt_control]
-    process = subprocess.Popen(
+    return rlwrap.rlwrap_process(
         proc_args + args,
-        bufsize=0,
-        universal_newlines=True,
-        stdin=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-
-    # Loop over prompts
-    while process.poll() is None:
-        try:
-            prompt = wait_for_prompt(
-                process.stderr, sys.stderr, prompt_control)
-            raw = input_with_stderr_prompt(prompt) + '\n'
-        except KeyboardInterrupt:
-            process.send_signal(signal.SIGINT)
-        except EOFError:
-            process.stdin.close()
-        else:
-            process.stdin.write(raw)
-
-    # Clean up
-    sys.stderr.write(process.stderr.read())
-    return process.returncode
-
-
-def wait_for_prompt(src, dest, prompt_control, current='\n'):
-
-    # Read exactly one byte
-    def read_one():
-        value = src.read(1)
-        if value:
-            return value
-        raise EOFError
-
-    while True:
-        # Prompt detection
-        if current.endswith('\n'):
-            current = read_one()
-            if current.startswith(prompt_control):
-                current += read_one()
-                while current[-1] not in (prompt_control, '\n'):
-                    current += read_one()
-                if current.endswith(prompt_control):
-                    return current[1:-1]
-        # Regular read
-        else:
-            current = read_one()
-        # Write
-        dest.write(current)
-
-
-def input_with_stderr_prompt(prompt=''):
-    api = ctypes.pythonapi
-    # Cross-platform compatibility
-    if sys.platform == 'darwin':
-        stdin = '__stdinp'
-        stderr = '__stderrp'
-    else:
-        stdin = 'stdin'
-        stderr = 'stderr'
-    # Get standard streams
-    try:
-        fin = ctypes.c_void_p.in_dll(api, stdin)
-        ferr = ctypes.c_void_p.in_dll(api, stderr)
-    # Cygwin fallback
-    except ValueError:
-        return input(prompt)
-    # Call readline
-    call_readline = api.PyOS_Readline
-    call_readline.restype = ctypes.c_char_p
-    result = call_readline(fin, ferr, prompt.encode())
-    # Decode result
-    if len(result) == 0:
-        raise EOFError
-    return result.decode().rstrip('\n')
+        use_stderr=True,
+        prompt_control=prompt_control)
 
 
 if __name__ == '__main__':

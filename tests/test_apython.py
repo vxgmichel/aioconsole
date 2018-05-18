@@ -4,7 +4,7 @@ from unittest.mock import patch, call
 
 import pytest
 
-from aioconsole import apython
+from aioconsole import apython, rlwrap
 
 
 @pytest.fixture(params=['darwin', 'linux'])
@@ -12,8 +12,8 @@ def platform(request):
     return request.param
 
 
-@patch('aioconsole.apython.ctypes')
-@patch('aioconsole.apython.sys')
+@patch('aioconsole.rlwrap.ctypes')
+@patch('aioconsole.rlwrap.sys')
 def test_input_with_stderr_prompt_darwin(m_sys, m_ctypes, platform):
     m_sys.platform = platform
 
@@ -29,7 +29,7 @@ def test_input_with_stderr_prompt_darwin(m_sys, m_ctypes, platform):
     result = call_readline.return_value
     result.__len__.return_value = 1
 
-    apython.input_with_stderr_prompt()
+    rlwrap.input(use_stderr=True)
 
     m_ctypes.c_void_p.in_dll.assert_has_calls([
         call(api, stdin),
