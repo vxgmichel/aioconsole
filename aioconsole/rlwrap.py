@@ -104,7 +104,7 @@ def input(prompt='', use_stderr=False):
         ferr = ctypes.c_void_p.in_dll(api, stderr)
     # Cygwin fallback
     except ValueError:
-        return input(prompt)
+        return builtins.input(prompt)
     # Call readline
     call_readline = api.PyOS_Readline
     call_readline.restype = ctypes.c_char_p
