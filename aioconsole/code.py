@@ -65,8 +65,8 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.print(pydoc.render_doc(obj))
 
     @functools.wraps(stream.ainput)
-    async def ainput(self, prompt='', *, streams=None, use_stderr=False,
-                     loop=None):
+    @asyncio.coroutine
+    def ainput(self, prompt='', *, streams=None, use_stderr=False, loop=None):
         # Get the console streams by default
         if streams is None and use_stderr is False:
             streams = self.reader, self.writer
@@ -74,8 +74,8 @@ class AsynchronousConsole(code.InteractiveConsole):
         if self.prompt_control and self.prompt_control not in prompt:
             prompt = self.prompt_control + prompt + self.prompt_control
         # Run ainput
-        return await stream.ainput(
-            prompt, streams=streams, use_stderr=use_stderr, loop=loop)
+        return (yield from stream.ainput(
+            prompt, streams=streams, use_stderr=use_stderr, loop=loop))
 
     def get_default_banner(self):
         cprt = ('Type "help", "copyright", "credits" '
