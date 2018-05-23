@@ -43,3 +43,21 @@ def test_basic_apython_usage(capsys):
     out, err = capsys.readouterr()
     assert out == ''
     assert err == 'test\n>>> 2\n>>> \n'
+
+
+def test_apython_with_prompt_control(capsys):
+    with patch('sys.stdin', new=io.StringIO('1+1\n')):
+        apython.run_apython(
+            ['--no-readline', '--banner=test', '--prompt-control=▲'])
+    out, err = capsys.readouterr()
+    assert out == ''
+    assert err == 'test\n▲>>> ▲2\n▲>>> ▲\n'
+
+
+def test_apython_with_ainput(capsys):
+    with patch('sys.stdin', new=io.StringIO('await ainput()\nhello\n')):
+        apython.run_apython(
+            ['--no-readline', '--banner=test', '--prompt-control=▲'])
+    out, err = capsys.readouterr()
+    assert out == ''
+    assert err == 'test\n▲>>> ▲▲▲hello\n▲>>> ▲\n'
