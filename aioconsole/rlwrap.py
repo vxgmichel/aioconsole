@@ -4,6 +4,7 @@ import sys
 import ctypes
 import signal
 import builtins
+import threading
 import subprocess
 
 ZERO_WIDTH_SPACE = '\u200b'
@@ -14,22 +15,27 @@ def rlwrap_process(args=None, use_stderr=False,
     # Get args
     if args is None:
         args = sys.argv[1:]
-    # Piping
-    kwargs = {'stderr' if use_stderr else 'stdout': subprocess.PIPE}
     # Start process
     process = subprocess.Popen(
         args,
         bufsize=0,
         universal_newlines=True,
         stdin=subprocess.PIPE,
-        **kwargs)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     # Readline wrapping
     return _rlwrap(process, use_stderr, prompt_control)
 
 
 def _rlwrap(process, use_stderr=False,
             prompt_control=ZERO_WIDTH_SPACE):
-    # Get destination
+    # Bind unused stream
+    source = process.stdout if use_stderr else process.stderr
+    dest = sys.stdout if use_stderr else sys.stderr
+    pipe_thread = threading.Thread(target=bind, args=(source, dest))
+    pipe_thread.start()
+
+    # Get source and destination
     source = process.stderr if use_stderr else process.stdout
     dest = sys.stderr if use_stderr else sys.stdout
 
@@ -51,7 +57,15 @@ def _rlwrap(process, use_stderr=False,
 
     # Clean up
     dest.write(source.read())
+    pipe_thread.join()
     return process.returncode
+
+
+def bind(src, dest, value=True):
+    while value:
+        value = src.read(1)
+        dest.write(value)
+        dest.flush()
 
 
 def wait_for_prompt(src, dest, prompt_control, current='\n'):
