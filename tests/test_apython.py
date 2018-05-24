@@ -1,45 +1,78 @@
 import io
+import sys
+from contextlib import contextmanager
 
-from unittest.mock import patch, call
+from unittest.mock import Mock, patch, call
 
 import pytest
 
+from aioconsole import compat
 from aioconsole import apython, rlwrap
 
 
-@pytest.fixture(params=['darwin', 'linux'])
+@contextmanager
+def mock_module(name):
+    try:
+        module = sys.modules.get(name)
+        sys.modules[name] = Mock()
+        yield sys.modules[name]
+    finally:
+        if module is None:
+            del sys.modules[name]
+        else:
+            sys.modules[name] = module
+
+
+@pytest.fixture(params=['linux', 'darwin', 'win32'])
 def platform(request):
-    return request.param
+    with patch('sys.platform', new=request.param):
+        yield request.param
 
 
-@patch('aioconsole.rlwrap.ctypes')
-@patch('aioconsole.rlwrap.sys')
-def test_input_with_stderr_prompt_darwin(m_sys, m_ctypes, platform):
-    m_sys.platform = platform
+@pytest.fixture
+def mock_readline(platform):
+    with mock_module('readline'):
+        with patch('aioconsole.rlwrap.ctypes') as m_ctypes:
 
-    if platform == 'darwin':
-        stdin = '__stdinp'
-        stderr = '__stderrp'
-    else:
-        stdin = 'stdin'
-        stderr = 'stderr'
+            if platform == 'darwin':
+                stdin = '__stdinp'
+                stderr = '__stderrp'
+            else:
+                stdin = 'stdin'
+                stderr = 'stderr'
 
-    api = m_ctypes.pythonapi
-    call_readline = api.PyOS_Readline
-    result = call_readline.return_value
-    result.__len__.return_value = 1
+            def readline(fin, ferr, prompt):
+                sys.stderr.write(prompt.decode())
+                return sys.stdin.readline().encode()
 
-    rlwrap.input(use_stderr=True)
+            api = m_ctypes.pythonapi
+            call_readline = api.PyOS_Readline
+            call_readline.side_effect = readline
+            yield call_readline
 
-    m_ctypes.c_void_p.in_dll.assert_has_calls([
-        call(api, stdin),
-        call(api, stderr),
-    ])
+            if call_readline.called:
+                m_ctypes.c_void_p.in_dll.assert_has_calls([
+                    call(api, stdin),
+                    call(api, stderr),
+                ])
 
 
-def test_basic_apython_usage(capsys):
+@pytest.fixture(params=['readline', 'no-readline'])
+def use_readline(request, mock_readline, platform):
+    if request.param == 'readline':
+        return [] if platform == 'win32' else ['--prompt-control=▲']
+    return ['--no-readline']
+
+
+def test_input_with_stderr_prompt(mock_readline):
+    with patch('sys.stdin', new=io.StringIO('test\n')):
+        assert rlwrap.input(use_stderr=True) == 'test'
+
+
+def test_basic_apython_usage(capsys, use_readline):
     with patch('sys.stdin', new=io.StringIO('1+1\n')):
-        apython.run_apython(['--no-readline', '--banner=test'])
+        with pytest.raises(SystemExit):
+            apython.run_apython(['--banner=test'] + use_readline)
     out, err = capsys.readouterr()
     assert out == ''
     assert err == 'test\n>>> 2\n>>> \n'
@@ -47,17 +80,42 @@ def test_basic_apython_usage(capsys):
 
 def test_apython_with_prompt_control(capsys):
     with patch('sys.stdin', new=io.StringIO('1+1\n')):
-        apython.run_apython(
-            ['--no-readline', '--banner=test', '--prompt-control=▲'])
+        with pytest.raises(SystemExit):
+            apython.run_apython(
+                ['--banner=test', '--prompt-control=▲', '--no-readline'])
     out, err = capsys.readouterr()
     assert out == ''
     assert err == 'test\n▲>>> ▲2\n▲>>> ▲\n'
 
 
-def test_apython_with_ainput(capsys):
-    with patch('sys.stdin', new=io.StringIO('await ainput()\nhello\n')):
-        apython.run_apython(
-            ['--no-readline', '--banner=test', '--prompt-control=▲'])
+def test_apython_with_prompt_control_and_ainput(capsys):
+    input_string = "{} ainput()\nhello\n".format(
+        'await' if compat.PY35 else 'yield from')
+    with patch('sys.stdin', new=io.StringIO(input_string)):
+        with pytest.raises(SystemExit):
+            apython.run_apython(
+                ['--no-readline', '--banner=test', '--prompt-control=▲'])
     out, err = capsys.readouterr()
     assert out == ''
     assert err == 'test\n▲>>> ▲▲▲hello\n▲>>> ▲\n'
+
+
+def test_apython_with_ainput(capsys, use_readline):
+    input_string = "{} ainput()\nhello\n".format(
+        'await' if compat.PY35 else 'yield from')
+    with patch('sys.stdin', new=io.StringIO(input_string)):
+        with pytest.raises(SystemExit):
+            apython.run_apython(['--banner=test'] + use_readline)
+    out, err = capsys.readouterr()
+    assert out == ''
+    assert err == 'test\n>>> hello\n>>> \n'
+
+
+def test_apython_with_stdout_logs(capsys, use_readline):
+    with patch('sys.stdin', new=io.StringIO(
+            'import sys; sys.stdout.write("logging")\n')):
+        with pytest.raises(SystemExit):
+            apython.run_apython(['--banner=test'] + use_readline)
+    out, err = capsys.readouterr()
+    assert out == 'logging'
+    assert err == 'test\n>>> 7\n>>> \n'
