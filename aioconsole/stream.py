@@ -26,14 +26,12 @@ class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
 
 class StandardStreamReader(asyncio.StreamReader):
 
-    if compat.PY34:
-        __del__ = protect_standard_streams
+    __del__ = protect_standard_streams
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
 
-    if compat.PY34:
-        __del__ = protect_standard_streams
+    __del__ = protect_standard_streams
 
     def write(self, data):
         if isinstance(data, str):
