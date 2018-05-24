@@ -45,14 +45,13 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
             asyncio.Future.cancel(self.console_task)
         super().close()
 
-    if compat.PY34:
-        def __del__(self):
-            if self.console_task and self.console_task.done():
-                self.console_task.exception()
-            try:
-                super().__del__()
-            except AttributeError:
-                pass
+    def __del__(self):
+        if self.console_task and self.console_task.done():
+            self.console_task.exception()
+        try:
+            super().__del__()
+        except AttributeError:
+            pass
 
 
 class InteractiveEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
