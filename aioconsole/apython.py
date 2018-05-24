@@ -74,17 +74,19 @@ def parse_args(args=None):
 def run_apython(args=None):
     namespace = parse_args(args)
 
-    try:
-        import readline
-        import rlcompleter
-    except ImportError:
-        readline, rlcompleter = None, None
+    if namespace.readline and not namespace.serve and sys.platform != 'win32':
 
-    if readline and namespace.readline and not namespace.serve:
-        if rlcompleter:
-            readline.parse_and_bind("tab: complete")
-        code = run_apython_in_subprocess(args, namespace.prompt_control)
-        sys.exit(code)
+        try:
+            import readline
+            import rlcompleter
+        except ImportError:
+            readline, rlcompleter = None, None
+
+        if readline:
+            if rlcompleter:
+                readline.parse_and_bind("tab: complete")
+            code = run_apython_in_subprocess(args, namespace.prompt_control)
+            sys.exit(code)
 
     try:
         sys._argv = sys.argv
@@ -120,6 +122,8 @@ def run_apython(args=None):
     finally:
         sys.argv = sys._argv
         sys.path = sys._path
+
+    sys.exit()
 
 
 def run_apython_in_subprocess(args, prompt_control):
