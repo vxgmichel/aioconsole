@@ -7,6 +7,8 @@ import builtins
 import threading
 import subprocess
 
+from . import compat
+
 ZERO_WIDTH_SPACE = '\u200b'
 
 
@@ -106,7 +108,7 @@ def input(prompt='', use_stderr=False):
         return builtins.input(prompt)
     api = ctypes.pythonapi
     # Cross-platform compatibility
-    if sys.platform == 'darwin':
+    if compat.platform == 'darwin':
         stdin = '__stdinp'
         stderr = '__stderrp'
     else:

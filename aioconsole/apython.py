@@ -9,6 +9,7 @@ import argparse
 from . import events
 from . import server
 from . import rlwrap
+from . import compat
 
 DESCRIPTION = """\
 Run the given python file or module with a modified asyncio policy replacing
@@ -74,7 +75,8 @@ def parse_args(args=None):
 def run_apython(args=None):
     namespace = parse_args(args)
 
-    if namespace.readline and not namespace.serve and sys.platform != 'win32':
+    if namespace.readline and not namespace.serve and \
+       compat.platform != 'win32':
 
         try:
             import readline
