@@ -16,7 +16,7 @@ from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 @contextmanager
 def stdcontrol(event_loop, monkeypatch):
     # PS1
-    monkeypatch.setattr('sys.ps1', "[Hello!]")
+    monkeypatch.setattr('sys.ps1', "[Hello!]", raising=False)
     # Stdin control
     stdin_read, stdin_write = os.pipe()
     monkeypatch.setattr('sys.stdin', open(stdin_read))
@@ -104,7 +104,10 @@ def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
         # Wait for banner
         yield from assert_stream(reader, banner)
         # Send SIGINT
-        os.kill(os.getpid(), signal.SIGINT)
+        if sys.platform == 'win32':
+            signal.getsignal(signal.SIGINT)(signal.SIGINT, None)
+        else:
+            os.kill(os.getpid(), signal.SIGINT)
         # Wait for ps1
         yield from assert_stream(reader, sys.ps1)
         yield from assert_stream(reader, "KeyboardInterrupt")
