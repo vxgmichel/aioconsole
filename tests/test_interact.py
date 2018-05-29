@@ -4,6 +4,7 @@ import os
 import sys
 import signal
 import asyncio
+from unittest.mock import Mock
 from contextlib import contextmanager
 
 import pytest
@@ -37,6 +38,15 @@ def stdcontrol(event_loop, monkeypatch):
 def assert_stream(stream, expected):
     for line in expected.splitlines():
         assert line == (yield from stream.readline()).decode().strip('\n')
+
+
+@pytest.fixture(params=['unix', 'not-unix'])
+def signaling(request, monkeypatch, event_loop):
+    if request.param == 'not-unix':
+        m = Mock(side_effect=NotImplementedError)
+        monkeypatch.setattr(event_loop, 'add_signal_handler', m)
+        monkeypatch.setattr(event_loop, 'remove_signal_handler', m)
+    yield request.param
 
 
 @pytest.mark.asyncio
@@ -87,7 +97,7 @@ def test_interact_syntax_error(event_loop, monkeypatch):
 
 
 @pytest.mark.asyncio
-def test_interact_keyboard_interrupt(event_loop, monkeypatch):
+def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         # Start interaction
         banner = "A BANNER"
