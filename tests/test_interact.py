@@ -15,23 +15,22 @@ from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 
 @contextmanager
 def stdcontrol(event_loop, monkeypatch):
-    with monkeypatch.context() as m:
-        # PS1
-        m.setattr('sys.ps1', "[Hello!]")
-        # Stdin control
-        stdin_read, stdin_write = os.pipe()
-        m.setattr('sys.stdin', open(stdin_read))
-        writer = NonFileStreamWriter(open(stdin_write, 'w'), loop=event_loop)
-        # Stdout control
-        m.setattr(sys, 'stdout', io.StringIO())
-        # Stderr control
-        stderr_read, stderr_write = os.pipe()
-        m.setattr('sys.stderr', open(stderr_write, 'w'))
-        reader = NonFileStreamReader(open(stderr_read), loop=event_loop)
-        # Yield
-        yield reader, writer
-        # Check
-        assert sys.stdout.getvalue() == ''
+    # PS1
+    monkeypatch.setattr('sys.ps1', "[Hello!]")
+    # Stdin control
+    stdin_read, stdin_write = os.pipe()
+    monkeypatch.setattr('sys.stdin', open(stdin_read))
+    writer = NonFileStreamWriter(open(stdin_write, 'w'), loop=event_loop)
+    # Stdout control
+    monkeypatch.setattr(sys, 'stdout', io.StringIO())
+    # Stderr control
+    stderr_read, stderr_write = os.pipe()
+    monkeypatch.setattr('sys.stderr', open(stderr_write, 'w'))
+    reader = NonFileStreamReader(open(stderr_read), loop=event_loop)
+    # Yield
+    yield reader, writer
+    # Check
+    assert sys.stdout.getvalue() == ''
 
 
 @asyncio.coroutine

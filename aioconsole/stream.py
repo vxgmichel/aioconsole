@@ -126,7 +126,7 @@ def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
 @asyncio.coroutine
 def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     try:
-        if sys.platform == 'win32':
+        if compat.platform == 'win32':
             raise OSError
         stdin.fileno(), stdout.fileno(), stderr.fileno()
     except OSError:

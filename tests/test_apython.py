@@ -25,7 +25,7 @@ def mock_module(name):
 
 @pytest.fixture(params=['linux', 'darwin', 'win32'])
 def platform(request):
-    with patch('sys.platform', new=request.param):
+    with patch('aioconsole.compat.platform', new=request.param):
         yield request.param
 
 
