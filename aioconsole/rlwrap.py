@@ -61,9 +61,9 @@ def _rlwrap(process, use_stderr=False,
     return process.returncode
 
 
-def bind(src, dest, value=True):
+def bind(src, dest, value=True, buffersize=4096):
     while value:
-        value = src.read(1)
+        value = src.read(buffersize)
         dest.write(value)
         dest.flush()
 
