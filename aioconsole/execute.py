@@ -30,7 +30,7 @@ def exec_result(obj, local, stream):
     """Reproduce default exec behavior (print and builtins._)"""
     local['_'] = obj
     if obj is not None:
-        print(obj, file=stream)
+        print(repr(obj), file=stream)
 
 
 def make_tree(statement, filename="<aexec>", symbol="single", local={}):
