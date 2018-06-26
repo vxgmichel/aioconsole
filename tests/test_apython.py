@@ -100,7 +100,7 @@ def test_apython_with_prompt_control_and_ainput(capsys):
                 ['--no-readline', '--banner=test', '--prompt-control=▲'])
     out, err = capsys.readouterr()
     assert out == ''
-    assert err == 'test\n▲>>> ▲▲▲hello\n▲>>> ▲\n'
+    assert err == "test\n▲>>> ▲▲▲'hello'\n▲>>> ▲\n"
 
 
 def test_apython_with_ainput(capsys, use_readline):
@@ -111,7 +111,7 @@ def test_apython_with_ainput(capsys, use_readline):
             apython.run_apython(['--banner=test'] + use_readline)
     out, err = capsys.readouterr()
     assert out == ''
-    assert err == 'test\n>>> hello\n>>> \n'
+    assert err == "test\n>>> 'hello'\n>>> \n"
 
 
 def test_apython_with_stdout_logs(capsys, use_readline):
