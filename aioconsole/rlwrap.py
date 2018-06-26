@@ -63,38 +63,44 @@ def _rlwrap(process, use_stderr=False,
     return process.returncode
 
 
-def bind(src, dest, value=True, buffersize=4096):
+def bind(src, dest, value=True, buffersize=1):
     while value:
         value = src.read(buffersize)
         dest.write(value)
         dest.flush()
 
 
-def wait_for_prompt(src, dest, prompt_control, current='\n'):
+def wait_for_prompt(src, dest, prompt_control, buffersize=1):
 
-    # Read exactly one byte
-    def read_one():
-        value = src.read(1)
+    def read():
+        value = src.read(buffersize)
         if value:
             return value
         raise EOFError
 
+    def write(arg):
+        if arg:
+            dest.write(arg)
+            dest.flush()
+
+    # Wait for first prompt control
     while True:
-        # Prompt detection
-        if current.endswith('\n'):
-            current = read_one()
-            if current.startswith(prompt_control):
-                current += read_one()
-                while current[-1] not in (prompt_control, '\n'):
-                    current += read_one()
-                if current.endswith(prompt_control):
-                    return current[1:-1]
-        # Regular read
-        else:
-            current = read_one()
-        # Write and flush
-        dest.write(current)
-        dest.flush()
+        current = read()
+        if prompt_control in current:
+            break
+        write(current)
+
+    preprompt, current = current.split(prompt_control, 1)
+    write(preprompt)
+
+    # Wait for second prompt control
+    while prompt_control not in current:
+        current += read()
+
+    prompt, postprompt = current.split(prompt_control, 1)
+    write(postprompt)
+
+    return prompt
 
 
 def input(prompt='', use_stderr=False):
