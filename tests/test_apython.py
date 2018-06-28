@@ -1,5 +1,6 @@
 import io
 import sys
+import asyncio
 from contextlib import contextmanager
 
 from unittest.mock import Mock, patch, call
@@ -8,6 +9,7 @@ import pytest
 
 from aioconsole import compat
 from aioconsole import apython, rlwrap
+from aioconsole import InteractiveEventLoop
 
 
 @contextmanager
@@ -122,3 +124,16 @@ def test_apython_with_stdout_logs(capsys, use_readline):
     out, err = capsys.readouterr()
     assert out == 'logging'
     assert err == 'test\n>>> 7\n>>> \n'
+
+
+def test_apython_server(capsys, event_loop, monkeypatch):
+    def run_forever(self, orig=InteractiveEventLoop.run_forever):
+        if self.console_server is not None:
+            self.call_later(0, self.stop)
+        return orig(self)
+    with patch('aioconsole.InteractiveEventLoop.run_forever', run_forever):
+        with pytest.raises(SystemExit):
+            apython.run_apython(['--serve=:0'])
+    out, err = capsys.readouterr()
+    assert out.startswith('The console is being served on')
+    assert err == ''
