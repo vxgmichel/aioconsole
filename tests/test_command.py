@@ -97,10 +97,10 @@ def make_cli(streams=None):
     list(testdata.values()),
     ids=list(testdata.keys()))
 @pytest.mark.asyncio
-def test_async_cli(event_loop, input_string, expected):
-    sys.ps1 = "[Hello!] "
-    sys.stdin = io.StringIO(input_string)
-    sys.stderr = io.StringIO()
+def test_async_cli(event_loop, monkeypatch, input_string, expected):
+    monkeypatch.setattr('sys.ps1', "[Hello!] ", raising=False)
+    monkeypatch.setattr('sys.stdin', io.StringIO(input_string))
+    monkeypatch.setattr('sys.stderr', io.StringIO())
     yield from make_cli().interact(stop=False)
     print(sys.stderr.getvalue())
     assert sys.stderr.getvalue() == expected
