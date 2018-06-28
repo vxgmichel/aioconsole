@@ -30,7 +30,7 @@ def start_console_server(host='localhost', port=8000,
                          prompt_control=None, *, loop=None):
     factory = lambda streams: code.AsynchronousConsole(
         streams, locals, filename, prompt_control=prompt_control)
-    server = yield from asyncio.start_console_server(
+    server = yield from start_interactive_server(
         factory,
         host=host,
         port=port,
