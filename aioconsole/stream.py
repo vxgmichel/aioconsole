@@ -1,9 +1,27 @@
 """Provide an asychronous equivalent to *input*."""
 
+import os
 import sys
+import stat
 import asyncio
 
 from . import compat
+
+
+def is_pipe_transport_compatible(pipe):
+    if compat.platform == 'win32':
+        return False
+    try:
+        fileno = pipe.fileno()
+    except OSError:
+        return False
+    mode = os.fstat(fileno).st_mode
+    is_char = stat.S_ISCHR(mode)
+    is_fifo = stat.S_ISFIFO(mode)
+    is_socket = stat.S_ISSOCK(mode)
+    if not (is_char or is_fifo or is_socket):
+        return False
+    return True
 
 
 def protect_standard_streams(stream):
@@ -125,19 +143,13 @@ def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
 
 @asyncio.coroutine
 def create_standard_streams(stdin, stdout, stderr, *, loop=None):
-    try:
-        if compat.platform == 'win32':
-            raise OSError
-        stdin.fileno(), stdout.fileno(), stderr.fileno()
-    except OSError:
-        in_reader = NonFileStreamReader(stdin, loop=loop)
-        out_writer = NonFileStreamWriter(stdout, loop=loop)
-        err_writer = NonFileStreamWriter(stderr, loop=loop)
-    else:
-        future = open_stantard_pipe_connection(
-            stdin, stdout, stderr, loop=loop)
-        in_reader, out_writer, err_writer = yield from future
-    return in_reader, out_writer, err_writer
+    if all(map(is_pipe_transport_compatible, (stdin, stdout, stderr))):
+        return (yield from open_stantard_pipe_connection(
+            stdin, stdout, stderr, loop=loop))
+    return (
+        NonFileStreamReader(stdin, loop=loop),
+        NonFileStreamWriter(stdout, loop=loop),
+        NonFileStreamWriter(stderr, loop=loop))
 
 
 @asyncio.coroutine
