@@ -9,6 +9,10 @@ aioconsole
    :target: https://travis-ci.org/vxgmichel/aioconsole
    :alt:
 
+.. image:: https://coveralls.io/repos/github/vxgmichel/aioconsole/badge.svg?branch=master
+   :target: https://coveralls.io/github/vxgmichel/aioconsole?branch=master
+   :alt:
+
 .. image:: https://img.shields.io/pypi/v/aioconsole.svg
    :target: https://pypi.python.org/pypi/aioconsole
    :alt:
