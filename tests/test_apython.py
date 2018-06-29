@@ -74,59 +74,59 @@ def test_input_with_stderr_prompt(mock_readline):
         assert rlwrap.input(use_stderr=True) == 'test'
 
 
-def test_basic_apython_usage(capsys, use_readline):
+def test_basic_apython_usage(capfd, use_readline):
     with patch('sys.stdin', new=io.StringIO('1+1\n')):
         with pytest.raises(SystemExit):
             apython.run_apython(['--banner=test'] + use_readline)
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert out == ''
     assert err == 'test\n>>> 2\n>>> \n'
 
 
-def test_apython_with_prompt_control(capsys):
+def test_apython_with_prompt_control(capfd):
     with patch('sys.stdin', new=io.StringIO('1+1\n')):
         with pytest.raises(SystemExit):
             apython.run_apython(
                 ['--banner=test', '--prompt-control=▲', '--no-readline'])
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert out == ''
     assert err == 'test\n▲>>> ▲2\n▲>>> ▲\n'
 
 
-def test_apython_with_prompt_control_and_ainput(capsys):
+def test_apython_with_prompt_control_and_ainput(capfd):
     input_string = "{} ainput()\nhello\n".format(
         'await' if compat.PY35 else 'yield from')
     with patch('sys.stdin', new=io.StringIO(input_string)):
         with pytest.raises(SystemExit):
             apython.run_apython(
                 ['--no-readline', '--banner=test', '--prompt-control=▲'])
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert out == ''
     assert err == "test\n▲>>> ▲▲▲'hello'\n▲>>> ▲\n"
 
 
-def test_apython_with_ainput(capsys, use_readline):
+def test_apython_with_ainput(capfd, use_readline):
     input_string = "{} ainput()\nhello\n".format(
         'await' if compat.PY35 else 'yield from')
     with patch('sys.stdin', new=io.StringIO(input_string)):
         with pytest.raises(SystemExit):
             apython.run_apython(['--banner=test'] + use_readline)
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert out == ''
     assert err == "test\n>>> 'hello'\n>>> \n"
 
 
-def test_apython_with_stdout_logs(capsys, use_readline):
+def test_apython_with_stdout_logs(capfd, use_readline):
     with patch('sys.stdin', new=io.StringIO(
-            'import sys; sys.stdout.write("logging")\n')):
+            'import sys; sys.stdout.write("logging") or 7\n')):
         with pytest.raises(SystemExit):
             apython.run_apython(['--banner=test'] + use_readline)
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert out == 'logging'
     assert err == 'test\n>>> 7\n>>> \n'
 
 
-def test_apython_server(capsys, event_loop, monkeypatch):
+def test_apython_server(capfd, event_loop, monkeypatch):
     def run_forever(self, orig=InteractiveEventLoop.run_forever):
         if self.console_server is not None:
             self.call_later(0, self.stop)
@@ -134,6 +134,6 @@ def test_apython_server(capsys, event_loop, monkeypatch):
     with patch('aioconsole.InteractiveEventLoop.run_forever', run_forever):
         with pytest.raises(SystemExit):
             apython.run_apython(['--serve=:0'])
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert out.startswith('The console is being served on')
     assert err == ''
