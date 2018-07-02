@@ -4,7 +4,6 @@ import sys
 import ctypes
 import signal
 import builtins
-import threading
 import subprocess
 
 from . import compat
@@ -12,11 +11,11 @@ from . import compat
 ZERO_WIDTH_SPACE = '\u200b'
 
 
-def rlwrap_process(args=None, use_stderr=False,
-                   prompt_control=ZERO_WIDTH_SPACE):
-    # Get args
-    if args is None:
-        args = sys.argv[1:]
+def rlwrap_process(args, use_stderr=False, prompt_control=None):
+    # Default prompt control
+    if prompt_control is None:
+        prompt_control = ZERO_WIDTH_SPACE
+    assert len(prompt_control) == 1
     # Start process
     process = subprocess.Popen(
         args,
