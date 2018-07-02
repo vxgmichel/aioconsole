@@ -137,3 +137,19 @@ def test_apython_server(capfd, event_loop, monkeypatch):
     out, err = capfd.readouterr()
     assert out.startswith('The console is being served on')
     assert err == ''
+
+
+def test_apython_non_existing_file(capfd):
+    with pytest.raises(SystemExit):
+        apython.run_apython(['idontexist.py'])
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert "No such file or directory: 'idontexist.py'" in err
+
+
+def test_apython_non_existing_module(capfd):
+    with pytest.raises(SystemExit):
+        apython.run_apython(['-m', 'idontexist'])
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert "No module named idontexist" in err
