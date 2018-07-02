@@ -129,25 +129,13 @@ def run_apython(args=None):
 
 
 def run_apython_in_subprocess(args, prompt_control):
-    # Get arguments
-    if args is None:
-        args = sys.argv[1:]
-    if prompt_control is None:
-        prompt_control = rlwrap.ZERO_WIDTH_SPACE
-
-    # Check prompt control
-    assert len(prompt_control) == 1
-
     # Create subprocess
     proc_args = [sys.executable,
                  '-m', 'aioconsole',
-                 '--no-readline',
-                 '--prompt-control', prompt_control]
+                 '--no-readline']
+    if prompt_control:
+        proc_args += ['--prompt-control', prompt_control]
     return rlwrap.rlwrap_process(
         proc_args + args,
         use_stderr=True,
         prompt_control=prompt_control)
-
-
-if __name__ == '__main__':
-    run_apython()
