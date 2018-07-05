@@ -154,8 +154,6 @@ def create_standard_streams(stdin, stdout, stderr, *, loop=None):
 
 @asyncio.coroutine
 def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
-    if loop is None:
-        loop = asyncio.get_event_loop()
     key = sys.stdin, sys.stdout, sys.stderr
     if cache.get(key) is None:
         connection = create_standard_streams(*key, loop=loop)
@@ -167,8 +165,6 @@ def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
 @asyncio.coroutine
 def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
     """Asynchronous equivalent to *input*."""
-    if loop is None:
-        loop = asyncio.get_event_loop()
     # Get standard streams
     if streams is None:
         streams = yield from get_standard_streams(
@@ -180,11 +176,7 @@ def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
     # Get data
     data = yield from reader.readline()
     # Decode data
-    try:
-        data = data.decode()
-    except UnicodeDecodeError:
-        if b'\xff\xf4\xff\xfd\x06' in data:
-            raise SystemExit
+    data = data.decode()
     # Return or raise EOF
     if not data.endswith('\n'):
         raise EOFError
