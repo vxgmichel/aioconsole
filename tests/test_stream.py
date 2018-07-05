@@ -13,6 +13,7 @@ from aioconsole.stream import is_pipe_transport_compatible
     sys.platform == 'win32',
     reason='Not supported on windows')
 @pytest.mark.asyncio
+@asyncio.coroutine
 def test_create_standard_stream_with_pipe():
     r, w = os.pipe()
     stdin = open(r)
@@ -47,6 +48,7 @@ def test_create_standard_stream_with_pipe():
 
 
 @pytest.mark.asyncio
+@asyncio.coroutine
 def test_create_standard_stream_with_non_pipe():
     stdin = io.StringIO('a\nb\nc\nd\n')
     stdout = io.StringIO()
