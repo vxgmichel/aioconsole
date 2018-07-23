@@ -11,6 +11,8 @@ from . import server
 from . import rlwrap
 from . import compat
 
+ZERO_WIDTH_SPACE = '\u200b'
+
 DESCRIPTION = """\
 Run the given python file or module with a modified asyncio policy replacing
 the default event loop with an interactive loop.
@@ -128,14 +130,19 @@ def run_apython(args=None):
     sys.exit()
 
 
-def run_apython_in_subprocess(args, prompt_control):
+def run_apython_in_subprocess(args=None, prompt_control=None):
+    # Default arguments
+    if args is None:
+        args = sys.argv[1:]
+    if prompt_control is None:
+        prompt_control = ZERO_WIDTH_SPACE
     # Create subprocess
-    proc_args = [sys.executable,
-                 '-m', 'aioconsole',
-                 '--no-readline']
-    if prompt_control:
-        proc_args += ['--prompt-control', prompt_control]
+    proc_args = [
+        sys.executable,
+        '-m', 'aioconsole',
+        '--no-readline',
+        '--prompt-control', prompt_control]
     return rlwrap.rlwrap_process(
         proc_args + args,
-        use_stderr=True,
-        prompt_control=prompt_control)
+        prompt_control,
+        use_stderr=True)
