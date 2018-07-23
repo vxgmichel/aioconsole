@@ -1,6 +1,5 @@
 import io
 import sys
-import asyncio
 from contextlib import contextmanager
 
 from unittest.mock import Mock, patch, call
@@ -78,6 +77,17 @@ def test_basic_apython_usage(capfd, use_readline):
     with patch('sys.stdin', new=io.StringIO('1+1\n')):
         with pytest.raises(SystemExit):
             apython.run_apython(['--banner=test'] + use_readline)
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert err == 'test\n>>> 2\n>>> \n'
+
+
+def test_basic_apython_usage_with_sys_argv(capfd, use_readline):
+    with patch('sys.argv', new=[
+            'path.py', '--banner=test'] + use_readline):
+        with patch('sys.stdin', new=io.StringIO('1+1\n')):
+            with pytest.raises(SystemExit):
+                apython.run_apython()
     out, err = capfd.readouterr()
     assert out == ''
     assert err == 'test\n>>> 2\n>>> \n'
