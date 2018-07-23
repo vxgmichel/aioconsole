@@ -8,13 +8,8 @@ import subprocess
 
 from . import compat
 
-ZERO_WIDTH_SPACE = '\u200b'
 
-
-def rlwrap_process(args, use_stderr=False, prompt_control=None):
-    # Default prompt control
-    if prompt_control is None:
-        prompt_control = ZERO_WIDTH_SPACE
+def rlwrap_process(args, prompt_control, use_stderr=False):
     assert len(prompt_control) == 1
     # Start process
     process = subprocess.Popen(
@@ -24,11 +19,10 @@ def rlwrap_process(args, use_stderr=False, prompt_control=None):
         stdin=subprocess.PIPE,
         **{'stderr' if use_stderr else 'stdout': subprocess.PIPE})
     # Readline wrapping
-    return _rlwrap(process, use_stderr, prompt_control)
+    return _rlwrap(process, prompt_control, use_stderr)
 
 
-def _rlwrap(process, use_stderr=False,
-            prompt_control=ZERO_WIDTH_SPACE):
+def _rlwrap(process, prompt_control, use_stderr=False):
     # Get source and destination
     source = process.stderr if use_stderr else process.stdout
     dest = sys.stderr if use_stderr else sys.stdout
