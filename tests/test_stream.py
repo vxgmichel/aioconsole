@@ -9,6 +9,7 @@ from aioconsole import compat
 from aioconsole.stream import create_standard_streams, ainput, aprint
 from aioconsole.stream import is_pipe_transport_compatible
 
+
 @pytest.mark.skipif(
     sys.platform == 'win32',
     reason='Not supported on windows')
@@ -26,7 +27,6 @@ def test_create_standard_stream_with_pipe():
 
     reader, writer1, writer2 = yield from create_standard_streams(
         stdin, stdout, stderr)
-
 
     writer1.write('a\n')
     yield from writer1.drain()
@@ -112,3 +112,26 @@ def test_aprint_with_standard_stream(monkeypatch):
     yield from aprint('a' * 1024 * 64)
     assert sys.stdout.getvalue() == 'ab cd\n' + 'a' * 1024 * 64 + '\n'
     assert sys.stderr.getvalue() == ''
+
+
+@pytest.mark.asyncio
+def test_read_from_closed_pipe():
+    stdin_r, stdin_w = os.pipe()
+    stdout_r, stdout_w = os.pipe()
+    stderr_r, stderr_w = os.pipe()
+
+    stdin = open(stdin_w, 'wb')
+    stdin.write(b'hello\n')
+    stdin.close()
+
+    reader, writer1, writer2 = yield from create_standard_streams(
+        open(stdin_r, 'rb'), open(stdout_w, 'wb'), open(stderr_w, 'rb'))
+
+    result = yield from ainput('>>> ', streams=(reader, writer1))
+    assert result == 'hello'
+
+    os.close(stdout_w)
+    os.close(stderr_w)
+
+    assert open(stdout_r).read() == '>>> '
+    assert open(stderr_r).read() == ''
