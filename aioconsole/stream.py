@@ -181,3 +181,15 @@ def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
     if not data.endswith('\n'):
         raise EOFError
     return data.rstrip('\n')
+
+
+@asyncio.coroutine
+def aprint(*values, sep=None, end='\n', flush=False, streams=None, use_stderr=False, loop=None):
+    """Asynchronous equivalent to *print*."""
+    # Get standard streams
+    if streams is None:
+        streams = yield from get_standard_streams(
+            use_stderr=use_stderr, loop=loop)
+    _, writer = streams
+    print(*values, sep=sep, end=end, flush=flush, file=writer)
+    yield from writer.drain()
