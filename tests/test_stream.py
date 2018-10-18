@@ -6,7 +6,7 @@ import asyncio
 from unittest.mock import Mock
 
 from aioconsole import compat
-from aioconsole.stream import create_standard_streams, ainput
+from aioconsole.stream import create_standard_streams, ainput, aprint
 from aioconsole.stream import is_pipe_transport_compatible
 
 @pytest.mark.skipif(
@@ -98,4 +98,17 @@ def test_ainput_with_standard_stream(monkeypatch):
     assert (yield from ainput()) == 'a'
     assert (yield from ainput('>>> ')) == 'b'
     assert sys.stdout.getvalue() == '>>> '
+    assert sys.stderr.getvalue() == ''
+
+
+@pytest.mark.asyncio
+def test_aprint_with_standard_stream(monkeypatch):
+    string = ''
+    monkeypatch.setattr('sys.stdin', io.StringIO())
+    monkeypatch.setattr('sys.stdout', io.StringIO(string))
+    monkeypatch.setattr('sys.stderr', io.StringIO())
+    yield from aprint('ab', 'cd')
+    assert sys.stdout.getvalue() == 'ab cd\n'
+    yield from aprint('a' * 1024 * 64)
+    assert sys.stdout.getvalue() == 'ab cd\n' + 'a' * 1024 * 64 + '\n'
     assert sys.stderr.getvalue() == ''
