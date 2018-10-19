@@ -53,12 +53,10 @@ def parse_args(args=None):
 
     # Input
 
-    group = parser.add_mutually_exclusive_group()
-
-    group.add_argument(
+    parser.add_argument(
         '-m', dest='module',
         help='run a python module')
-    group.add_argument(
+    parser.add_argument(
         'filename', metavar='FILE', nargs='?',
         help='python file to run')
 
@@ -69,8 +67,15 @@ def parse_args(args=None):
         help='extra arguments')
 
     namespace = parser.parse_args(args)
+
+    # If module is provided, filname is actually the fist arg
+    if namespace.module is not None and namespace.filename is not None:
+        namespace.args.insert(0, namespace.filename)
+
+    # Parse the serve argument
     if namespace.serve is not None:
         namespace.serve = server.parse_server(namespace.serve, parser)
+
     return namespace
 
 
