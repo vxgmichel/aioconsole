@@ -21,6 +21,10 @@ Try: {0} asyncio.sleep(1, result=3)
 ---""".format('await' if compat.PY35 else 'yield from')
 
 
+current_task = (
+    asyncio.current_task if compat.PY37 else asyncio.Task.current_task)
+
+
 class AsynchronousCompiler(codeop.CommandCompiler):
 
     def __init__(self):
@@ -116,7 +120,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             task._wakeup(task._fut_waiter)
 
     def add_sigint_handler(self):
-        task = asyncio.Task.current_task(loop=self.loop)
+        task = current_task(loop=self.loop)
         try:
             self.loop.add_signal_handler(
                 signal.SIGINT, self.handle_sigint, task)
