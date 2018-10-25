@@ -2,6 +2,7 @@ import asyncio
 
 import pytest
 
+from aioconsole import compat
 from aioconsole.server import start_console_server
 
 
@@ -14,5 +15,10 @@ def test_server(event_loop):
     assert (yield from reader.readline()) == b'test\n'
     writer.write(b'1+1\n')
     assert (yield from reader.readline()) == b'>>> 2\n'
+    writer.write_eof()
+    assert (yield from reader.readline()) == b'>>> \n'
     writer.close()
-    assert (yield from reader.readline()) == b'>>> '
+    if compat.PY37:
+        yield from writer.wait_closed()
+    server.close()
+    yield from server.wait_closed()

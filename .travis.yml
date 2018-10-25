@@ -8,9 +8,9 @@ matrix:
       - python: 3.7
         dist: xenial
         sudo: true
-      # - python: 3.8-dev
-      #   dist: xenial
-      #   sudo: true
+      - python: 3.8-dev
+        dist: xenial
+        sudo: true
 
 install: pip install -U coveralls pytest
 script: python setup.py test
