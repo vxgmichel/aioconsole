@@ -114,9 +114,9 @@ Vincent Michel: vxgmichel@gmail.com
 .. _input: https://docs.python.org/3/library/functions.html#input
 .. _print: https://docs.python.org/3/library/functions.html#print
 .. _exec: https://docs.python.org/3/library/functions.html#exec
-.. _code.interact: https://docs.python.org/2/library/code.html#code.interact
+.. _code.interact: https://docs.python.org/3/library/code.html#code.interact
 .. _argparse: https://docs.python.org/dev/library/argparse.html
-.. _stream: https://docs.python.org/3.4/library/asyncio-stream.html
+.. _stream: https://docs.python.org/3/library/asyncio-stream.html
 .. _example directory: https://github.com/vxgmichel/aioconsole/blob/master/example
 .. _documentation: http://aioconsole.readthedocs.io/
 .. _PyPI: aioconsole_
