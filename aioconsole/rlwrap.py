@@ -5,6 +5,7 @@ import ctypes
 import signal
 import builtins
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
 from . import compat
 
@@ -30,22 +31,43 @@ def _rlwrap(process, prompt_control, use_stderr=False):
     # Check prompt control
     assert len(prompt_control) == 1
 
-    # Loop over prompts
-    while process.poll() is None:
-        try:
-            prompt = wait_for_prompt(
-                source, dest, prompt_control)
-            raw = input(prompt, use_stderr=use_stderr) + '\n'
-        except KeyboardInterrupt:
-            process.send_signal(signal.SIGINT)
-        except EOFError:
-            process.stdin.close()
-        else:
-            process.stdin.write(raw)
+    # Run background task
+    with ThreadPoolExecutor(1) as executor:
+        future = executor.submit(
+            wait_for_prompt, source, dest, prompt_control)
 
-    # Clean up
-    dest.write(source.read())
-    return process.returncode
+        # Loop over prompts
+        while process.poll() is None:
+
+            # Get prompt
+            try:
+                prompt = future.result()
+            except KeyboardInterrupt:
+                process.send_signal(signal.SIGINT)
+                continue
+            except EOFError:
+                break
+            else:
+                future = executor.submit(
+                    wait_for_prompt, source, dest, prompt_control)
+
+            # Get user input
+            try:
+                raw = input(prompt, use_stderr=use_stderr) + '\n'
+            except KeyboardInterrupt:
+                process.send_signal(signal.SIGINT)
+                continue
+            except EOFError:
+                break
+            else:
+                process.stdin.write(raw)
+
+        # Close and wait process streams
+        process.stdin.close()
+        future.exception()
+
+    # Wait process and return code
+    return process.wait()
 
 
 def wait_for_prompt(src, dest, prompt_control, buffersize=1):
