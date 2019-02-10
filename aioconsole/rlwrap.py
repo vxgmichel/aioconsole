@@ -84,8 +84,8 @@ def wait_for_prompt(src, dest, prompt_control, buffersize=1):
             dest.write(arg)
             dest.flush()
 
-    # Prevent BlockingIOError on macOS.
-    fcntl.fcntl(dest.fileno(), fcntl.F_SETFL, 0)
+    if sys.platform == 'darwin':
+        fcntl.fcntl(dest.fileno(), fcntl.F_SETFL, 0)
 
     # Wait for first prompt control
     while True:
