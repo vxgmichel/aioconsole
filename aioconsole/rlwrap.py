@@ -2,6 +2,7 @@
 
 import sys
 import ctypes
+import fcntl
 import signal
 import builtins
 import subprocess
@@ -82,6 +83,9 @@ def wait_for_prompt(src, dest, prompt_control, buffersize=1):
         if arg:
             dest.write(arg)
             dest.flush()
+
+    # Prevent BlockingIOError on macOS.
+    fcntl.fcntl(dest.fileno(), fcntl.F_SETFL, 0)
 
     # Wait for first prompt control
     while True:
