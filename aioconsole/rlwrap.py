@@ -84,7 +84,8 @@ def wait_for_prompt(src, dest, prompt_control, buffersize=1):
             dest.write(arg)
             dest.flush()
 
-    if sys.platform == 'darwin':
+    # Prevent exception in macOS with large output (issue #42)
+    if compat.platform == 'darwin':
         fcntl.fcntl(dest.fileno(), fcntl.F_SETFL, 0)
 
     # Wait for first prompt control
