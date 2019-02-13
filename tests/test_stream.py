@@ -1,5 +1,6 @@
 import os
 import io
+import gc
 import sys
 import pytest
 import asyncio
@@ -43,8 +44,9 @@ def test_create_standard_stream_with_pipe():
     get_extra_info = Mock(side_effect=OSError)
     writer2._transport.get_extra_info = get_extra_info
     del reader, writer1, writer2
-    stdout.fileno.assert_called_once_with()
+    gc.collect()  # Force garbage collection - necessary for pypy
     get_extra_info.assert_called_once_with('pipe')
+    stdout.fileno.assert_called_once_with()
 
 
 @pytest.mark.asyncio

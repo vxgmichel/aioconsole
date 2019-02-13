@@ -49,7 +49,12 @@ def mock_readline(platform):
             api = m_ctypes.pythonapi
             call_readline = api.PyOS_Readline
             call_readline.side_effect = readline
-            yield call_readline
+
+            if platform == 'darwin':
+                with patch('aioconsole.rlwrap.fcntl', create=True):
+                    yield call_readline
+            else:
+                yield call_readline
 
             if call_readline.called:
                 m_ctypes.c_void_p.in_dll.assert_has_calls([

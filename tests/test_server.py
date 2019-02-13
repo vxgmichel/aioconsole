@@ -9,7 +9,8 @@ from aioconsole.server import start_console_server
 @pytest.mark.asyncio
 @asyncio.coroutine
 def test_server(event_loop):
-    server = yield from start_console_server(port=0, banner='test')
+    server = yield from start_console_server(
+        host="127.0.0.1", port=0, banner='test')
     address = server.sockets[0].getsockname()
     reader, writer = yield from asyncio.open_connection(*address)
     assert (yield from reader.readline()) == b'test\n'

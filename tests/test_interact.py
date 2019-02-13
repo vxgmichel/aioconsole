@@ -34,9 +34,10 @@ def stdcontrol(event_loop, monkeypatch):
 
 
 @asyncio.coroutine
-def assert_stream(stream, expected):
+def assert_stream(stream, expected, loose=False):
+    s = None if loose else "\n"
     for line in expected.splitlines():
-        assert line == (yield from stream.readline()).decode().strip('\n')
+        assert line.strip(s) == (yield from stream.readline()).decode().strip(s)
 
 
 @pytest.fixture(params=['unix', 'not-unix'])
@@ -90,7 +91,7 @@ def test_interact_syntax_error(event_loop, monkeypatch):
         # Skip line
         yield from reader.readline()
         yield from assert_stream(reader, '    a b')
-        yield from assert_stream(reader, '      ^')
+        yield from assert_stream(reader, '      ^', loose=True)
         yield from assert_stream(reader, 'SyntaxError: invalid syntax')
         yield from assert_stream(reader, sys.ps1)
 

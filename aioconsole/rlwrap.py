@@ -2,13 +2,15 @@
 
 import sys
 import ctypes
-import fcntl
 import signal
 import builtins
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 from . import compat
+
+if compat.platform == 'darwin':
+    import fcntl
 
 
 def rlwrap_process(args, prompt_control, use_stderr=False):

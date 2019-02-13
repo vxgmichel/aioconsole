@@ -1,16 +1,32 @@
+os: linux
+dist: xenial
 language: python
 
+python:
+- 3.5
+- pypy3.5
+- 3.6
+- 3.7
+- 3.8-dev
+
 matrix:
-    include:
-      - python: 3.4
-      - python: 3.5
-      - python: 3.6
-      - python: 3.7
-        dist: xenial
-        sudo: true
-      - python: 3.8-dev
-        dist: xenial
-        sudo: true
+  include:
+    # Linux - 3.4
+    - os: linux
+      dist: trusty
+      language: python
+      python: 3.4
+    # OSX - 3.6
+    - os: osx
+      language: generic
+      env: MACPYTHON=3.6.8
+      before_install: source .travis-osx-install
+    # OSX - 3.7
+    - os: osx
+      language: generic
+      env: MACPYTHON=3.7.2
+      before_install: source .travis-osx-install
+
 
 install: pip install -U coveralls pytest
 script: python setup.py test
