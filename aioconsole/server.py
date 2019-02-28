@@ -1,6 +1,7 @@
 """Serve the python console using socket communication."""
 
 import asyncio
+import socket
 
 from . import code
 
@@ -16,16 +17,19 @@ def handle_connect(reader, writer, factory, banner=None):
 
 @asyncio.coroutine
 def start_interactive_server(factory=code.AsynchronousConsole,
-                             host='localhost', port=8000, banner=None,
-                             *, loop=None):
+                             host='localhost', port=8000, path=None,
+                             banner=None, *, loop=None):
     callback = lambda reader, writer: handle_connect(
         reader, writer, factory, banner)
-    server = yield from asyncio.start_server(callback, host, port, loop=loop)
+    if path:
+        server = yield from asyncio.start_unix_server(callback, path, loop=loop)
+    else:
+        server = yield from asyncio.start_server(callback, host, port, loop=loop)
     return server
 
 
 @asyncio.coroutine
-def start_console_server(host='localhost', port=8000,
+def start_console_server(host='localhost', port=8000, path=None,
                          locals=None, filename="<console>", banner=None,
                          prompt_control=None, *, loop=None):
     factory = lambda streams: code.AsynchronousConsole(
@@ -34,19 +38,22 @@ def start_console_server(host='localhost', port=8000,
         factory,
         host=host,
         port=port,
+        path=path,
         banner=banner,
         loop=loop)
     return server
 
 
 def print_server(server, name='console'):
-    interface = '{}:{}'.format(*server.sockets[0].getsockname())
+    interface = server.sockets[0].getsockname()
+    if server.sockets[0].family != socket.AF_UNIX:
+        interface = '{}:{}'.format(*interface)
     print('The {} is being served on {}'.format(name, interface))
 
 
-def run(host='localhost', port=8000):
+def run(host='localhost', port=8000, path=None):
     loop = asyncio.get_event_loop()
-    coro = start_interactive_server(host=host, port=port)
+    coro = start_interactive_server(host=host, port=port, path=path)
     loop.server = loop.run_until_complete(coro)
     print_server(loop.server)
     try:
