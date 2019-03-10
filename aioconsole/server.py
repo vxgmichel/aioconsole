@@ -57,7 +57,7 @@ def run(host='localhost', port=8000):
 
 def parse_server(server, parser=None):
     try:
-        host, port = server.split(':')
+        host, port = server.rsplit(':', maxsplit=1)
     except ValueError:
         host, port = 'localhost', server
     try:
