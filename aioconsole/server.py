@@ -2,6 +2,7 @@
 
 import asyncio
 import socket
+from functools import partial
 
 from . import code
 
@@ -19,16 +20,17 @@ def handle_connect(reader, writer, factory, banner=None):
 def start_interactive_server(factory=code.AsynchronousConsole,
                              host=None, port=None, path=None,
                              banner=None, *, loop=None):
-    callback = lambda reader, writer: handle_connect(
-        reader, writer, factory, banner)
-    if (port is not None) == (path is not None):
+    if (port is None) == (path is None):
         raise ValueError("Either a TCP port or a UDS path should be provided")
-    if path:
-        server = yield from asyncio.start_unix_server(callback, path, loop=loop)
-    else:
+    if port is not None:
         # Override asyncio behavior (i.e serve on all interfaces by default)
         host = host or "localhost"
-        server = yield from asyncio.start_server(callback, host, port, loop=loop)
+        start_server = partial(asyncio.start_server, host=host, port=port)
+    else:
+        start_server = partial(asyncio.start_unix_server, path=path)
+
+    client_connected = partial(handle_connect, factory=factory, banner=banner)
+    server = yield from start_server(client_connected, loop=loop)
     return server
 
 
@@ -36,8 +38,9 @@ def start_interactive_server(factory=code.AsynchronousConsole,
 def start_console_server(host=None, port=None, path=None,
                          locals=None, filename="<console>", banner=None,
                          prompt_control=None, *, loop=None):
-    factory = lambda streams: code.AsynchronousConsole(
-        streams, locals, filename, prompt_control=prompt_control)
+    factory = partial(
+        code.AsynchronousConsole,
+        locals=locals, filename=filename, prompt_control=prompt_control)
     server = yield from start_interactive_server(
         factory,
         host=host,
