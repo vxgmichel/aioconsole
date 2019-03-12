@@ -51,11 +51,11 @@ def start_console_server(host=None, port=None, path=None,
     return server
 
 
-def print_server(server, name='console'):
+def print_server(server, name='console', file=None):
     interface = server.sockets[0].getsockname()
     if server.sockets[0].family != socket.AF_UNIX:
         interface = '{}:{}'.format(*interface)
-    print('The {} is being served on {}'.format(name, interface))
+    print('The {} is being served on {}'.format(name, interface), file=file)
 
 
 def run(host=None, port=None, path=None):
