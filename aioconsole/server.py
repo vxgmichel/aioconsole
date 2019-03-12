@@ -21,13 +21,13 @@ def start_interactive_server(factory=code.AsynchronousConsole,
                              banner=None, *, loop=None):
     callback = lambda reader, writer: handle_connect(
         reader, writer, factory, banner)
-    if bool(host or port) == bool(path):
-        raise ValueError("Either host/port or socket path should be provided")
+    if (port is not None) == (path is not None):
+        raise ValueError("Either a TCP port or a UDS path should be provided")
     if path:
         server = yield from asyncio.start_unix_server(callback, path, loop=loop)
     else:
+        # Override asyncio behavior (i.e serve on all interfaces by default)
         host = host or "localhost"
-        port = port or 8000
         server = yield from asyncio.start_server(callback, host, port, loop=loop)
     return server
 
