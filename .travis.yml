@@ -21,11 +21,13 @@ matrix:
       language: generic
       env: MACPYTHON=3.6.8
       before_install: source .travis-osx-install
+      script: python setup.py test --addopts "--basetemp=$TMPDIR/pytest"
     # OSX - 3.7
     - os: osx
       language: generic
       env: MACPYTHON=3.7.2
       before_install: source .travis-osx-install
+      script: python setup.py test --addopts "--basetemp=$TMPDIR/pytest"
 
 
 install: pip install -U coveralls pytest
