@@ -166,9 +166,12 @@ def create_standard_streams(stdin, stdout, stderr, *, loop=None):
 
 @asyncio.coroutine
 def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
-    key = sys.stdin, sys.stdout, sys.stderr
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    args = sys.stdin, sys.stdout, sys.stderr
+    key = args, loop
     if cache.get(key) is None:
-        connection = create_standard_streams(*key, loop=loop)
+        connection = create_standard_streams(*args, loop=loop)
         cache[key] = yield from connection
     in_reader, out_writer, err_writer = cache[key]
     return in_reader, err_writer if use_stderr else out_writer

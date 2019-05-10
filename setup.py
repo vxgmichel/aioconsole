@@ -27,7 +27,8 @@ setup(
                    'pytest-asyncio>=0.8;python_version>"3.4"',
                    'pytest<4;python_version=="3.4"',
                    'pytest-asyncio<0.6;python_version=="3.4"',
-                   'pytest-cov'],
+                   'pytest-cov',
+                   'pytest-repeat'],
 
     license="GPLv3",
     classifiers=CLASSIFIERS,
