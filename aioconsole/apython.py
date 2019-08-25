@@ -5,6 +5,7 @@ import sys
 import ast
 import runpy
 import argparse
+import traceback
 
 from . import events
 from . import server
@@ -23,6 +24,25 @@ usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
                [--banner BANNER] [--locals LOCALS]
                [-m MODULE | FILE] ...
 """.split('usage: ')[1]
+
+
+def exec_pythonstartup(locals_dict):
+    filename = os.environ.get('PYTHONSTARTUP')
+    if filename:
+        if os.path.isfile(filename):
+            with open(filename) as fobj:
+                startupcode = fobj.read()
+            try:
+                locals_dict['__file__'] = filename
+                exec(startupcode, globals(), locals_dict)
+            except Exception as e:  # pragma: no cover
+                tb = traceback.format_exc()
+                print(tb)
+            finally:
+                locals_dict.pop('__file__', None)
+
+        else:
+            print('Could not open PYTHONSTARTUP - No such file: {}'.format(filename))
 
 
 def parse_args(args=None):
@@ -123,6 +143,9 @@ def run_apython(args=None):
             runpy.run_path(namespace.filename,
                            run_name='__main__')
         else:
+            if namespace.locals is None:
+                namespace.locals = {}
+            exec_pythonstartup(namespace.locals)
             events.run_console(
                 locals=namespace.locals,
                 banner=namespace.banner,
