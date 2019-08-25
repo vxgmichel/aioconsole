@@ -1,5 +1,6 @@
 import io
 import sys
+import tempfile
 from contextlib import contextmanager
 
 from unittest.mock import Mock, patch, call
@@ -10,6 +11,18 @@ from aioconsole import compat
 from aioconsole import apython, rlwrap
 from aioconsole import InteractiveEventLoop
 
+
+startupfile = '''
+def hehe():
+    return 42
+
+foo = 1
+'''
+
+@pytest.fixture
+def tempfd():
+    with tempfile.NamedTemporaryFile() as tf:
+        yield tf
 
 @contextmanager
 def mock_module(name):
@@ -168,3 +181,17 @@ def test_apython_non_existing_module(capfd):
     out, err = capfd.readouterr()
     assert out == ''
     assert "No module named idontexist" in err
+
+def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tempfd):
+
+    monkeypatch.setenv('PYTHONSTARTUP', tempfd.name)
+    tempfd.write(startupfile.encode())
+    tempfd.flush()
+
+    with patch('sys.stdin', new=io.StringIO(
+            'print(foo)\nprint(hehe())\n')):
+        with pytest.raises(SystemExit):
+            apython.run_apython(['--banner=test'] + use_readline)
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert err == 'test\n>>> 1\n>>> 42\n>>> \n'

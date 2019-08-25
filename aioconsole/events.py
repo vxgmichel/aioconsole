@@ -1,7 +1,9 @@
 """Provide an interactive event loop class."""
 
+import os
 import asyncio
 import functools
+import traceback
 
 from . import code
 from . import compat
@@ -78,8 +80,26 @@ def set_interactive_policy(*, locals=None, banner=None, serve=None,
         prompt_control=prompt_control)
     asyncio.set_event_loop_policy(policy)
 
+def exec_pythonstartup(locals):
+    filename = os.environ.get('PYTHONSTARTUP')
+    if filename:
+        if os.path.isfile(filename):
+            with open(filename) as fobj:
+                startup_file = fobj.read()
+            try:
+                exec(startup_file, globals(), locals)
+            except Exception as e:  # pragma: no cover
+                tb = traceback.format_exc()
+                print(tb)
+
+        else:
+            print('Could not open PYTHONSTARTUP - No such file: %s', filename)
 
 def run_console(*, locals=None, banner=None, serve=None, prompt_control=None):
+    if locals is None:
+        locals = {}
+    exec_pythonstartup(locals)
+
     """Run the interactive event loop."""
     loop = InteractiveEventLoop(
         locals=locals,
