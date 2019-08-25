@@ -17,6 +17,15 @@ def hehe():
     return 42
 
 foo = 1
+
+# Imports work
+import math
+r = math.cos(0)
+
+# Exec works and is visible from the interpreter
+s = 'from pprint import pprint'
+exec(s)
+
 '''
 
 @pytest.fixture
@@ -188,10 +197,19 @@ def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tempfd):
     tempfd.write(startupfile.encode())
     tempfd.flush()
 
-    with patch('sys.stdin', new=io.StringIO(
-            'print(foo)\nprint(hehe())\n')):
+    test_vectors = (
+        ('print(foo)\n', '', '>>> 1\n'),
+        ('print(hehe())\n', '', '>>> 42\n'),
+        ('print(r)\n', '', '>>> 1.0\n'),
+        ('pprint({1:2})', '{1: 2}\n', '>>> >>> \n'),
+    )
+    inputstr = ''.join([tv[0] for tv in test_vectors])
+    outstr = ''.join([tv[1] for tv in test_vectors])
+    errstr = 'test\n' + ''.join([tv[2] for tv in test_vectors])
+
+    with patch('sys.stdin', new=io.StringIO(inputstr)):
         with pytest.raises(SystemExit):
             apython.run_apython(['--banner=test'] + use_readline)
     out, err = capfd.readouterr()
-    assert out == ''
-    assert err == 'test\n>>> 1\n>>> 42\n>>> \n'
+    assert out == outstr
+    assert err == errstr
