@@ -60,21 +60,6 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.locals.setdefault('help', self.help)
         self.locals.setdefault('ainput', self.ainput)
 
-    def init_pythonstartup(self):
-        filename = os.environ.get('PYTHONSTARTUP')
-        if filename:
-            if os.path.isfile(filename):
-                with open(filename) as fobj:
-                    startup_file = fobj.read()
-                try:
-                    exec(startup_file, globals(), self.locals)
-                except Exception as e:
-                    tb = traceback.format_exc()
-                    print(tb)
-
-            else:
-                print('Could not open PYTHONSTARTUP - No such file: %s', filename)
-
     @functools.wraps(print)
     def print(self, *args, **kwargs):
         kwargs.setdefault('file', self)
