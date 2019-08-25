@@ -201,7 +201,7 @@ def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tempfd):
         ('print(foo)\n', '', '>>> 1\n'),
         ('print(hehe())\n', '', '>>> 42\n'),
         ('print(r)\n', '', '>>> 1.0\n'),
-        ('pprint({1:2})', '{1: 2}\n', '>>> >>> \n'),
+        ('pprint({1:2})\n', '{1: 2}\n', '>>> >>> \n'),
     )
     inputstr = ''.join([tv[0] for tv in test_vectors])
     outstr = ''.join([tv[1] for tv in test_vectors])
