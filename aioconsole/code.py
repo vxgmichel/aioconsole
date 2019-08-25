@@ -1,6 +1,5 @@
 """Provide an asynchronous equivalent to the python console."""
 
-import os
 import sys
 import code
 import pydoc
