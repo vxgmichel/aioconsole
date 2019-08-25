@@ -93,7 +93,7 @@ def exec_pythonstartup(locals):
                 print(tb)
 
         else:
-            print('Could not open PYTHONSTARTUP - No such file: %s', filename)
+            print('Could not open PYTHONSTARTUP - No such file: {}'.format(filename))
 
 def run_console(*, locals=None, banner=None, serve=None, prompt_control=None):
     if locals is None:
