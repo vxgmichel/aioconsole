@@ -1,5 +1,6 @@
 import io
 import sys
+import tempfile
 from contextlib import contextmanager
 
 from unittest.mock import Mock, patch, call
@@ -10,6 +11,27 @@ from aioconsole import compat
 from aioconsole import apython, rlwrap
 from aioconsole import InteractiveEventLoop
 
+
+startupfile = '''
+def hehe():
+    return 42
+
+foo = 1
+
+# Imports work
+import math
+r = math.cos(0)
+
+# Exec works and is visible from the interpreter
+s = 'from pprint import pprint'
+exec(s)
+
+'''
+
+@pytest.fixture
+def tempfd():
+    with tempfile.NamedTemporaryFile() as tf:
+        yield tf
 
 @contextmanager
 def mock_module(name):
@@ -168,3 +190,26 @@ def test_apython_non_existing_module(capfd):
     out, err = capfd.readouterr()
     assert out == ''
     assert "No module named idontexist" in err
+
+def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tempfd):
+
+    monkeypatch.setenv('PYTHONSTARTUP', tempfd.name)
+    tempfd.write(startupfile.encode())
+    tempfd.flush()
+
+    test_vectors = (
+        ('print(foo)\n', '', '>>> 1\n'),
+        ('print(hehe())\n', '', '>>> 42\n'),
+        ('print(r)\n', '', '>>> 1.0\n'),
+        ('pprint({1:2})\n', '{1: 2}\n', '>>> >>> \n'),
+    )
+    inputstr = ''.join([tv[0] for tv in test_vectors])
+    outstr = ''.join([tv[1] for tv in test_vectors])
+    errstr = 'test\n' + ''.join([tv[2] for tv in test_vectors])
+
+    with patch('sys.stdin', new=io.StringIO(inputstr)):
+        with pytest.raises(SystemExit):
+            apython.run_apython(['--banner=test'] + use_readline)
+    out, err = capfd.readouterr()
+    assert out == outstr
+    assert err == errstr
