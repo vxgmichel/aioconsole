@@ -36,22 +36,21 @@ def protect_standard_streams(stream):
 
 
 class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
+
     def connection_made(self, transport):
+        # The connection is already made
         if self._stream_reader._transport is not None:
             return
+        # Make the connection
         super().connection_made(transport)
 
     def connection_lost(self, exc):
-        if self._stream_reader is not None:
-            if exc is None:
-                self._stream_reader.feed_eof()
-            else:
-                self._stream_reader.set_exception(exc)
-        if not self._closed.done():
-            if exc is None:
-                self._closed.set_result(None)
-            else:
-                self._closed.set_exception(exc)
+        # Copy the inner state
+        state = self.__dict__.copy()
+        # Call the parent
+        super().connection_lost(exc)
+        # Restore the inner state
+        self.__dict__.update(state)
 
 
 class StandardStreamReader(asyncio.StreamReader):
