@@ -199,7 +199,15 @@ def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
 
 
 @asyncio.coroutine
-def aprint(*values, sep=None, end='\n', flush=False, streams=None, use_stderr=False, loop=None):
+def aprint(
+    *values,
+    sep=None,
+    end='\n',
+    flush=False,
+    streams=None,
+    use_stderr=False,
+    loop=None
+):
     """Asynchronous equivalent to *print*."""
     # Get standard streams
     if streams is None:

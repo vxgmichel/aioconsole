@@ -107,7 +107,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             yield from execute.aexec(code, self.locals, self)
         except SystemExit:
             raise
-        except:
+        except BaseException:
             self.showtraceback()
         yield from self.flush()
 

@@ -36,8 +36,9 @@ def stdcontrol(event_loop, monkeypatch):
 @asyncio.coroutine
 def assert_stream(stream, expected, loose=False):
     s = None if loose else "\n"
-    for line in expected.splitlines():
-        assert line.strip(s) == (yield from stream.readline()).decode().strip(s)
+    for expected_line in expected.splitlines():
+        line = yield from stream.readline()
+        assert expected_line.strip(s) == line.decode().strip(s)
 
 
 @pytest.fixture(params=['unix', 'not-unix'])

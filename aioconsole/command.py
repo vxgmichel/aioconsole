@@ -1,7 +1,6 @@
 """Provide an asynchronous equivalent to the python console."""
 
 import sys
-import random
 import asyncio
 import argparse
 import shlex
@@ -97,7 +96,7 @@ Type '<command> -h' to display the help message of <command>."""
             raise
 
         # Prompt the traceback or result
-        except:
+        except BaseException:
             self.showtraceback()
         else:
             if result is not None:

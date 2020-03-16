@@ -28,10 +28,12 @@ exec(s)
 
 '''
 
+
 @pytest.fixture
 def tempfd():
     with tempfile.NamedTemporaryFile() as tf:
         yield tf
+
 
 @contextmanager
 def mock_module(name):
@@ -190,6 +192,7 @@ def test_apython_non_existing_module(capfd):
     out, err = capfd.readouterr()
     assert out == ''
     assert "No module named idontexist" in err
+
 
 def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tempfd):
 

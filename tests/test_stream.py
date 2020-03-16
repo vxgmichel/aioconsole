@@ -76,7 +76,7 @@ def test_create_standard_stream_with_non_pipe():
     data = yield from reader.read(2)
     assert data == b'c\n'
 
-    assert reader.at_eof() == False
+    assert reader.at_eof() is False
 
     if compat.PY35:
         assert (yield from reader.__aiter__()) == reader
@@ -87,7 +87,7 @@ def test_create_standard_stream_with_non_pipe():
         assert (yield from reader.read()) == b'd\n'
         assert (yield from reader.read()) == b''
 
-    assert reader.at_eof() == True
+    assert reader.at_eof() is True
 
 
 @pytest.mark.asyncio
