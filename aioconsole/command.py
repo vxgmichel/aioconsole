@@ -6,10 +6,10 @@ import asyncio
 import argparse
 import shlex
 
-from . import code
+from . import console
 
 
-class AsynchronousCli(code.AsynchronousConsole):
+class AsynchronousCli(console.AsynchronousConsole):
 
     def __init__(self, commands, streams=None, *, prog=None,
                  prompt_control=None, loop=None):

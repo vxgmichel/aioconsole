@@ -4,7 +4,7 @@ import asyncio
 import socket
 from functools import partial
 
-from . import code
+from . import console
 
 
 @asyncio.coroutine
@@ -17,7 +17,7 @@ def handle_connect(reader, writer, factory, banner=None):
 
 
 @asyncio.coroutine
-def start_interactive_server(factory=code.AsynchronousConsole,
+def start_interactive_server(factory=console.AsynchronousConsole,
                              host=None, port=None, path=None,
                              banner=None, *, loop=None):
     if (port is None) == (path is None):
@@ -39,7 +39,7 @@ def start_console_server(host=None, port=None, path=None,
                          locals=None, filename="<console>", banner=None,
                          prompt_control=None, *, loop=None):
     factory = partial(
-        code.AsynchronousConsole,
+        console.AsynchronousConsole,
         locals=locals, filename=filename, prompt_control=prompt_control)
     server = yield from start_interactive_server(
         factory,
