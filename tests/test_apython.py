@@ -183,7 +183,8 @@ def test_apython_non_existing_file(capfd):
         apython.run_apython(['idontexist.py'])
     out, err = capfd.readouterr()
     assert out == ''
-    assert "No such file or directory: 'idontexist.py'" in err
+    assert "No such file or directory" in err
+    assert "idontexist.py" in err
 
 
 def test_apython_non_existing_module(capfd):
