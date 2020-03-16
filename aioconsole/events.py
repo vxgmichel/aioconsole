@@ -3,15 +3,14 @@
 import asyncio
 import functools
 
-from . import code
-from . import compat
 from . import server
+from . import console
 
 
 class InteractiveEventLoop(asyncio.SelectorEventLoop):
     """Event loop running a python console."""
 
-    console_class = code.AsynchronousConsole
+    console_class = console.AsynchronousConsole
 
     def __init__(self, *, selector=None, locals=None, banner=None, serve=None,
                  prompt_control=None):

@@ -113,7 +113,7 @@ def wait_for_prompt(src, dest, prompt_control, buffersize=1):
 def input(prompt='', use_stderr=False):
     # Use readline if possible
     try:
-        import readline
+        import readline  # noqa
     except ImportError:
         return builtins.input(prompt)
     # Use stdout

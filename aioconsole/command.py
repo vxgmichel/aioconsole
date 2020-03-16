@@ -1,15 +1,14 @@
 """Provide an asynchronous equivalent to the python console."""
 
 import sys
-import random
 import asyncio
 import argparse
 import shlex
 
-from . import code
+from . import console
 
 
-class AsynchronousCli(code.AsynchronousConsole):
+class AsynchronousCli(console.AsynchronousConsole):
 
     def __init__(self, commands, streams=None, *, prog=None,
                  prompt_control=None, loop=None):
@@ -97,7 +96,7 @@ Type '<command> -h' to display the help message of <command>."""
             raise
 
         # Prompt the traceback or result
-        except:
+        except BaseException:
             self.showtraceback()
         else:
             if result is not None:

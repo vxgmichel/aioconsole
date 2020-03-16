@@ -20,6 +20,11 @@ It allows you to wait for coroutines using the '{0}' syntax.
 Try: {0} asyncio.sleep(1, result=3)
 ---""".format('await' if compat.PY35 else 'yield from')
 
+# cx_Freeze does not include the help function
+try:
+    help_function = help
+except NameError:
+    help_function = None
 
 current_task = (
     asyncio.current_task if compat.PY37 else asyncio.Task.current_task)
@@ -64,7 +69,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         kwargs.setdefault('file', self)
         print(*args, **kwargs)
 
-    @functools.wraps(help)
+    @functools.wraps(help_function)
     def help(self, obj):
         self.print(pydoc.render_doc(obj))
 
@@ -107,7 +112,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             yield from execute.aexec(code, self.locals, self)
         except SystemExit:
             raise
-        except:
+        except BaseException:
             self.showtraceback()
         yield from self.flush()
 

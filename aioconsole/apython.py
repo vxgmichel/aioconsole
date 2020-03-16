@@ -35,14 +35,14 @@ def exec_pythonstartup(locals_dict):
             try:
                 locals_dict['__file__'] = filename
                 exec(startupcode, globals(), locals_dict)
-            except Exception as e:  # pragma: no cover
-                tb = traceback.format_exc()
-                print(tb)
+            except Exception:  # pragma: no cover
+                traceback.print_exc()
             finally:
                 locals_dict.pop('__file__', None)
 
         else:
-            print('Could not open PYTHONSTARTUP - No such file: {}'.format(filename))
+            message = 'Could not open PYTHONSTARTUP - No such file: {}'
+            print(message.format(filename))
 
 
 def parse_args(args=None):
