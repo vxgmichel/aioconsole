@@ -133,11 +133,18 @@ class NonFileStreamWriter:
 
 
 @asyncio.coroutine
-def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
+def open_stantard_pipe_connection(
+    pipe_in,
+    pipe_out,
+    pipe_err,
+    *,
+    limit=None,
+    loop=None,
+):
     if loop is None:
         loop = asyncio.get_event_loop()
     # Reader
-    in_reader = StandardStreamReader(loop=loop)
+    in_reader = StandardStreamReader(limit=limit, loop=loop)
     protocol = StandardStreamReaderProtocol(in_reader, loop=loop)
     yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
     # Out writer
@@ -153,10 +160,10 @@ def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
 
 
 @asyncio.coroutine
-def create_standard_streams(stdin, stdout, stderr, *, loop=None):
+def create_standard_streams(stdin, stdout, stderr, *, limit=None, loop=None):
     if all(map(is_pipe_transport_compatible, (stdin, stdout, stderr))):
         return (yield from open_stantard_pipe_connection(
-            stdin, stdout, stderr, loop=loop))
+            stdin, stdout, stderr, limit=limit, loop=loop))
     return (
         NonFileStreamReader(stdin, loop=loop),
         NonFileStreamWriter(stdout, loop=loop),
@@ -164,25 +171,25 @@ def create_standard_streams(stdin, stdout, stderr, *, loop=None):
 
 
 @asyncio.coroutine
-def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
+def get_standard_streams(*, cache={}, use_stderr=False, limit=None, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     args = sys.stdin, sys.stdout, sys.stderr
     key = args, loop
     if cache.get(key) is None:
-        connection = create_standard_streams(*args, loop=loop)
+        connection = create_standard_streams(*args, limit=limit, loop=loop)
         cache[key] = yield from connection
     in_reader, out_writer, err_writer = cache[key]
     return in_reader, err_writer if use_stderr else out_writer
 
 
 @asyncio.coroutine
-def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
+def ainput(prompt='', *, streams=None, use_stderr=False, limit=None, loop=None):
     """Asynchronous equivalent to *input*."""
     # Get standard streams
     if streams is None:
         streams = yield from get_standard_streams(
-            use_stderr=use_stderr, loop=loop)
+            use_stderr=use_stderr, limit=limit, loop=loop)
     reader, writer = streams
     # Write prompt
     writer.write(prompt.encode())
@@ -205,13 +212,14 @@ def aprint(
     flush=False,
     streams=None,
     use_stderr=False,
-    loop=None
+    limit=None,
+    loop=None,
 ):
     """Asynchronous equivalent to *print*."""
     # Get standard streams
     if streams is None:
         streams = yield from get_standard_streams(
-            use_stderr=use_stderr, loop=loop)
+            use_stderr=use_stderr, limit=limit, loop=loop)
     _, writer = streams
     print(*values, sep=sep, end=end, flush=flush, file=writer)
     yield from writer.drain()

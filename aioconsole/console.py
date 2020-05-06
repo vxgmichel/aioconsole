@@ -41,13 +41,14 @@ class AsynchronousCompiler(codeop.CommandCompiler):
 class AsynchronousConsole(code.InteractiveConsole):
 
     def __init__(self, streams=None, locals=None, filename="<console>",
-                 prompt_control=None, *, loop=None):
+                 prompt_control=None, *, limit=None, loop=None):
         super().__init__(locals, filename)
         # Process arguments
         if loop is None:
             loop = asyncio.get_event_loop()
         if streams is None:
-            streams = stream.get_standard_streams(use_stderr=True, loop=loop)
+            streams = stream.get_standard_streams(
+                use_stderr=True, limit=limit, loop=loop)
         elif isinstance(streams, tuple):
             streams = asyncio.coroutine(lambda x=streams: x)()
         # Attributes
