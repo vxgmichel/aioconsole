@@ -137,3 +137,37 @@ def test_read_from_closed_pipe():
 
     assert open(stdout_r).read() == '>>> '
     assert open(stderr_r).read() == ''
+
+
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason='Not supported on windows')
+@pytest.mark.asyncio
+@asyncio.coroutine
+def test_standard_stream_pipe_buffering():
+    r, w = os.pipe()
+    stdin = open(r)
+    stdout = open(w, 'w')
+    stderr = open(w, 'w')
+
+    assert is_pipe_transport_compatible(stdin)
+    assert is_pipe_transport_compatible(stdout)
+    assert is_pipe_transport_compatible(stderr)
+
+    reader, writer1, writer2 = yield from create_standard_streams(
+        stdin, stdout, stderr)
+
+    blob_size = 4 * 1024 * 1024  # 4 MB
+    writer1.write("a\n" + "b" * blob_size + "\n")
+    task = asyncio.ensure_future(writer1.drain())
+    data = yield from reader.readline()
+    assert data == b'a\n'
+
+    # Check back pressure
+    yield from asyncio.sleep(0.1)
+    assert not task.done()
+    assert len(reader._buffer) < blob_size
+
+    data = yield from reader.readline()
+    assert data == b"b" * blob_size + b"\n"
+    yield from task
