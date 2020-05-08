@@ -57,6 +57,24 @@ class StandardStreamReader(asyncio.StreamReader):
 
     __del__ = protect_standard_streams
 
+    @asyncio.coroutine
+    def readuntil(self, separator=b'\n'):
+        # Re-implement `readuntil` to work around self._limit.
+        # The limit is still useful to prevent the internal buffer
+        # from growing too large when it's not necessary, but it
+        # needs to be disabled when the user code is purposely
+        # reading from stdin.
+        while True:
+            try:
+                return (yield from super().readuntil(separator))
+            except asyncio.LimitOverrunError as e:
+                if self._buffer.startswith(separator, e.consumed):
+                    chunk = self._buffer[:e.consumed + len(separator)]
+                    del self._buffer[:e.consumed + len(separator)]
+                    self._maybe_resume_transport()
+                    return bytes(chunk)
+                yield from self._wait_for_data('readuntil')
+
 
 class StandardStreamWriter(asyncio.StreamWriter):
 
