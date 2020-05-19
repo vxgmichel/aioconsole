@@ -306,6 +306,14 @@ to add an extra access for debugging:
     The echo service is being served on 127.0.0.1:8888
 
 
+Limitations
+-----------
+
+The python console exposed by `aioconsole`_ is quite limited compared to modern consoles such as `IPython`_ or `ptpython`_. Luckily, those projects gained greater asyncio support over the years. In particular, the following use cases overlap with `aioconsole`_ capabilities:
+
+- `Embedding a ptpython console in an asyncio program <https://github.com/prompt-toolkit/ptpython/blob/master/examples/asyncio-python-embed.py>`_
+- `Using the await syntax in an IPython console <https://ipython.readthedocs.io/en/stable/whatsnew/version7.html#autowait-asynchronous-repl>`_
+
 Contact
 -------
 
@@ -333,3 +341,5 @@ Vincent Michel: vxgmichel@gmail.com
 .. _PyPI: aioconsole_
 .. _netcat: https://linux.die.net/man/1/nc
 .. _rlwrap: https://linux.die.net/man/1/rlwrap
+.. _IPython: https://ipython.readthedocs.io
+.. _ptpython: https://github.com/prompt-toolkit/ptpython
