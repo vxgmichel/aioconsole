@@ -104,6 +104,15 @@ Documentation
 Find more examples in the documentation_ and the `example directory`_.
 
 
+Limitations
+-----------
+
+The python console exposed by `aioconsole`_ is quite limited compared to modern consoles such as `IPython`_ or `ptpython`_. Luckily, those projects gained greater asyncio support over the years. In particular, the following use cases overlap with `aioconsole`_ capabilities:
+
+- `Embedding a ptpython console in an asyncio program <https://github.com/prompt-toolkit/ptpython/blob/master/examples/asyncio-python-embed.py>`_
+- `Using the await syntax in an IPython console <https://ipython.readthedocs.io/en/stable/whatsnew/version7.html#autowait-asynchronous-repl>`_
+
+
 Contact
 -------
 
@@ -120,3 +129,5 @@ Vincent Michel: vxgmichel@gmail.com
 .. _example directory: https://github.com/vxgmichel/aioconsole/blob/master/example
 .. _documentation: http://aioconsole.readthedocs.io/
 .. _PyPI: aioconsole_
+.. _IPython: https://ipython.readthedocs.io
+.. _ptpython: https://github.com/prompt-toolkit/ptpython
