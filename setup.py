@@ -18,11 +18,11 @@ Programming Language :: Python :: 3.7
 
 setup(
     name="aioconsole",
-    version="0.2.0",
+    version="0.2.1.dev0",
     packages=["aioconsole"],
     entry_points={"console_scripts": ["apython = aioconsole:run_apython"]},
     setup_requires=["pytest-runner" if TESTING else ""],
-    tests_require=["pytest", "pytest-asyncio>=0.8", "pytest-cov", "pytest-repeat"],
+    tests_require=["pytest", "pytest-asyncio", "pytest-cov", "pytest-repeat"],
     license="GPLv3",
     classifiers=CLASSIFIERS,
     description="Asynchronous console and interfaces for asyncio",
