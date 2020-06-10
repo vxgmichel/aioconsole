@@ -9,8 +9,7 @@ from aioconsole.server import start_console_server, print_server
 
 @pytest.mark.asyncio
 async def test_server(event_loop):
-    server = await start_console_server(
-        host="127.0.0.1", port=0, banner='test')
+    server = await start_console_server(host="127.0.0.1", port=0, banner="test")
     address = server.sockets[0].getsockname()
 
     stream = io.StringIO()
@@ -19,11 +18,11 @@ async def test_server(event_loop):
     assert stream.getvalue() == expected.format(address[1])
 
     reader, writer = await asyncio.open_connection(*address)
-    assert (await reader.readline()) == b'test\n'
-    writer.write(b'1+1\n')
-    assert (await reader.readline()) == b'>>> 2\n'
+    assert (await reader.readline()) == b"test\n"
+    writer.write(b"1+1\n")
+    assert (await reader.readline()) == b">>> 2\n"
     writer.write_eof()
-    assert (await reader.readline()) == b'>>> \n'
+    assert (await reader.readline()) == b">>> \n"
     writer.close()
     if compat.PY37:
         await writer.wait_closed()
@@ -34,7 +33,7 @@ async def test_server(event_loop):
 @pytest.mark.asyncio
 async def test_uds_server(event_loop, tmpdir):
     path = str(tmpdir / "test.uds")
-    server = await start_console_server(path=path, banner='test')
+    server = await start_console_server(path=path, banner="test")
 
     stream = io.StringIO()
     print_server(server, "test console", file=stream)
@@ -43,11 +42,11 @@ async def test_uds_server(event_loop, tmpdir):
 
     address = server.sockets[0].getsockname()
     reader, writer = await asyncio.open_unix_connection(address)
-    assert (await reader.readline()) == b'test\n'
-    writer.write(b'1+1\n')
-    assert (await reader.readline()) == b'>>> 2\n'
+    assert (await reader.readline()) == b"test\n"
+    writer.write(b"1+1\n")
+    assert (await reader.readline()) == b">>> 2\n"
     writer.write_eof()
-    assert (await reader.readline()) == b'>>> \n'
+    assert (await reader.readline()) == b">>> \n"
     writer.close()
     if compat.PY37:
         await writer.wait_closed()

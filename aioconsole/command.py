@@ -8,32 +8,32 @@ from . import console
 
 
 class AsynchronousCli(console.AsynchronousConsole):
-
-    def __init__(self, commands, streams=None, *, prog=None,
-                 prompt_control=None, loop=None):
-        super().__init__(
-            streams=streams, prompt_control=prompt_control, loop=loop)
+    def __init__(
+        self, commands, streams=None, *, prog=None, prompt_control=None, loop=None
+    ):
+        super().__init__(streams=streams, prompt_control=prompt_control, loop=loop)
         self.prog = prog
         self.commands = dict(commands)
-        self.commands['help'] = (
+        self.commands["help"] = (
             self.help_command,
-            argparse.ArgumentParser(
-                description='Display the help message.'))
-        self.commands['list'] = (
+            argparse.ArgumentParser(description="Display the help message."),
+        )
+        self.commands["list"] = (
             self.list_command,
-            argparse.ArgumentParser(
-                description='Display the command list.'))
-        self.commands['exit'] = (
+            argparse.ArgumentParser(description="Display the command list."),
+        )
+        self.commands["exit"] = (
             self.exit_command,
-            argparse.ArgumentParser(
-                description='Exit the interface.'))
+            argparse.ArgumentParser(description="Exit the interface."),
+        )
         for key, (corofunc, parser) in self.commands.items():
             parser.prog = key
-            parser.print_help = lambda file=sys.stderr, *, self=parser: \
-                type(parser).print_help(self, file)
+            parser.print_help = lambda file=sys.stderr, *, self=parser: type(
+                parser
+            ).print_help(self, file)
 
     def get_default_banner(self):
-        prog = self.prog or sys.argv[0].split('/')[-1]
+        prog = self.prog or sys.argv[0].split("/")[-1]
         msg = "Welcome to the CLI interface of {0}!\n".format(prog)
         msg += "Try:\n"
         msg += " * 'help' to display the help message\n"
@@ -47,10 +47,10 @@ Type 'list' to display the command list.
 Type '<command> -h' to display the help message of <command>."""
 
     async def list_command(self, reader, writer):
-        msg = 'List of commands:'
+        msg = "List of commands:"
         for key, (corofunc, parser) in sorted(self.commands.items()):
-            usage = parser.format_usage().replace('usage: ', '')[:-1]
-            msg += '\n * ' + usage
+            usage = parser.format_usage().replace("usage: ", "")[:-1]
+            msg += "\n * " + usage
         return msg
 
     async def exit_command(self, reader, writer):
@@ -58,9 +58,9 @@ Type '<command> -h' to display the help message of <command>."""
 
     async def runsource(self, source, filename=None):
         # Parse the source
-        if source.strip().endswith('\\'):
+        if source.strip().endswith("\\"):
             return True
-        source = source.replace('\\\n', '')
+        source = source.replace("\\\n", "")
         try:
             name, *args = shlex.split(source)
         except ValueError:
@@ -74,8 +74,9 @@ Type '<command> -h' to display the help message of <command>."""
         corofunc, parser = self.commands[name]
 
         # Patch print_message so the parser prints to our console
-        parser._print_message = lambda message, file=None: \
-            message and self.write(message)
+        parser._print_message = lambda message, file=None: message and self.write(
+            message
+        )
 
         # Parse arguments
         try:
@@ -95,6 +96,6 @@ Type '<command> -h' to display the help message of <command>."""
             self.showtraceback()
         else:
             if result is not None:
-                self.write(str(result) + '\n')
+                self.write(str(result) + "\n")
         await self.flush()
         return False

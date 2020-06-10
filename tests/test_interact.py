@@ -1,4 +1,3 @@
-
 import io
 import os
 import sys
@@ -15,21 +14,21 @@ from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 @contextmanager
 def stdcontrol(event_loop, monkeypatch):
     # PS1
-    monkeypatch.setattr('sys.ps1', "[Hello!]", raising=False)
+    monkeypatch.setattr("sys.ps1", "[Hello!]", raising=False)
     # Stdin control
     stdin_read, stdin_write = os.pipe()
-    monkeypatch.setattr('sys.stdin', open(stdin_read))
-    writer = NonFileStreamWriter(open(stdin_write, 'w'), loop=event_loop)
+    monkeypatch.setattr("sys.stdin", open(stdin_read))
+    writer = NonFileStreamWriter(open(stdin_write, "w"), loop=event_loop)
     # Stdout control
-    monkeypatch.setattr(sys, 'stdout', io.StringIO())
+    monkeypatch.setattr(sys, "stdout", io.StringIO())
     # Stderr control
     stderr_read, stderr_write = os.pipe()
-    monkeypatch.setattr('sys.stderr', open(stderr_write, 'w'))
+    monkeypatch.setattr("sys.stderr", open(stderr_write, "w"))
     reader = NonFileStreamReader(open(stderr_read), loop=event_loop)
     # Yield
     yield reader, writer
     # Check
-    assert sys.stdout.getvalue() == ''
+    assert sys.stdout.getvalue() == ""
 
 
 async def assert_stream(stream, expected, loose=False):
@@ -39,12 +38,12 @@ async def assert_stream(stream, expected, loose=False):
         assert expected_line.strip(s) == line.decode().strip(s)
 
 
-@pytest.fixture(params=['unix', 'not-unix'])
+@pytest.fixture(params=["unix", "not-unix"])
 def signaling(request, monkeypatch, event_loop):
-    if request.param == 'not-unix':
+    if request.param == "not-unix":
         m = Mock(side_effect=NotImplementedError)
-        monkeypatch.setattr(event_loop, 'add_signal_handler', m)
-        monkeypatch.setattr(event_loop, 'remove_signal_handler', m)
+        monkeypatch.setattr(event_loop, "add_signal_handler", m)
+        monkeypatch.setattr(event_loop, "remove_signal_handler", m)
     yield request.param
 
 
@@ -52,11 +51,11 @@ def signaling(request, monkeypatch, event_loop):
 async def test_interact_simple(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         banner = "A BANNER"
-        writer.write('1+1\n')
+        writer.write("1+1\n")
         writer.stream.close()
         await interact(banner=banner, stop=False)
         await assert_stream(reader, banner)
-        await assert_stream(reader, sys.ps1 + '2')
+        await assert_stream(reader, sys.ps1 + "2")
         await assert_stream(reader, sys.ps1)
 
 
@@ -64,13 +63,12 @@ async def test_interact_simple(event_loop, monkeypatch):
 async def test_interact_traceback(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         banner = "A BANNER"
-        writer.write('1/0\n')
+        writer.write("1/0\n")
         writer.stream.close()
         await interact(banner=banner, stop=False)
         # Check stderr
         await assert_stream(reader, banner)
-        await assert_stream(
-            reader, sys.ps1 + 'Traceback (most recent call last):')
+        await assert_stream(reader, sys.ps1 + "Traceback (most recent call last):")
         # Skip 3 lines
         for _ in range(3):
             await reader.readline()
@@ -82,16 +80,16 @@ async def test_interact_traceback(event_loop, monkeypatch):
 @pytest.mark.asyncio
 async def test_interact_syntax_error(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
-        writer.write('a b\n')
+        writer.write("a b\n")
         writer.stream.close()
         banner = "A BANNER"
         await interact(banner=banner, stop=False)
         await assert_stream(reader, banner)
         # Skip line
         await reader.readline()
-        await assert_stream(reader, '    a b')
-        await assert_stream(reader, '      ^', loose=True)
-        await assert_stream(reader, 'SyntaxError: invalid syntax')
+        await assert_stream(reader, "    a b")
+        await assert_stream(reader, "      ^", loose=True)
+        await assert_stream(reader, "SyntaxError: invalid syntax")
         await assert_stream(reader, sys.ps1)
 
 
@@ -104,7 +102,7 @@ async def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
         # Wait for banner
         await assert_stream(reader, banner)
         # Send SIGINT
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             signal.getsignal(signal.SIGINT)(signal.SIGINT, None)
         else:
             os.kill(os.getpid(), signal.SIGINT)
@@ -117,4 +115,4 @@ async def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
         await assert_stream(reader, sys.ps1)
         await task
         # Test
-        assert sys.stdout.getvalue() == ''
+        assert sys.stdout.getvalue() == ""

@@ -10,17 +10,18 @@ from aioconsole import AsynchronousCli
 async def dice(reader, writer, faces):
     for _ in range(3):
         await asyncio.sleep(0.33)
-        writer.write('.')
+        writer.write(".")
         await writer.drain()
-    writer.write('\n')
+    writer.write("\n")
     return random.randint(1, faces)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Throw a dice.')
-    parser.add_argument('--faces', '-f', metavar='N', type=int,
-                        default=6, help='Number of faces')
-    cli = AsynchronousCli({'dice': (dice, parser)}, prog='dice')
+    parser = argparse.ArgumentParser(description="Throw a dice.")
+    parser.add_argument(
+        "--faces", "-f", metavar="N", type=int, default=6, help="Number of faces"
+    )
+    cli = AsynchronousCli({"dice": (dice, parser)}, prog="dice")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(cli.interact())

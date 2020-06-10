@@ -9,7 +9,7 @@ from . import compat
 
 
 def is_pipe_transport_compatible(pipe):
-    if compat.platform == 'win32':
+    if compat.platform == "win32":
         return False
     try:
         fileno = pipe.fileno()
@@ -28,7 +28,7 @@ def protect_standard_streams(stream):
     if stream._transport is None:
         return
     try:
-        fileno = stream._transport.get_extra_info('pipe').fileno()
+        fileno = stream._transport.get_extra_info("pipe").fileno()
     except (ValueError, OSError):
         return
     if fileno < 3:
@@ -36,7 +36,6 @@ def protect_standard_streams(stream):
 
 
 class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
-
     def connection_made(self, transport):
         # The connection is already made
         if self._stream_reader._transport is not None:
@@ -57,7 +56,7 @@ class StandardStreamReader(asyncio.StreamReader):
 
     __del__ = protect_standard_streams
 
-    async def readuntil(self, separator=b'\n'):
+    async def readuntil(self, separator=b"\n"):
         # Re-implement `readuntil` to work around self._limit.
         # The limit is still useful to prevent the internal buffer
         # from growing too large when it's not necessary, but it
@@ -65,14 +64,14 @@ class StandardStreamReader(asyncio.StreamReader):
         # reading from stdin.
         while True:
             try:
-                return (await super().readuntil(separator))
+                return await super().readuntil(separator)
             except asyncio.LimitOverrunError as e:
                 if self._buffer.startswith(separator, e.consumed):
-                    chunk = self._buffer[:e.consumed + len(separator)]
-                    del self._buffer[:e.consumed + len(separator)]
+                    chunk = self._buffer[: e.consumed + len(separator)]
+                    del self._buffer[: e.consumed + len(separator)]
                     self._maybe_resume_transport()
                     return bytes(chunk)
-                await self._wait_for_data('readuntil')
+                await self._wait_for_data("readuntil")
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
@@ -86,7 +85,6 @@ class StandardStreamWriter(asyncio.StreamWriter):
 
 
 class NonFileStreamReader:
-
     def __init__(self, stream, *, loop=None):
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -116,13 +114,12 @@ class NonFileStreamReader:
 
     async def __anext__(self):
         val = await self.readline()
-        if val == b'':
+        if val == b"":
             raise StopAsyncIteration
         return val
 
 
 class NonFileStreamWriter:
-
     def __init__(self, stream, *, loop=None):
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -143,9 +140,7 @@ class NonFileStreamWriter:
             await self.loop.run_in_executor(None, flush)
 
 
-async def open_stantard_pipe_connection(
-    pipe_in, pipe_out, pipe_err, *, loop=None
-):
+async def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     # Reader
@@ -166,12 +161,12 @@ async def open_stantard_pipe_connection(
 
 async def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     if all(map(is_pipe_transport_compatible, (stdin, stdout, stderr))):
-        return (await open_stantard_pipe_connection(
-            stdin, stdout, stderr, loop=loop))
+        return await open_stantard_pipe_connection(stdin, stdout, stderr, loop=loop)
     return (
         NonFileStreamReader(stdin, loop=loop),
         NonFileStreamWriter(stdout, loop=loop),
-        NonFileStreamWriter(stderr, loop=loop))
+        NonFileStreamWriter(stderr, loop=loop),
+    )
 
 
 async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
@@ -186,12 +181,11 @@ async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
     return in_reader, err_writer if use_stderr else out_writer
 
 
-async def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
+async def ainput(prompt="", *, streams=None, use_stderr=False, loop=None):
     """Asynchronous equivalent to *input*."""
     # Get standard streams
     if streams is None:
-        streams = await get_standard_streams(
-            use_stderr=use_stderr, loop=loop)
+        streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     reader, writer = streams
     # Write prompt
     writer.write(prompt.encode())
@@ -201,25 +195,18 @@ async def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
     # Decode data
     data = data.decode()
     # Return or raise EOF
-    if not data.endswith('\n'):
+    if not data.endswith("\n"):
         raise EOFError
-    return data.rstrip('\n')
+    return data.rstrip("\n")
 
 
 async def aprint(
-    *values,
-    sep=None,
-    end='\n',
-    flush=False,
-    streams=None,
-    use_stderr=False,
-    loop=None
+    *values, sep=None, end="\n", flush=False, streams=None, use_stderr=False, loop=None
 ):
     """Asynchronous equivalent to *print*."""
     # Get standard streams
     if streams is None:
-        streams = await get_standard_streams(
-            use_stderr=use_stderr, loop=loop)
+        streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     _, writer = streams
     print(*values, sep=sep, end=end, flush=flush, file=writer)
     await writer.drain()

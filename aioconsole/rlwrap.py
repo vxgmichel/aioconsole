@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from . import compat
 
-if compat.platform == 'darwin':
+if compat.platform == "darwin":
     import fcntl
 
 
@@ -21,7 +21,8 @@ def rlwrap_process(args, prompt_control, use_stderr=False):
         bufsize=0,
         universal_newlines=True,
         stdin=subprocess.PIPE,
-        **{'stderr' if use_stderr else 'stdout': subprocess.PIPE})
+        **{"stderr" if use_stderr else "stdout": subprocess.PIPE}
+    )
     # Readline wrapping
     return _rlwrap(process, prompt_control, use_stderr)
 
@@ -36,8 +37,7 @@ def _rlwrap(process, prompt_control, use_stderr=False):
 
     # Run background task
     with ThreadPoolExecutor(1) as executor:
-        future = executor.submit(
-            wait_for_prompt, source, dest, prompt_control)
+        future = executor.submit(wait_for_prompt, source, dest, prompt_control)
 
         # Loop over prompts
         while process.poll() is None:
@@ -51,12 +51,11 @@ def _rlwrap(process, prompt_control, use_stderr=False):
             except EOFError:
                 break
             else:
-                future = executor.submit(
-                    wait_for_prompt, source, dest, prompt_control)
+                future = executor.submit(wait_for_prompt, source, dest, prompt_control)
 
             # Get user input
             try:
-                raw = input(prompt, use_stderr=use_stderr) + '\n'
+                raw = input(prompt, use_stderr=use_stderr) + "\n"
             except KeyboardInterrupt:
                 process.send_signal(signal.SIGINT)
                 continue
@@ -74,7 +73,6 @@ def _rlwrap(process, prompt_control, use_stderr=False):
 
 
 def wait_for_prompt(src, dest, prompt_control, buffersize=1):
-
     def read():
         value = src.read(buffersize)
         if value:
@@ -87,7 +85,7 @@ def wait_for_prompt(src, dest, prompt_control, buffersize=1):
             dest.flush()
 
     # Prevent exception in macOS with large output (issue #42)
-    if compat.platform == 'darwin':
+    if compat.platform == "darwin":
         fcntl.fcntl(dest.fileno(), fcntl.F_SETFL, 0)
 
     # Wait for first prompt control
@@ -110,7 +108,7 @@ def wait_for_prompt(src, dest, prompt_control, buffersize=1):
     return prompt
 
 
-def input(prompt='', use_stderr=False):
+def input(prompt="", use_stderr=False):
     # Use readline if possible
     try:
         import readline  # noqa
@@ -121,12 +119,12 @@ def input(prompt='', use_stderr=False):
         return builtins.input(prompt)
     api = ctypes.pythonapi
     # Cross-platform compatibility
-    if compat.platform == 'darwin':
-        stdin = '__stdinp'
-        stderr = '__stderrp'
+    if compat.platform == "darwin":
+        stdin = "__stdinp"
+        stderr = "__stderrp"
     else:
-        stdin = 'stdin'
-        stderr = 'stderr'
+        stdin = "stdin"
+        stderr = "stderr"
     # Get standard streams
     try:
         fin = ctypes.c_void_p.in_dll(api, stdin)
@@ -141,4 +139,4 @@ def input(prompt='', use_stderr=False):
     # Decode result
     if len(result) == 0:
         raise EOFError
-    return result.decode().rstrip('\n')
+    return result.decode().rstrip("\n")

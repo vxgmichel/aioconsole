@@ -10,14 +10,19 @@ from . import console
 async def handle_connect(reader, writer, factory, banner=None):
     streams = reader, writer
     interface = factory(streams=streams)
-    await interface.interact(banner=banner, stop=False,
-                             handle_sigint=False)
+    await interface.interact(banner=banner, stop=False, handle_sigint=False)
     writer.close()
 
 
-async def start_interactive_server(factory=console.AsynchronousConsole,
-                                   host=None, port=None, path=None,
-                                   banner=None, *, loop=None):
+async def start_interactive_server(
+    factory=console.AsynchronousConsole,
+    host=None,
+    port=None,
+    path=None,
+    banner=None,
+    *,
+    loop=None
+):
     if (port is None) == (path is None):
         raise ValueError("Either a TCP port or a UDS path should be provided")
     if port is not None:
@@ -32,27 +37,34 @@ async def start_interactive_server(factory=console.AsynchronousConsole,
     return server
 
 
-async def start_console_server(host=None, port=None, path=None,
-                               locals=None, filename="<console>", banner=None,
-                               prompt_control=None, *, loop=None):
+async def start_console_server(
+    host=None,
+    port=None,
+    path=None,
+    locals=None,
+    filename="<console>",
+    banner=None,
+    prompt_control=None,
+    *,
+    loop=None
+):
     factory = partial(
         console.AsynchronousConsole,
-        locals=locals, filename=filename, prompt_control=prompt_control)
+        locals=locals,
+        filename=filename,
+        prompt_control=prompt_control,
+    )
     server = await start_interactive_server(
-        factory,
-        host=host,
-        port=port,
-        path=path,
-        banner=banner,
-        loop=loop)
+        factory, host=host, port=port, path=path, banner=banner, loop=loop
+    )
     return server
 
 
-def print_server(server, name='console', file=None):
+def print_server(server, name="console", file=None):
     interface = server.sockets[0].getsockname()
     if server.sockets[0].family != socket.AF_UNIX:
-        interface = '{}:{}'.format(*interface)
-    print('The {} is being served on {}'.format(name, interface), file=file)
+        interface = "{}:{}".format(*interface)
+    print("The {} is being served on {}".format(name, interface), file=file)
 
 
 def run(host=None, port=None, path=None):
@@ -68,9 +80,9 @@ def run(host=None, port=None, path=None):
 
 def parse_server(server, parser=None):
     try:
-        host, port = server.rsplit(':', maxsplit=1)
+        host, port = server.rsplit(":", maxsplit=1)
     except ValueError:
-        host, port = 'localhost', server
+        host, port = "localhost", server
     try:
         port = int(port)
     except (ValueError, TypeError):
