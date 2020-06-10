@@ -7,12 +7,11 @@ import argparse
 from aioconsole import AsynchronousCli
 
 
-@asyncio.coroutine
-def dice(reader, writer, faces):
+async def dice(reader, writer, faces):
     for _ in range(3):
-        yield from asyncio.sleep(0.33)
+        await asyncio.sleep(0.33)
         writer.write('.')
-        yield from writer.drain()
+        await writer.drain()
     writer.write('\n')
     return random.randint(1, faces)
 

@@ -1,7 +1,6 @@
 
 import io
 import sys
-import asyncio
 import argparse
 
 import pytest
@@ -81,8 +80,7 @@ Try:
 
 def make_cli(streams=None):
 
-    @asyncio.coroutine
-    def say_hello(reader, writer, name=None):
+    async def say_hello(reader, writer, name=None):
         data = "Hello {}!".format(name) if name else "Hello!"
         writer.write(data.encode() + b'\n')
 
@@ -97,10 +95,10 @@ def make_cli(streams=None):
     list(testdata.values()),
     ids=list(testdata.keys()))
 @pytest.mark.asyncio
-def test_async_cli(event_loop, monkeypatch, input_string, expected):
+async def test_async_cli(event_loop, monkeypatch, input_string, expected):
     monkeypatch.setattr('sys.ps1', "[Hello!] ", raising=False)
     monkeypatch.setattr('sys.stdin', io.StringIO(input_string))
     monkeypatch.setattr('sys.stderr', io.StringIO())
-    yield from make_cli().interact(stop=False)
+    await make_cli().interact(stop=False)
     print(sys.stderr.getvalue())
     assert sys.stderr.getvalue() == expected

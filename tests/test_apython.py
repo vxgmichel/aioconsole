@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch, call
 
 import pytest
 
-from aioconsole import compat
 from aioconsole import apython, rlwrap
 from aioconsole import InteractiveEventLoop
 
@@ -133,8 +132,7 @@ def test_apython_with_prompt_control(capfd):
 
 
 def test_apython_with_prompt_control_and_ainput(capfd):
-    input_string = "{} ainput()\nhello\n".format(
-        'await' if compat.PY35 else 'yield from')
+    input_string = "await ainput()\nhello\n"
     with patch('sys.stdin', new=io.StringIO(input_string)):
         with pytest.raises(SystemExit):
             apython.run_apython(
@@ -145,8 +143,7 @@ def test_apython_with_prompt_control_and_ainput(capfd):
 
 
 def test_apython_with_ainput(capfd, use_readline):
-    input_string = "{} ainput()\nhello\n".format(
-        'await' if compat.PY35 else 'yield from')
+    input_string = "await ainput()\nhello\n"
     with patch('sys.stdin', new=io.StringIO(input_string)):
         with pytest.raises(SystemExit):
             apython.run_apython(['--banner=test'] + use_readline)

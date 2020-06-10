@@ -3,14 +3,12 @@ import asyncio
 
 import pytest
 from aioconsole import aexec
-from aioconsole.compat import PY35
 
 
 # Helper
 
-@asyncio.coroutine
-def coro(x):
-    yield
+async def coro(x):
+    await asyncio.sleep(0)
     return x
 
 
@@ -39,7 +37,7 @@ testdata = {
         {'c': 3, 'd': 4}),
     'async': (
         {'coro': coro},
-        "await coro(6)" if PY35 else "yield from coro(6)",
+        "await coro(6)",
         6,
         {'coro': coro}),
 }
@@ -52,10 +50,10 @@ testdata = {
     list(testdata.values()),
     ids=list(testdata.keys()))
 @pytest.mark.asyncio
-def test_aexec(event_loop, local, code,
-               expected_result, expected_local):
+async def test_aexec(event_loop, local, code,
+                     expected_result, expected_local):
     stream = io.StringIO()
-    yield from aexec(code, local=local, stream=stream)
+    await aexec(code, local=local, stream=stream)
     if expected_result is None:
         assert stream.getvalue() == ''
     else:

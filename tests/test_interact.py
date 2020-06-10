@@ -8,7 +8,6 @@ from unittest.mock import Mock
 from contextlib import contextmanager
 
 import pytest
-from aioconsole import compat
 from aioconsole import interact
 from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 
@@ -33,11 +32,10 @@ def stdcontrol(event_loop, monkeypatch):
     assert sys.stdout.getvalue() == ''
 
 
-@asyncio.coroutine
-def assert_stream(stream, expected, loose=False):
+async def assert_stream(stream, expected, loose=False):
     s = None if loose else "\n"
     for expected_line in expected.splitlines():
-        line = yield from stream.readline()
+        line = await stream.readline()
         assert expected_line.strip(s) == line.decode().strip(s)
 
 
@@ -51,72 +49,72 @@ def signaling(request, monkeypatch, event_loop):
 
 
 @pytest.mark.asyncio
-def test_interact_simple(event_loop, monkeypatch):
+async def test_interact_simple(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write('1+1\n')
         writer.stream.close()
-        yield from interact(banner=banner, stop=False)
-        yield from assert_stream(reader, banner)
-        yield from assert_stream(reader, sys.ps1 + '2')
-        yield from assert_stream(reader, sys.ps1)
+        await interact(banner=banner, stop=False)
+        await assert_stream(reader, banner)
+        await assert_stream(reader, sys.ps1 + '2')
+        await assert_stream(reader, sys.ps1)
 
 
 @pytest.mark.asyncio
-def test_interact_traceback(event_loop, monkeypatch):
+async def test_interact_traceback(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write('1/0\n')
         writer.stream.close()
-        yield from interact(banner=banner, stop=False)
+        await interact(banner=banner, stop=False)
         # Check stderr
-        yield from assert_stream(reader, banner)
-        yield from assert_stream(
+        await assert_stream(reader, banner)
+        await assert_stream(
             reader, sys.ps1 + 'Traceback (most recent call last):')
-        # Skip 3 (or 5) lines
-        for _ in range(3 if compat.PY35 else 5):
-            yield from reader.readline()
+        # Skip 3 lines
+        for _ in range(3):
+            await reader.readline()
         # Check stderr
-        yield from assert_stream(reader, "ZeroDivisionError: division by zero")
-        yield from assert_stream(reader, sys.ps1)
+        await assert_stream(reader, "ZeroDivisionError: division by zero")
+        await assert_stream(reader, sys.ps1)
 
 
 @pytest.mark.asyncio
-def test_interact_syntax_error(event_loop, monkeypatch):
+async def test_interact_syntax_error(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         writer.write('a b\n')
         writer.stream.close()
         banner = "A BANNER"
-        yield from interact(banner=banner, stop=False)
-        yield from assert_stream(reader, banner)
+        await interact(banner=banner, stop=False)
+        await assert_stream(reader, banner)
         # Skip line
-        yield from reader.readline()
-        yield from assert_stream(reader, '    a b')
-        yield from assert_stream(reader, '      ^', loose=True)
-        yield from assert_stream(reader, 'SyntaxError: invalid syntax')
-        yield from assert_stream(reader, sys.ps1)
+        await reader.readline()
+        await assert_stream(reader, '    a b')
+        await assert_stream(reader, '      ^', loose=True)
+        await assert_stream(reader, 'SyntaxError: invalid syntax')
+        await assert_stream(reader, sys.ps1)
 
 
 @pytest.mark.asyncio
-def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
+async def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         # Start interaction
         banner = "A BANNER"
         task = asyncio.ensure_future(interact(banner=banner, stop=False))
         # Wait for banner
-        yield from assert_stream(reader, banner)
+        await assert_stream(reader, banner)
         # Send SIGINT
         if sys.platform == 'win32':
             signal.getsignal(signal.SIGINT)(signal.SIGINT, None)
         else:
             os.kill(os.getpid(), signal.SIGINT)
         # Wait for ps1
-        yield from assert_stream(reader, sys.ps1)
-        yield from assert_stream(reader, "KeyboardInterrupt")
+        await assert_stream(reader, sys.ps1)
+        await assert_stream(reader, "KeyboardInterrupt")
         # Close stdin
         writer.stream.close()
         # Wait for interact to finish
-        yield from assert_stream(reader, sys.ps1)
-        yield from task
+        await assert_stream(reader, sys.ps1)
+        await task
         # Test
         assert sys.stdout.getvalue() == ''

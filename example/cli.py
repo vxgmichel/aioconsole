@@ -10,8 +10,7 @@ from aioconsole.server import parse_server, print_server
 from . import echo
 
 
-@asyncio.coroutine
-def get_history(reader, writer, pattern=None):
+async def get_history(reader, writer, pattern=None):
     history = asyncio.get_event_loop().history
     if not history:
         return "No message in the history"

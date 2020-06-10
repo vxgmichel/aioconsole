@@ -2,15 +2,14 @@ import asyncio
 import collections
 
 
-@asyncio.coroutine
-def handle_echo(reader, writer):
+async def handle_echo(reader, writer):
     loop = asyncio.get_event_loop()
-    data = yield from reader.read(100)
+    data = await reader.read(100)
     message = data.decode()
     addr = writer.get_extra_info('peername')
     loop.history[addr[0]].append(message.strip())
     writer.write(data)
-    yield from writer.drain()
+    await writer.drain()
     writer.close()
 
 

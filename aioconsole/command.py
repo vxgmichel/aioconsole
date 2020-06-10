@@ -1,7 +1,6 @@
 """Provide an asynchronous equivalent to the python console."""
 
 import sys
-import asyncio
 import argparse
 import shlex
 
@@ -41,27 +40,23 @@ class AsynchronousCli(console.AsynchronousConsole):
         msg += " * 'list' to display the command list."
         return msg
 
-    @asyncio.coroutine
-    def help_command(self, reader, writer):
+    async def help_command(self, reader, writer):
         return """\
 Type 'help' to display this message.
 Type 'list' to display the command list.
 Type '<command> -h' to display the help message of <command>."""
 
-    @asyncio.coroutine
-    def list_command(self, reader, writer):
+    async def list_command(self, reader, writer):
         msg = 'List of commands:'
         for key, (corofunc, parser) in sorted(self.commands.items()):
             usage = parser.format_usage().replace('usage: ', '')[:-1]
             msg += '\n * ' + usage
         return msg
 
-    @asyncio.coroutine
-    def exit_command(self, reader, writer):
+    async def exit_command(self, reader, writer):
         raise SystemExit
 
-    @asyncio.coroutine
-    def runsource(self, source, filename=None):
+    async def runsource(self, source, filename=None):
         # Parse the source
         if source.strip().endswith('\\'):
             return True
@@ -74,7 +69,7 @@ Type '<command> -h' to display the help message of <command>."""
         # Get the command
         if name not in self.commands:
             self.write("Command '{0}' does not exist.\n".format(name))
-            yield from self.flush()
+            await self.flush()
             return False
         corofunc, parser = self.commands[name]
 
@@ -91,7 +86,7 @@ Type '<command> -h' to display the help message of <command>."""
         # Run the coroutine
         coro = corofunc(self.reader, self.writer, **vars(namespace))
         try:
-            result = yield from coro
+            result = await coro
         except SystemExit:
             raise
 
@@ -101,5 +96,5 @@ Type '<command> -h' to display the help message of <command>."""
         else:
             if result is not None:
                 self.write(str(result) + '\n')
-        yield from self.flush()
+        await self.flush()
         return False

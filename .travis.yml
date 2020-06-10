@@ -12,12 +12,6 @@ python:
 
 matrix:
   include:
-    # Linux - 3.4
-    - os: linux
-      dist: trusty
-      language: python
-      python: 3.4
-      install: pip install pytest==3.10 pytest-asyncio==0.5 pytest-cov pytest-repeat pytest-runner coveralls
     # OSX - 3.6
     - os: osx
       language: generic
