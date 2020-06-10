@@ -12,7 +12,7 @@ from . import server
 from . import rlwrap
 from . import compat
 
-ZERO_WIDTH_SPACE = '\u200b'
+ZERO_WIDTH_SPACE = "\u200b"
 
 DESCRIPTION = """\
 Run the given python file or module with a modified asyncio policy replacing
@@ -23,68 +23,72 @@ USAGE = """\
 usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
                [--banner BANNER] [--locals LOCALS]
                [-m MODULE | FILE] ...
-""".split('usage: ')[1]
+""".split(
+    "usage: "
+)[
+    1
+]
 
 
 def exec_pythonstartup(locals_dict):
-    filename = os.environ.get('PYTHONSTARTUP')
+    filename = os.environ.get("PYTHONSTARTUP")
     if filename:
         if os.path.isfile(filename):
             with open(filename) as fobj:
                 startupcode = fobj.read()
             try:
-                locals_dict['__file__'] = filename
+                locals_dict["__file__"] = filename
                 exec(startupcode, globals(), locals_dict)
             except Exception:  # pragma: no cover
                 traceback.print_exc()
             finally:
-                locals_dict.pop('__file__', None)
+                locals_dict.pop("__file__", None)
 
         else:
-            message = 'Could not open PYTHONSTARTUP - No such file: {}'
+            message = "Could not open PYTHONSTARTUP - No such file: {}"
             print(message.format(filename))
 
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
-        prog='apython',
-        description=DESCRIPTION,
-        usage=USAGE)
+        prog="apython", description=DESCRIPTION, usage=USAGE
+    )
 
     # Options
 
     parser.add_argument(
-        '--serve', '-s', metavar='[HOST:] PORT',
-        help='serve a console on the given interface instead')
+        "--serve",
+        "-s",
+        metavar="[HOST:] PORT",
+        help="serve a console on the given interface instead",
+    )
     parser.add_argument(
-        '--no-readline', dest='readline', action='store_false',
-        help='disable readline support')
+        "--no-readline",
+        dest="readline",
+        action="store_false",
+        help="disable readline support",
+    )
+    parser.add_argument("--banner", help="provide a custom banner")
     parser.add_argument(
-        '--banner', help='provide a custom banner')
-    parser.add_argument(
-        '--locals', type=ast.literal_eval,
-        help='provide custom locals as a dictionary')
+        "--locals", type=ast.literal_eval, help="provide custom locals as a dictionary"
+    )
 
     # Hidden option
 
-    parser.add_argument(
-        '--prompt-control', metavar='PC',
-        help=argparse.SUPPRESS)
+    parser.add_argument("--prompt-control", metavar="PC", help=argparse.SUPPRESS)
 
     # Input
 
+    parser.add_argument("-m", dest="module", help="run a python module")
     parser.add_argument(
-        '-m', dest='module',
-        help='run a python module')
-    parser.add_argument(
-        'filename', metavar='FILE', nargs='?',
-        help='python file to run')
+        "filename", metavar="FILE", nargs="?", help="python file to run"
+    )
 
     # Extra arguments
 
     parser.add_argument(
-        'args', metavar='ARGS', nargs=argparse.REMAINDER,
-        help='extra arguments')
+        "args", metavar="ARGS", nargs=argparse.REMAINDER, help="extra arguments"
+    )
 
     namespace = parser.parse_args(args)
 
@@ -102,8 +106,7 @@ def parse_args(args=None):
 def run_apython(args=None):
     namespace = parse_args(args)
 
-    if namespace.readline and not namespace.serve and \
-       compat.platform != 'win32':
+    if namespace.readline and not namespace.serve and compat.platform != "win32":
 
         try:
             import readline
@@ -122,15 +125,14 @@ def run_apython(args=None):
         sys._path = sys.path
         if namespace.module:
             sys.argv = [None] + namespace.args
-            sys.path.insert(0, '')
+            sys.path.insert(0, "")
             events.set_interactive_policy(
                 locals=namespace.locals,
                 banner=namespace.banner,
                 serve=namespace.serve,
-                prompt_control=namespace.prompt_control)
-            runpy.run_module(namespace.module,
-                             run_name='__main__',
-                             alter_sys=True)
+                prompt_control=namespace.prompt_control,
+            )
+            runpy.run_module(namespace.module, run_name="__main__", alter_sys=True)
         elif namespace.filename:
             sys.argv = [None] + namespace.args
             path = os.path.dirname(os.path.abspath(namespace.filename))
@@ -139,9 +141,9 @@ def run_apython(args=None):
                 locals=namespace.locals,
                 banner=namespace.banner,
                 serve=namespace.serve,
-                prompt_control=namespace.prompt_control)
-            runpy.run_path(namespace.filename,
-                           run_name='__main__')
+                prompt_control=namespace.prompt_control,
+            )
+            runpy.run_path(namespace.filename, run_name="__main__")
         else:
             if namespace.locals is None:
                 namespace.locals = {}
@@ -150,7 +152,8 @@ def run_apython(args=None):
                 locals=namespace.locals,
                 banner=namespace.banner,
                 serve=namespace.serve,
-                prompt_control=namespace.prompt_control)
+                prompt_control=namespace.prompt_control,
+            )
     finally:
         sys.argv = sys._argv
         sys.path = sys._path
@@ -167,10 +170,10 @@ def run_apython_in_subprocess(args=None, prompt_control=None):
     # Create subprocess
     proc_args = [
         sys.executable,
-        '-m', 'aioconsole',
-        '--no-readline',
-        '--prompt-control', prompt_control]
-    return rlwrap.rlwrap_process(
-        proc_args + args,
+        "-m",
+        "aioconsole",
+        "--no-readline",
+        "--prompt-control",
         prompt_control,
-        use_stderr=True)
+    ]
+    return rlwrap.rlwrap_process(proc_args + args, prompt_control, use_stderr=True)

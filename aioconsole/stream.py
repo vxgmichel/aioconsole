@@ -9,7 +9,7 @@ from . import compat
 
 
 def is_pipe_transport_compatible(pipe):
-    if compat.platform == 'win32':
+    if compat.platform == "win32":
         return False
     try:
         fileno = pipe.fileno()
@@ -28,7 +28,7 @@ def protect_standard_streams(stream):
     if stream._transport is None:
         return
     try:
-        fileno = stream._transport.get_extra_info('pipe').fileno()
+        fileno = stream._transport.get_extra_info("pipe").fileno()
     except (ValueError, OSError):
         return
     if fileno < 3:
@@ -36,7 +36,6 @@ def protect_standard_streams(stream):
 
 
 class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
-
     def connection_made(self, transport):
         # The connection is already made
         if self._stream_reader._transport is not None:
@@ -57,8 +56,7 @@ class StandardStreamReader(asyncio.StreamReader):
 
     __del__ = protect_standard_streams
 
-    @asyncio.coroutine
-    def readuntil(self, separator=b'\n'):
+    async def readuntil(self, separator=b"\n"):
         # Re-implement `readuntil` to work around self._limit.
         # The limit is still useful to prevent the internal buffer
         # from growing too large when it's not necessary, but it
@@ -66,14 +64,14 @@ class StandardStreamReader(asyncio.StreamReader):
         # reading from stdin.
         while True:
             try:
-                return (yield from super().readuntil(separator))
+                return await super().readuntil(separator)
             except asyncio.LimitOverrunError as e:
                 if self._buffer.startswith(separator, e.consumed):
-                    chunk = self._buffer[:e.consumed + len(separator)]
-                    del self._buffer[:e.consumed + len(separator)]
+                    chunk = self._buffer[: e.consumed + len(separator)]
+                    del self._buffer[: e.consumed + len(separator)]
                     self._maybe_resume_transport()
                     return bytes(chunk)
-                yield from self._wait_for_data('readuntil')
+                await self._wait_for_data("readuntil")
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
@@ -87,7 +85,6 @@ class StandardStreamWriter(asyncio.StreamWriter):
 
 
 class NonFileStreamReader:
-
     def __init__(self, stream, *, loop=None):
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -98,37 +95,31 @@ class NonFileStreamReader:
     def at_eof(self):
         return self.eof
 
-    @asyncio.coroutine
-    def readline(self):
-        data = yield from self.loop.run_in_executor(None, self.stream.readline)
+    async def readline(self):
+        data = await self.loop.run_in_executor(None, self.stream.readline)
         if isinstance(data, str):
             data = data.encode()
         self.eof = not data
         return data
 
-    @asyncio.coroutine
-    def read(self, n=-1):
-        data = yield from self.loop.run_in_executor(None, self.stream.read, n)
+    async def read(self, n=-1):
+        data = await self.loop.run_in_executor(None, self.stream.read, n)
         if isinstance(data, str):
             data = data.encode()
         self.eof = not data
         return data
 
-    if compat.PY35:
-        @asyncio.coroutine
-        def __aiter__(self):
-            return self
+    async def __aiter__(self):
+        return self
 
-        @asyncio.coroutine
-        def __anext__(self):
-            val = yield from self.readline()
-            if val == b'':
-                raise StopAsyncIteration
-            return val
+    async def __anext__(self):
+        val = await self.readline()
+        if val == b"":
+            raise StopAsyncIteration
+        return val
 
 
 class NonFileStreamWriter:
-
     def __init__(self, stream, *, loop=None):
         if loop is None:
             loop = asyncio.get_event_loop()
@@ -140,96 +131,82 @@ class NonFileStreamWriter:
             data = data.decode()
         self.stream.write(data)
 
-    @asyncio.coroutine
-    def drain(self):
+    async def drain(self):
         try:
             flush = self.stream.flush
         except AttributeError:
             pass
         else:
-            yield from self.loop.run_in_executor(None, flush)
+            await self.loop.run_in_executor(None, flush)
 
 
-@asyncio.coroutine
-def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
+async def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     # Reader
     in_reader = StandardStreamReader(loop=loop)
     protocol = StandardStreamReaderProtocol(in_reader, loop=loop)
-    yield from loop.connect_read_pipe(lambda: protocol, pipe_in)
+    await loop.connect_read_pipe(lambda: protocol, pipe_in)
     # Out writer
     out_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
-    out_transport, _ = yield from out_write_connect
+    out_transport, _ = await out_write_connect
     out_writer = StandardStreamWriter(out_transport, protocol, in_reader, loop)
     # Err writer
     err_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_err)
-    err_transport, _ = yield from err_write_connect
+    err_transport, _ = await err_write_connect
     err_writer = StandardStreamWriter(err_transport, protocol, in_reader, loop)
     # Return
     return in_reader, out_writer, err_writer
 
 
-@asyncio.coroutine
-def create_standard_streams(stdin, stdout, stderr, *, loop=None):
+async def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     if all(map(is_pipe_transport_compatible, (stdin, stdout, stderr))):
-        return (yield from open_stantard_pipe_connection(
-            stdin, stdout, stderr, loop=loop))
+        return await open_stantard_pipe_connection(stdin, stdout, stderr, loop=loop)
     return (
         NonFileStreamReader(stdin, loop=loop),
         NonFileStreamWriter(stdout, loop=loop),
-        NonFileStreamWriter(stderr, loop=loop))
+        NonFileStreamWriter(stderr, loop=loop),
+    )
 
 
-@asyncio.coroutine
-def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
+async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     args = sys.stdin, sys.stdout, sys.stderr
     key = args, loop
     if cache.get(key) is None:
         connection = create_standard_streams(*args, loop=loop)
-        cache[key] = yield from connection
+        cache[key] = await connection
     in_reader, out_writer, err_writer = cache[key]
     return in_reader, err_writer if use_stderr else out_writer
 
 
-@asyncio.coroutine
-def ainput(prompt='', *, streams=None, use_stderr=False, loop=None):
+async def ainput(prompt="", *, streams=None, use_stderr=False, loop=None):
     """Asynchronous equivalent to *input*."""
     # Get standard streams
     if streams is None:
-        streams = yield from get_standard_streams(
-            use_stderr=use_stderr, loop=loop)
+        streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     reader, writer = streams
     # Write prompt
     writer.write(prompt.encode())
-    yield from writer.drain()
+    await writer.drain()
     # Get data
-    data = yield from reader.readline()
+    data = await reader.readline()
     # Decode data
     data = data.decode()
     # Return or raise EOF
-    if not data.endswith('\n'):
+    if not data.endswith("\n"):
         raise EOFError
-    return data.rstrip('\n')
+    return data.rstrip("\n")
 
 
-@asyncio.coroutine
-def aprint(
-    *values,
-    sep=None,
-    end='\n',
-    flush=False,
-    streams=None,
-    use_stderr=False,
-    loop=None
+async def aprint(
+    *values, sep=None, end="\n", flush=False, streams=None, use_stderr=False, loop=None
 ):
     """Asynchronous equivalent to *print*."""
     # Get standard streams
     if streams is None:
-        streams = yield from get_standard_streams(
-            use_stderr=use_stderr, loop=loop)
+        streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     _, writer = streams
     print(*values, sep=sep, end=end, flush=flush, file=writer)
-    yield from writer.drain()
+    await writer.drain()

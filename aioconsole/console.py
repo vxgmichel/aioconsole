@@ -6,6 +6,7 @@ import pydoc
 import codeop
 import signal
 import asyncio
+import inspect
 import functools
 import traceback
 
@@ -17,8 +18,8 @@ EXTRA_MESSAGE = """\
 ---
 This console is running in an asyncio event loop.
 It allows you to wait for coroutines using the '{0}' syntax.
-Try: {0} asyncio.sleep(1, result=3)
----""".format('await' if compat.PY35 else 'yield from')
+Try: await asyncio.sleep(1, result=3)
+---"""
 
 # cx_Freeze does not include the help function
 try:
@@ -26,30 +27,32 @@ try:
 except NameError:
     help_function = None
 
-current_task = (
-    asyncio.current_task if compat.PY37 else asyncio.Task.current_task)
+current_task = asyncio.current_task if compat.PY37 else asyncio.Task.current_task
 
 
 class AsynchronousCompiler(codeop.CommandCompiler):
-
     def __init__(self):
         self.compiler = functools.partial(
-            execute.compile_for_aexec,
-            dont_imply_dedent=True)
+            execute.compile_for_aexec, dont_imply_dedent=True
+        )
 
 
 class AsynchronousConsole(code.InteractiveConsole):
-
-    def __init__(self, streams=None, locals=None, filename="<console>",
-                 prompt_control=None, *, loop=None):
+    def __init__(
+        self,
+        streams=None,
+        locals=None,
+        filename="<console>",
+        prompt_control=None,
+        *,
+        loop=None
+    ):
         super().__init__(locals, filename)
         # Process arguments
         if loop is None:
             loop = asyncio.get_event_loop()
         if streams is None:
             streams = stream.get_standard_streams(use_stderr=True, loop=loop)
-        elif isinstance(streams, tuple):
-            streams = asyncio.coroutine(lambda x=streams: x)()
         # Attributes
         self.streams = streams
         self.loop = loop
@@ -58,15 +61,15 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.prompt_control = prompt_control
         self.compile = AsynchronousCompiler()
         # Populate locals
-        self.locals.setdefault('asyncio', asyncio)
-        self.locals.setdefault('loop', self.loop)
-        self.locals.setdefault('print', self.print)
-        self.locals.setdefault('help', self.help)
-        self.locals.setdefault('ainput', self.ainput)
+        self.locals.setdefault("asyncio", asyncio)
+        self.locals.setdefault("loop", self.loop)
+        self.locals.setdefault("print", self.print)
+        self.locals.setdefault("help", self.help)
+        self.locals.setdefault("ainput", self.ainput)
 
     @functools.wraps(print)
     def print(self, *args, **kwargs):
-        kwargs.setdefault('file', self)
+        kwargs.setdefault("file", self)
         print(*args, **kwargs)
 
     @functools.wraps(help_function)
@@ -74,8 +77,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.print(pydoc.render_doc(obj))
 
     @functools.wraps(stream.ainput)
-    @asyncio.coroutine
-    def ainput(self, prompt='', *, streams=None, use_stderr=False, loop=None):
+    async def ainput(self, prompt="", *, streams=None, use_stderr=False, loop=None):
         # Get the console streams by default
         if streams is None and use_stderr is False:
             streams = self.reader, self.writer
@@ -83,17 +85,18 @@ class AsynchronousConsole(code.InteractiveConsole):
         if self.prompt_control and self.prompt_control not in prompt:
             prompt = self.prompt_control + prompt + self.prompt_control
         # Run ainput
-        return (yield from stream.ainput(
-            prompt, streams=streams, use_stderr=use_stderr, loop=loop))
+        return await stream.ainput(
+            prompt, streams=streams, use_stderr=use_stderr, loop=loop
+        )
 
     def get_default_banner(self):
-        cprt = ('Type "help", "copyright", "credits" '
-                'or "license" for more information.')
+        cprt = (
+            'Type "help", "copyright", "credits" ' 'or "license" for more information.'
+        )
         msg = "Python %s on %s\n%s\n%s"
         return msg % (sys.version, sys.platform, cprt, EXTRA_MESSAGE)
 
-    @asyncio.coroutine
-    def runsource(self, source, filename="<ainput>", symbol="single"):
+    async def runsource(self, source, filename="<ainput>", symbol="single"):
         try:
             code = self.compile(source, filename, symbol)
         except (OverflowError, SyntaxError, ValueError):
@@ -103,18 +106,17 @@ class AsynchronousConsole(code.InteractiveConsole):
         if code is None:
             return True
 
-        yield from self.runcode(code)
+        await self.runcode(code)
         return False
 
-    @asyncio.coroutine
-    def runcode(self, code):
+    async def runcode(self, code):
         try:
-            yield from execute.aexec(code, self.locals, self)
+            await execute.aexec(code, self.locals, self)
         except SystemExit:
             raise
         except BaseException:
             self.showtraceback()
-        yield from self.flush()
+        await self.flush()
 
     def resetbuffer(self):
         self.buffer = []
@@ -127,11 +129,12 @@ class AsynchronousConsole(code.InteractiveConsole):
     def add_sigint_handler(self):
         task = current_task(loop=self.loop)
         try:
-            self.loop.add_signal_handler(
-                signal.SIGINT, self.handle_sigint, task)
+            self.loop.add_signal_handler(signal.SIGINT, self.handle_sigint, task)
         except NotImplementedError:
+
             def callback(*args):
                 self.loop.call_soon_threadsafe(self.handle_sigint, task)
+
             signal.signal(signal.SIGINT, callback)
 
     def remove_sigint_handler(self):
@@ -140,19 +143,20 @@ class AsynchronousConsole(code.InteractiveConsole):
         except NotImplementedError:
             signal.signal(signal.SIGINT, signal.default_int_handler)
 
-    @asyncio.coroutine
-    def interact(self, banner=None, stop=True, handle_sigint=True):
+    async def interact(self, banner=None, stop=True, handle_sigint=True):
         # Get the streams
         try:
-            if self.streams is not None:
-                self.reader, self.writer = yield from self.streams
+            if inspect.isawaitable(self.streams):
+                self.reader, self.writer = await self.streams
+            elif self.streams is not None:
+                self.reader, self.writer = self.streams
         finally:
             self.streams = None
         # Interact
         try:
             if handle_sigint:
                 self.add_sigint_handler()
-            yield from self._interact(banner)
+            await self._interact(banner)
         # Exit
         except SystemExit:
             if stop:
@@ -164,8 +168,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             if stop:
                 self.loop.stop()
 
-    @asyncio.coroutine
-    def _interact(self, banner=None):
+    async def _interact(self, banner=None):
         # Get ps1 and ps2
         try:
             sys.ps1
@@ -188,39 +191,36 @@ class AsynchronousConsole(code.InteractiveConsole):
                 else:
                     prompt = sys.ps1
                 try:
-                    line = yield from self.raw_input(prompt)
+                    line = await self.raw_input(prompt)
                 except EOFError:
                     self.write("\n")
-                    yield from self.flush()
+                    await self.flush()
                     break
                 else:
-                    more = yield from self.push(line)
+                    more = await self.push(line)
             except asyncio.CancelledError:
                 self.write("\nKeyboardInterrupt\n")
-                yield from self.flush()
+                await self.flush()
                 self.resetbuffer()
                 more = 0
 
-    @asyncio.coroutine
-    def push(self, line):
+    async def push(self, line):
         self.buffer.append(line)
         source = "\n".join(self.buffer)
-        more = yield from self.runsource(source, self.filename)
+        more = await self.runsource(source, self.filename)
         if not more:
             self.resetbuffer()
         return more
 
-    @asyncio.coroutine
-    def raw_input(self, prompt=''):
-        return (yield from self.ainput(prompt))
+    async def raw_input(self, prompt=""):
+        return await self.ainput(prompt)
 
     def write(self, data):
         return self.writer.write(data.encode())
 
-    @asyncio.coroutine
-    def flush(self):
+    async def flush(self):
         try:
-            yield from self.writer.drain()
+            await self.writer.drain()
         except ConnectionResetError:
             pass
 
@@ -232,7 +232,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         sys.last_traceback = last_tb
         try:
             lines = traceback.format_exception(ei[0], ei[1], last_tb.tb_next)
-            self.write(''.join(lines))
+            self.write("".join(lines))
         finally:
             last_tb = ei = None
 
@@ -253,16 +253,20 @@ class AsynchronousConsole(code.InteractiveConsole):
                 value = SyntaxError(msg, (filename, lineno, offset, line))
                 sys.last_value = value
         lines = traceback.format_exception_only(type, value)
-        self.write(''.join(lines))
+        self.write("".join(lines))
 
 
-@asyncio.coroutine
-def interact(banner=None, streams=None, locals=None,
-             prompt_control=None, stop=True,
-             handle_sigint=True, *, loop=None):
+async def interact(
+    banner=None,
+    streams=None,
+    locals=None,
+    prompt_control=None,
+    stop=True,
+    handle_sigint=True,
+    *,
+    loop=None
+):
     console = AsynchronousConsole(
-        streams,
-        locals=locals,
-        prompt_control=prompt_control,
-        loop=loop)
-    yield from console.interact(banner, stop, handle_sigint)
+        streams, locals=locals, prompt_control=prompt_control, loop=loop
+    )
+    await console.interact(banner, stop, handle_sigint)

@@ -23,10 +23,8 @@ setup(
     entry_points={'console_scripts': ['apython = aioconsole:run_apython']},
 
     setup_requires=['pytest-runner' if TESTING else ''],
-    tests_require=['pytest;python_version>"3.4"',
-                   'pytest-asyncio>=0.8;python_version>"3.4"',
-                   'pytest<4;python_version=="3.4"',
-                   'pytest-asyncio<0.6;python_version=="3.4"',
+    tests_require=['pytest',
+                   'pytest-asyncio>=0.8',
                    'pytest-cov',
                    'pytest-repeat'],
 

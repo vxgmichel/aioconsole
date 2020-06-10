@@ -7,19 +7,22 @@ from functools import partial
 from . import console
 
 
-@asyncio.coroutine
-def handle_connect(reader, writer, factory, banner=None):
+async def handle_connect(reader, writer, factory, banner=None):
     streams = reader, writer
     interface = factory(streams=streams)
-    yield from interface.interact(banner=banner, stop=False,
-                                  handle_sigint=False)
+    await interface.interact(banner=banner, stop=False, handle_sigint=False)
     writer.close()
 
 
-@asyncio.coroutine
-def start_interactive_server(factory=console.AsynchronousConsole,
-                             host=None, port=None, path=None,
-                             banner=None, *, loop=None):
+async def start_interactive_server(
+    factory=console.AsynchronousConsole,
+    host=None,
+    port=None,
+    path=None,
+    banner=None,
+    *,
+    loop=None
+):
     if (port is None) == (path is None):
         raise ValueError("Either a TCP port or a UDS path should be provided")
     if port is not None:
@@ -30,32 +33,38 @@ def start_interactive_server(factory=console.AsynchronousConsole,
         start_server = partial(asyncio.start_unix_server, path=path)
 
     client_connected = partial(handle_connect, factory=factory, banner=banner)
-    server = yield from start_server(client_connected, loop=loop)
+    server = await start_server(client_connected, loop=loop)
     return server
 
 
-@asyncio.coroutine
-def start_console_server(host=None, port=None, path=None,
-                         locals=None, filename="<console>", banner=None,
-                         prompt_control=None, *, loop=None):
+async def start_console_server(
+    host=None,
+    port=None,
+    path=None,
+    locals=None,
+    filename="<console>",
+    banner=None,
+    prompt_control=None,
+    *,
+    loop=None
+):
     factory = partial(
         console.AsynchronousConsole,
-        locals=locals, filename=filename, prompt_control=prompt_control)
-    server = yield from start_interactive_server(
-        factory,
-        host=host,
-        port=port,
-        path=path,
-        banner=banner,
-        loop=loop)
+        locals=locals,
+        filename=filename,
+        prompt_control=prompt_control,
+    )
+    server = await start_interactive_server(
+        factory, host=host, port=port, path=path, banner=banner, loop=loop
+    )
     return server
 
 
-def print_server(server, name='console', file=None):
+def print_server(server, name="console", file=None):
     interface = server.sockets[0].getsockname()
     if server.sockets[0].family != socket.AF_UNIX:
-        interface = '{}:{}'.format(*interface)
-    print('The {} is being served on {}'.format(name, interface), file=file)
+        interface = "{}:{}".format(*interface)
+    print("The {} is being served on {}".format(name, interface), file=file)
 
 
 def run(host=None, port=None, path=None):
@@ -71,9 +80,9 @@ def run(host=None, port=None, path=None):
 
 def parse_server(server, parser=None):
     try:
-        host, port = server.rsplit(':', maxsplit=1)
+        host, port = server.rsplit(":", maxsplit=1)
     except ValueError:
-        host, port = 'localhost', server
+        host, port = "localhost", server
     try:
         port = int(port)
     except (ValueError, TypeError):

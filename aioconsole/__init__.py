@@ -12,8 +12,18 @@ from .command import AsynchronousCli
 from .server import start_interactive_server
 from .apython import run_apython
 
-__all__ = ['aexec', 'ainput', 'aprint', 'AsynchronousConsole', 'interact',
-           'InteractiveEventLoop', 'InteractiveEventLoopPolicy',
-           'set_interactive_policy', 'run_console',
-           'AsynchronousCli', 'start_interactive_server',
-           'get_standard_streams', 'run_apython']
+__all__ = [
+    "aexec",
+    "ainput",
+    "aprint",
+    "AsynchronousConsole",
+    "interact",
+    "InteractiveEventLoop",
+    "InteractiveEventLoopPolicy",
+    "set_interactive_policy",
+    "run_console",
+    "AsynchronousCli",
+    "start_interactive_server",
+    "get_standard_streams",
+    "run_apython",
+]
