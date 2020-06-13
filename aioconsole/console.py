@@ -61,11 +61,11 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.prompt_control = prompt_control
         self.compile = AsynchronousCompiler()
         # Populate locals
-        self.locals.setdefault("asyncio", asyncio)
-        self.locals.setdefault("loop", self.loop)
-        self.locals.setdefault("print", self.print)
-        self.locals.setdefault("help", self.help)
-        self.locals.setdefault("ainput", self.ainput)
+        self.locals["asyncio"] = asyncio
+        self.locals["loop"] = self.loop
+        self.locals["print"] = self.print
+        self.locals["help"] = self.help
+        self.locals["ainput"] = self.ainput
 
     @functools.wraps(print)
     def print(self, *args, **kwargs):

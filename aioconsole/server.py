@@ -48,12 +48,15 @@ async def start_console_server(
     *,
     loop=None
 ):
-    factory = partial(
-        console.AsynchronousConsole,
-        locals=locals,
-        filename=filename,
-        prompt_control=prompt_control,
-    )
+    def factory(streams):
+        client_locals = dict(locals) if locals is not None else None
+        return console.AsynchronousConsole(
+            streams=streams,
+            locals=client_locals,
+            filename=filename,
+            prompt_control=prompt_control,
+        )
+
     server = await start_interactive_server(
         factory, host=host, port=port, path=path, banner=banner, loop=loop
     )
