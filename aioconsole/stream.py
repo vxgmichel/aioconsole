@@ -140,7 +140,7 @@ class NonFileStreamWriter:
             await self.loop.run_in_executor(None, flush)
 
 
-async def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
+async def open_standard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     # Reader
@@ -159,9 +159,12 @@ async def open_stantard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=Non
     return in_reader, out_writer, err_writer
 
 
+open_stantard_pipe_connection = open_standard_pipe_connection
+
+
 async def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     if all(map(is_pipe_transport_compatible, (stdin, stdout, stderr))):
-        return await open_stantard_pipe_connection(stdin, stdout, stderr, loop=loop)
+        return await open_standard_pipe_connection(stdin, stdout, stderr, loop=loop)
     return (
         NonFileStreamReader(stdin, loop=loop),
         NonFileStreamWriter(stdout, loop=loop),
