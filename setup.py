@@ -25,6 +25,7 @@ setup(
     setup_requires=["pytest-runner" if TESTING else ""],
     tests_require=["pytest", "pytest-asyncio", "pytest-cov", "pytest-repeat"],
     license="GPLv3",
+    python_requires=">=3.5",
     classifiers=CLASSIFIERS,
     description="Asynchronous console and interfaces for asyncio",
     long_description=README,
