@@ -10,10 +10,11 @@ README = open("README.rst").read()
 CLASSIFIERS = """\
 Programming Language :: Python
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.4
 Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
+Programming Language :: Python :: 3.8
+Programming Language :: Python :: 3 :: Only
 """.splitlines()
 
 setup(
@@ -30,5 +31,5 @@ setup(
     author="Vincent Michel",
     author_email="vxgmichel@gmail.com",
     url="https://github.com/vxgmichel/aioconsole",
-    download_url="http://pypi.python.org/pypi/aioconsole",
+    download_url="https://pypi.org/project/aioconsole/",
 )
