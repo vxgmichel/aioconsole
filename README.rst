@@ -35,7 +35,7 @@ aioconsole_ provides:
 Requirements
 ------------
 
-*  Python >= 3.5
+*  Python >= 3.6
 
 
 Installation

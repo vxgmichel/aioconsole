@@ -10,7 +10,6 @@ README = open("README.rst").read()
 CLASSIFIERS = """\
 Programming Language :: Python
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
@@ -25,7 +24,7 @@ setup(
     setup_requires=["pytest-runner" if TESTING else ""],
     tests_require=["pytest", "pytest-asyncio", "pytest-cov", "pytest-repeat"],
     license="GPLv3",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     classifiers=CLASSIFIERS,
     description="Asynchronous console and interfaces for asyncio",
     long_description=README,
