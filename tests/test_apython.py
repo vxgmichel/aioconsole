@@ -1,14 +1,12 @@
 import io
 import sys
-import tempfile
 from contextlib import contextmanager
 
 from unittest.mock import Mock, patch, call
 
 import pytest
 
-from aioconsole import apython, rlwrap
-from aioconsole import InteractiveEventLoop
+from aioconsole import InteractiveEventLoop, apython, rlwrap, compat
 
 
 startupfile = """
@@ -26,12 +24,6 @@ s = 'from pprint import pprint'
 exec(s)
 
 """
-
-
-@pytest.fixture
-def tempfd():
-    with tempfile.NamedTemporaryFile() as tf:
-        yield tf
 
 
 @contextmanager
@@ -177,6 +169,9 @@ def test_apython_server(capfd, event_loop, monkeypatch):
     assert err == ""
 
 
+@pytest.mark.skipif(
+    compat.platform == "win32", reason="apython does not run in a subprocess on windows"
+)
 def test_apython_non_existing_file(capfd):
     with pytest.raises(SystemExit):
         apython.run_apython(["idontexist.py"])
@@ -186,6 +181,9 @@ def test_apython_non_existing_file(capfd):
     assert "idontexist.py" in err
 
 
+@pytest.mark.skipif(
+    compat.platform == "win32", reason="apython does not run in a subprocess on windows"
+)
 def test_apython_non_existing_module(capfd):
     with pytest.raises(SystemExit):
         apython.run_apython(["-m", "idontexist"])
@@ -194,11 +192,10 @@ def test_apython_non_existing_module(capfd):
     assert "No module named idontexist" in err
 
 
-def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tempfd):
-
-    monkeypatch.setenv("PYTHONSTARTUP", tempfd.name)
-    tempfd.write(startupfile.encode())
-    tempfd.flush()
+def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tmpdir):
+    python_startup = tmpdir / "python_startup.py"
+    monkeypatch.setenv("PYTHONSTARTUP", str(python_startup))
+    python_startup.write(startupfile)
 
     test_vectors = (
         ("print(foo)\n", "", ">>> 1\n"),

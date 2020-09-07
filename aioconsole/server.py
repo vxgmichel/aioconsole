@@ -4,6 +4,7 @@ import asyncio
 import socket
 from functools import partial
 
+from . import compat
 from . import console
 
 
@@ -23,6 +24,8 @@ async def start_interactive_server(
     *,
     loop=None,
 ):
+    if compat.platform == "win32" and port is None:
+        raise ValueError("A TCP port should be provided")
     if (port is None) == (path is None):
         raise ValueError("Either a TCP port or a UDS path should be provided")
     if port is not None:
@@ -65,7 +68,8 @@ async def start_console_server(
 
 def print_server(server, name="console", file=None):
     interface = server.sockets[0].getsockname()
-    if server.sockets[0].family != socket.AF_UNIX:
+    AF_UNIX = None if compat.platform == "win32" else socket.AF_UNIX
+    if server.sockets[0].family != AF_UNIX:
         interface = "{}:{}".format(*interface)
     print(f"The {name} is being served on {interface}", file=file)
 
