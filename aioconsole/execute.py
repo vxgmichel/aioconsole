@@ -4,7 +4,7 @@ import ast
 import codeop
 
 CORO_NAME = "__corofn"
-CORO_DEF = "async def {}(): ".format(CORO_NAME)
+CORO_DEF = f"async def {CORO_NAME}(): "
 CORO_CODE = CORO_DEF + "return (None, locals())\n"
 
 

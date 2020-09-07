@@ -7,7 +7,7 @@ VERSION = open("../setup.py").read().split('version="')[1].split('"')[0]
 project = "aioconsole"
 version = VERSION
 author = "Vincent Michel"
-copyright = u"2020, Vincent Michel"
+copyright = "2020, Vincent Michel"
 
 master_doc = "index"
 highlight_language = "python"

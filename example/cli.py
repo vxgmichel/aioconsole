@@ -19,9 +19,9 @@ async def get_history(reader, writer, pattern=None):
     if not history:
         return "No host match the given pattern"
     for host in history:
-        writer.write("Host {}:\n".format(host).encode())
+        writer.write(f"Host {host}:\n".encode())
         for i, message in enumerate(history[host]):
-            writer.write("  {}. {}\n".format(i, message).encode())
+            writer.write(f"  {i}. {message}\n".encode())
 
 
 def make_cli(streams=None):
