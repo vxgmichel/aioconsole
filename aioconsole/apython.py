@@ -45,8 +45,7 @@ def exec_pythonstartup(locals_dict):
                 locals_dict.pop("__file__", None)
 
         else:
-            message = "Could not open PYTHONSTARTUP - No such file: {}"
-            print(message.format(filename))
+            print(f"Could not open PYTHONSTARTUP - No such file: {filename}")
 
 
 def parse_args(args=None):

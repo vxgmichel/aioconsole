@@ -45,7 +45,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         filename="<console>",
         prompt_control=None,
         *,
-        loop=None
+        loop=None,
     ):
         super().__init__(locals, filename)
         # Process arguments
@@ -93,8 +93,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         cprt = (
             'Type "help", "copyright", "credits" ' 'or "license" for more information.'
         )
-        msg = "Python %s on %s\n%s\n%s"
-        return msg % (sys.version, sys.platform, cprt, EXTRA_MESSAGE)
+        return f"Python {sys.version} on {sys.platform}\n{cprt}\n{EXTRA_MESSAGE}"
 
     async def runsource(self, source, filename="<ainput>", symbol="single"):
         try:
@@ -181,7 +180,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         # Print banner
         if banner is None:
             banner = self.get_default_banner()
-        self.write("%s\n" % str(banner))
+        self.write(f"{banner}\n")
         # Run loop
         more = 0
         while 1:
@@ -264,7 +263,7 @@ async def interact(
     stop=True,
     handle_sigint=True,
     *,
-    loop=None
+    loop=None,
 ):
     console = AsynchronousConsole(
         streams, locals=locals, prompt_control=prompt_control, loop=loop
