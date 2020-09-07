@@ -14,8 +14,8 @@ async def test_server(event_loop):
 
     stream = io.StringIO()
     print_server(server, "test console", file=stream)
-    expected = "The test console is being served on 127.0.0.1:{}\n"
-    assert stream.getvalue() == expected.format(address[1])
+    expected = f"The test console is being served on 127.0.0.1:{address[1]}\n"
+    assert stream.getvalue() == expected
 
     reader, writer = await asyncio.open_connection(*address)
     assert (await reader.readline()) == b"test\n"
@@ -37,8 +37,8 @@ async def test_uds_server(event_loop, tmpdir):
 
     stream = io.StringIO()
     print_server(server, "test console", file=stream)
-    expected = "The test console is being served on {}\n"
-    assert stream.getvalue() == expected.format(path)
+    expected = f"The test console is being served on {path}\n"
+    assert stream.getvalue() == expected
 
     address = server.sockets[0].getsockname()
     reader, writer = await asyncio.open_unix_connection(address)

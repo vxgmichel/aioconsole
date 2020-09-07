@@ -34,7 +34,7 @@ class AsynchronousCli(console.AsynchronousConsole):
 
     def get_default_banner(self):
         prog = self.prog or sys.argv[0].split("/")[-1]
-        msg = "Welcome to the CLI interface of {0}!\n".format(prog)
+        msg = f"Welcome to the CLI interface of {prog}!\n"
         msg += "Try:\n"
         msg += " * 'help' to display the help message\n"
         msg += " * 'list' to display the command list."
@@ -68,7 +68,7 @@ Type '<command> -h' to display the help message of <command>."""
 
         # Get the command
         if name not in self.commands:
-            self.write("Command '{0}' does not exist.\n".format(name))
+            self.write(f"Command '{name}' does not exist.\n")
             await self.flush()
             return False
         corofunc, parser = self.commands[name]

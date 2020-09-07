@@ -77,7 +77,7 @@ Try:
 
 def make_cli(streams=None):
     async def say_hello(reader, writer, name=None):
-        data = "Hello {}!".format(name) if name else "Hello!"
+        data = f"Hello {name}!" if name else "Hello!"
         writer.write(data.encode() + b"\n")
 
     parser = argparse.ArgumentParser(description="Say hello")

@@ -19,7 +19,7 @@ def run(host="localhost", port=8000):
     coro = asyncio.start_server(handle_echo, host, port, loop=loop)
     loop.server = loop.run_until_complete(coro)
     interface = "{}:{}".format(*loop.server.sockets[0].getsockname())
-    print("The echo service is being served on {}".format(interface))
+    print(f"The echo service is being served on {interface}")
     try:
         loop.run_forever()
     except KeyboardInterrupt:

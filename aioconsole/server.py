@@ -21,7 +21,7 @@ async def start_interactive_server(
     path=None,
     banner=None,
     *,
-    loop=None
+    loop=None,
 ):
     if (port is None) == (path is None):
         raise ValueError("Either a TCP port or a UDS path should be provided")
@@ -46,7 +46,7 @@ async def start_console_server(
     banner=None,
     prompt_control=None,
     *,
-    loop=None
+    loop=None,
 ):
     def factory(streams):
         client_locals = dict(locals) if locals is not None else None
@@ -67,7 +67,7 @@ def print_server(server, name="console", file=None):
     interface = server.sockets[0].getsockname()
     if server.sockets[0].family != socket.AF_UNIX:
         interface = "{}:{}".format(*interface)
-    print("The {} is being served on {}".format(name, interface), file=file)
+    print(f"The {name} is being served on {interface}", file=file)
 
 
 def run(host=None, port=None, path=None):
@@ -89,7 +89,7 @@ def parse_server(server, parser=None):
     try:
         port = int(port)
     except (ValueError, TypeError):
-        msg = "{!r} is not a valid server [HOST:]PORT".format(server)
+        msg = f"{server!r} is not a valid server [HOST:]PORT"
         if not parser:
             raise ValueError(msg)
         parser.error(msg)
