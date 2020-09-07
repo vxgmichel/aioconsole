@@ -33,6 +33,13 @@ async def test_server(event_loop):
 @pytest.mark.asyncio
 async def test_uds_server(event_loop, tmpdir):
     path = str(tmpdir / "test.uds")
+
+    # Not availble on windows
+    if compat.platform == "win32":
+        with pytest.raises(ValueError):
+            await start_console_server(path=path, banner="test")
+        return
+
     server = await start_console_server(path=path, banner="test")
 
     stream = io.StringIO()

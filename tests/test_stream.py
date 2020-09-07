@@ -116,7 +116,7 @@ async def test_read_from_closed_pipe():
     stdin.close()
 
     reader, writer1, writer2 = await create_standard_streams(
-        open(stdin_r, "rb"), open(stdout_w, "wb"), open(stderr_w, "rb")
+        open(stdin_r, "r"), open(stdout_w, "w"), open(stderr_w, "r")
     )
 
     result = await ainput(">>> ", streams=(reader, writer1))
