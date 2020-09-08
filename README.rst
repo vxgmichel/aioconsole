@@ -5,8 +5,8 @@ aioconsole
    :target: http://aioconsole.readthedocs.io/
    :alt:
 
-.. image:: https://travis-ci.org/vxgmichel/aioconsole.svg?branch=master
-   :target: https://travis-ci.org/vxgmichel/aioconsole
+.. image:: https://github.com/vxgmichel/aioconsole/workflows/CI/badge.svg
+   :target: https://github.com/vxgmichel/aioconsole/
    :alt:
 
 .. image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/master/graph/badge.svg
