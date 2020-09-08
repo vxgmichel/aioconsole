@@ -6,7 +6,7 @@ aioconsole
    :alt:
 
 .. image:: https://github.com/vxgmichel/aioconsole/workflows/CI/badge.svg
-   :target: https://github.com/vxgmichel/aioconsole/
+   :target: https://github.com/vxgmichel/aioconsole/actions?query=branch%3Amaster
    :alt:
 
 .. image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/master/graph/badge.svg
