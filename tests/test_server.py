@@ -31,8 +31,8 @@ async def test_server(event_loop):
 
 
 @pytest.mark.asyncio
-async def test_uds_server(event_loop, tmpdir):
-    path = str(tmpdir / "test.uds")
+async def test_uds_server(event_loop, tmpdir_factory):
+    path = str(tmpdir_factory.mktemp("uds") / "my_uds")
 
     # Not availble on windows
     if compat.platform == "win32":
