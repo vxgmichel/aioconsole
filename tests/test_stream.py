@@ -71,10 +71,8 @@ async def test_create_standard_stream_with_non_pipe():
 
     assert reader.at_eof() is False
 
-    assert (await reader.__aiter__()) == reader
-    assert (await reader.__anext__()) == b"d\n"
-    with pytest.raises(StopAsyncIteration):
-        await reader.__anext__()
+    async for data in reader:
+        assert data == b"d\n"
 
     assert reader.at_eof() is True
 
