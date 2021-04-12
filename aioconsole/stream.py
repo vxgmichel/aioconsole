@@ -208,5 +208,8 @@ async def aprint(
     if streams is None:
         streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     _, writer = streams
-    print(*values, sep=sep, end=end, flush=flush, file=writer)
-    await writer.drain()
+
+    print(*values, sep=sep, end=end, flush=False, file=writer)
+
+    if flush:
+        await writer.drain()
