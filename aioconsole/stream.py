@@ -140,21 +140,50 @@ class NonFileStreamWriter:
             await self.loop.run_in_executor(None, flush)
 
 
+def set_write_buffer_limits(
+    transport: asyncio.WriteTransport, *, high: int = 0, low: int = 0,
+) -> None:
+    """Set the transport write buffer limits.
+
+    Buffering is disabled by default. Use `await stream.drain()`
+    to make sure that underlying buffer is flushed.
+
+    Constraints
+    -----------
+    0 <= low <= high
+
+    | Mark | Action         | Triggered On                   |
+    |------|----------------|--------------------------------|
+    | low  | resume_writing | *once* buffer_size <= low      |
+    | high | pause_writing  | *whenever* high <= buffer_size |
+
+    """
+    transport.set_write_buffer_limits(high=high, low=low)
+
+
 async def open_standard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
+
     # Reader
     in_reader = StandardStreamReader(loop=loop)
     protocol = StandardStreamReaderProtocol(in_reader, loop=loop)
     await loop.connect_read_pipe(lambda: protocol, pipe_in)
+
     # Out writer
     out_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
     out_transport, _ = await out_write_connect
     out_writer = StandardStreamWriter(out_transport, protocol, in_reader, loop)
+
     # Err writer
     err_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_err)
     err_transport, _ = await err_write_connect
     err_writer = StandardStreamWriter(err_transport, protocol, in_reader, loop)
+
+    # Set the write buffer limits to zeros
+    set_write_buffer_limits(out_transport)
+    set_write_buffer_limits(err_transport)
+
     # Return
     return in_reader, out_writer, err_writer
 
