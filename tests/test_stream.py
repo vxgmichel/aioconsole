@@ -13,10 +13,11 @@ from aioconsole.stream import is_pipe_transport_compatible
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on windows")
 @pytest.mark.asyncio
 async def test_create_standard_stream_with_pipe():
-    r, w = os.pipe()
-    stdin = open(r)
-    stdout = open(w, "w")
-    stderr = open(w, "w")
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    stdin = open(r1)
+    stdout = open(w1, "w")
+    stderr = open(w2, "w")
 
     assert is_pipe_transport_compatible(stdin)
     assert is_pipe_transport_compatible(stdout)
@@ -31,8 +32,7 @@ async def test_create_standard_stream_with_pipe():
 
     writer2.write("b\n")
     await writer2.drain()
-    data = await reader.readline()
-    assert data == b"b\n"
+    assert os.read(r2, 2) == b"b\n"
 
     reader._transport = None
     stdout.fileno = Mock(return_value=0)
@@ -127,7 +127,12 @@ async def test_read_from_closed_pipe():
     result = await ainput(">>> ", streams=(reader, writer1))
     assert result == "hello"
 
+    writer1.close()
+    await writer1.wait_closed()
     os.close(stdout_w)
+
+    writer2.close()
+    await writer2.wait_closed()
     os.close(stderr_w)
 
     assert open(stdout_r).read() == ">>> "
@@ -137,10 +142,11 @@ async def test_read_from_closed_pipe():
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on windows")
 @pytest.mark.asyncio
 async def test_standard_stream_pipe_buffering():
-    r, w = os.pipe()
-    stdin = open(r)
-    stdout = open(w, "w")
-    stderr = open(w, "w")
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    stdin = open(r1)
+    stdout = open(w1, "w")
+    stderr = open(w2, "w")
 
     assert is_pipe_transport_compatible(stdin)
     assert is_pipe_transport_compatible(stdout)
