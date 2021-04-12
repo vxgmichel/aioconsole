@@ -77,7 +77,7 @@ async def test_create_standard_stream_with_non_pipe():
     assert reader.at_eof() is True
 
 
-def mock_stdio(monkeypatch, input_text=''):
+def mock_stdio(monkeypatch, input_text=""):
     monkeypatch.setattr("sys.stdin", io.StringIO(input_text))
     monkeypatch.setattr("sys.stdout", io.StringIO())
     monkeypatch.setattr("sys.stderr", io.StringIO())
@@ -102,7 +102,7 @@ async def test_aprint_with_standard_stream(monkeypatch):
     assert sys.stderr.getvalue() == ""
 
 
-@pytest.mark.parametrize('flush', [False, True])
+@pytest.mark.parametrize("flush", [False, True])
 @pytest.mark.asyncio
 async def test_aprint_with_flushing_stream(monkeypatch, flush):
     mock_stdio(monkeypatch)
