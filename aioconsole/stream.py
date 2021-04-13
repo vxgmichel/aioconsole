@@ -130,6 +130,8 @@ class NonFileStreamWriter:
         self.write_task = None
 
     def write(self, data):
+        if self.stream is None:
+            raise RuntimeError("This writer stream is already closed")
         if isinstance(data, bytes):
             data = data.decode()
         self.buffer.append(data)
@@ -138,22 +140,34 @@ class NonFileStreamWriter:
         if self.write_task is not None:
             write_task, self.write_task = self.write_task, None
             write_task.result()
-        self.write_task = asyncio.create_task(self._write_task_target())
+        self.write_task = asyncio.create_task(self._write_task_target(self.stream))
 
-    async def _write_task_target(self):
+    async def _write_task_target(self, stream):
         while self.buffer:
             data = self.buffer.popleft()
-            await self.loop.run_in_executor(None, self.stream.write, data)
+            await self.loop.run_in_executor(None, stream.write, data)
 
     async def drain(self):
         if self.write_task is not None:
-            await self.write_task
+            try:
+                await self.write_task
+            finally:
+                self.write_task = None
         try:
             flush = self.stream.flush
         except AttributeError:
             pass
         else:
             await self.loop.run_in_executor(None, flush)
+
+    def close(self):
+        self.stream = None
+
+    def is_closing(self):
+        return self.stream is None and self.write_task is not None
+
+    async def wait_closed(self):
+        await self.drain()
 
     def __del__(self):
         if self.write_task is not None and not self.write_task.done():
