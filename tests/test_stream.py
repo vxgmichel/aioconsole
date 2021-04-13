@@ -104,9 +104,13 @@ async def test_aprint_with_standard_stream(monkeypatch):
 
 @pytest.mark.parametrize("flush", [False, True])
 @pytest.mark.asyncio
-async def test_aprint_with_flushing_stream(monkeypatch, flush):
+async def test_aprint_flush_argument(monkeypatch, flush):
     mock_stdio(monkeypatch)
     await aprint("a", flush=flush)
+    if not flush:
+        # Might or might not be there yet, depending on internal logic
+        assert sys.stdout.getvalue() in ("", "a\n")
+        await aprint("", end="", flush=True)
     assert sys.stdout.getvalue() == "a\n"
 
 
