@@ -77,13 +77,15 @@ async def test_create_standard_stream_with_non_pipe():
     assert reader.at_eof() is True
 
 
-@pytest.mark.asyncio
-async def test_ainput_with_standard_stream(monkeypatch):
-    string = "a\nb\n"
-    monkeypatch.setattr("sys.stdin", io.StringIO(string))
+def mock_stdio(monkeypatch, input_text=""):
+    monkeypatch.setattr("sys.stdin", io.StringIO(input_text))
     monkeypatch.setattr("sys.stdout", io.StringIO())
     monkeypatch.setattr("sys.stderr", io.StringIO())
 
+
+@pytest.mark.asyncio
+async def test_ainput_with_standard_stream(monkeypatch):
+    mock_stdio(monkeypatch, "a\nb\n")
     assert (await ainput()) == "a"
     assert (await ainput(">>> ")) == "b"
     assert sys.stdout.getvalue() == ">>> "
@@ -92,15 +94,20 @@ async def test_ainput_with_standard_stream(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_aprint_with_standard_stream(monkeypatch):
-    string = ""
-    monkeypatch.setattr("sys.stdin", io.StringIO())
-    monkeypatch.setattr("sys.stdout", io.StringIO(string))
-    monkeypatch.setattr("sys.stderr", io.StringIO())
+    mock_stdio(monkeypatch)
     await aprint("ab", "cd")
     assert sys.stdout.getvalue() == "ab cd\n"
     await aprint("a" * 1024 * 64)
     assert sys.stdout.getvalue() == "ab cd\n" + "a" * 1024 * 64 + "\n"
     assert sys.stderr.getvalue() == ""
+
+
+@pytest.mark.parametrize("flush", [False, True])
+@pytest.mark.asyncio
+async def test_aprint_with_flushing_stream(monkeypatch, flush):
+    mock_stdio(monkeypatch)
+    await aprint("a", flush=flush)
+    assert sys.stdout.getvalue() == "a\n"
 
 
 @pytest.mark.asyncio

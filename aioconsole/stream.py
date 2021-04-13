@@ -143,18 +143,27 @@ class NonFileStreamWriter:
 async def open_standard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
+
     # Reader
     in_reader = StandardStreamReader(loop=loop)
     protocol = StandardStreamReaderProtocol(in_reader, loop=loop)
     await loop.connect_read_pipe(lambda: protocol, pipe_in)
+
     # Out writer
     out_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
     out_transport, _ = await out_write_connect
     out_writer = StandardStreamWriter(out_transport, protocol, in_reader, loop)
+
     # Err writer
     err_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_err)
     err_transport, _ = await err_write_connect
     err_writer = StandardStreamWriter(err_transport, protocol, in_reader, loop)
+
+    # Set the write buffer limits to zero
+    # This way, `await stream.drain()` can be used to make sure the buffer is flushed
+    out_transport.set_write_buffer_limits(high=0, low=0)
+    err_transport.set_write_buffer_limits(high=0, low=0)
+
     # Return
     return in_reader, out_writer, err_writer
 
@@ -201,12 +210,15 @@ async def ainput(prompt="", *, streams=None, use_stderr=False, loop=None):
 
 
 async def aprint(
-    *values, sep=None, end="\n", flush=False, streams=None, use_stderr=False, loop=None
+    *values, sep=None, end="\n", flush=True, streams=None, use_stderr=False, loop=None
 ):
     """Asynchronous equivalent to *print*."""
     # Get standard streams
     if streams is None:
         streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     _, writer = streams
-    print(*values, sep=sep, end=end, flush=flush, file=writer)
-    await writer.drain()
+
+    print(*values, sep=sep, end=end, flush=False, file=writer)
+
+    if flush:
+        await writer.drain()
