@@ -36,7 +36,7 @@ async def start_interactive_server(
         start_server = partial(asyncio.start_unix_server, path=path)
 
     client_connected = partial(handle_connect, factory=factory, banner=banner)
-    server = await start_server(client_connected, loop=loop)
+    server = await start_server(client_connected)
     return server
 
 
