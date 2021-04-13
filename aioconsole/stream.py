@@ -4,6 +4,7 @@ import os
 import sys
 import stat
 import asyncio
+from collections import deque
 
 from . import compat
 
@@ -125,19 +126,40 @@ class NonFileStreamWriter:
             loop = asyncio.get_event_loop()
         self.loop = loop
         self.stream = stream
+        self.buffer = deque()
+        self.write_task = None
 
     def write(self, data):
         if isinstance(data, bytes):
             data = data.decode()
-        self.stream.write(data)
+        self.buffer.append(data)
+        if self.write_task is not None and not self.write_task.done():
+            return
+        if self.write_task is not None:
+            write_task, self.write_task = self.write_task, None
+            write_task.result()
+        self.write_task = asyncio.create_task(self._write_task_target())
+
+    async def _write_task_target(self):
+        while self.buffer:
+            data = self.buffer.popleft()
+            await self.loop.run_in_executor(None, self.stream.write, data)
 
     async def drain(self):
+        if self.write_task is not None:
+            await self.write_task
         try:
             flush = self.stream.flush
         except AttributeError:
             pass
         else:
             await self.loop.run_in_executor(None, flush)
+
+    def __del__(self):
+        if self.write_task is not None and not self.write_task.done():
+            self.write_task.cancel()
+        elif self.write_task is not None:
+            self.write_task.result()
 
 
 async def open_standard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):
