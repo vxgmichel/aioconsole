@@ -6,6 +6,7 @@ import pytest
 import asyncio
 from unittest.mock import Mock
 
+from aioconsole import compat
 from aioconsole.stream import create_standard_streams, ainput, aprint
 from aioconsole.stream import is_pipe_transport_compatible
 
@@ -133,20 +134,26 @@ async def test_read_from_closed_pipe():
     stdin.write(b"hello\n")
     stdin.close()
 
+    f_stdin = open(stdin_r, "r")
+    f_stdout = open(stdout_w, "w")
+    f_stderr = open(stderr_w, "r")
+
     reader, writer1, writer2 = await create_standard_streams(
-        open(stdin_r, "r"), open(stdout_w, "w"), open(stderr_w, "r")
+        f_stdin, f_stdout, f_stderr
     )
 
     result = await ainput(">>> ", streams=(reader, writer1))
     assert result == "hello"
 
     writer1.close()
-    await writer1.wait_closed()
-    os.close(stdout_w)
+    if not compat.PY36:
+        await writer1.wait_closed()
+    f_stdout.close()
 
     writer2.close()
-    await writer2.wait_closed()
-    os.close(stderr_w)
+    if not compat.PY36:
+        await writer2.wait_closed()
+    f_stderr.close()
 
     assert open(stdout_r).read() == ">>> "
     assert open(stderr_r).read() == ""

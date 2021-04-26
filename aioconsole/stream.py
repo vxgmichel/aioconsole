@@ -142,7 +142,7 @@ class NonFileStreamWriter:
         if self.write_task is not None and self.write_task.done():
             self.write_task = None
             self.task_finalizer()
-        self.write_task = asyncio.create_task(
+        self.write_task = asyncio.ensure_future(
             _nonfile_stream_writer_task_target(self.buffer, self.stream)
         )
         self.task_finalizer = weakref.finalize(self, self.write_task.result)

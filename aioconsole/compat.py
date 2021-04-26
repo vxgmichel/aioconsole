@@ -2,5 +2,5 @@
 
 import sys
 
-PY37 = sys.version_info >= (3, 7)
+PY36 = (3, 6) <= sys.version_info < (3, 7)
 platform = sys.platform

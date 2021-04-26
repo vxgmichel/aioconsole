@@ -27,7 +27,7 @@ try:
 except NameError:
     help_function = None
 
-current_task = asyncio.current_task if compat.PY37 else asyncio.Task.current_task
+current_task = asyncio.Task.current_task if compat.PY36 else asyncio.current_task
 
 
 class AsynchronousCompiler(codeop.CommandCompiler):
