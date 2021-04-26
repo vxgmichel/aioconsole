@@ -63,8 +63,17 @@ async def test_create_standard_stream_with_non_pipe():
     assert data == b"b\n"
     assert stderr.getvalue() == "b\n"
 
-    writer2.stream = Mock(spec={})
-    await writer2.drain()
+    # Multiple writes
+    writer2.write("c\n")
+    writer2.write("d\n")
+    await asyncio.sleep(0.1)
+    writer2.write("e\n")
+    writer2.close()
+    assert writer2.is_closing()
+    await writer2.wait_closed()
+    assert stderr.getvalue() == "b\nc\nd\ne\n"
+    with pytest.raises(RuntimeError):
+        writer2.write("f\n")
 
     data = await reader.read(2)
     assert data == b"c\n"
