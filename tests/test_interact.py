@@ -52,6 +52,7 @@ async def test_interact_simple(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write("1+1\n")
+        await writer.drain()
         writer.stream.close()
         await interact(banner=banner, stop=False)
         await assert_stream(reader, banner)
@@ -64,6 +65,7 @@ async def test_interact_traceback(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write("1/0\n")
+        await writer.drain()
         writer.stream.close()
         await interact(banner=banner, stop=False)
         # Check stderr
@@ -81,6 +83,7 @@ async def test_interact_traceback(event_loop, monkeypatch):
 async def test_interact_syntax_error(event_loop, monkeypatch):
     with stdcontrol(event_loop, monkeypatch) as (reader, writer):
         writer.write("a b\n")
+        await writer.drain()
         writer.stream.close()
         banner = "A BANNER"
         await interact(banner=banner, stop=False)

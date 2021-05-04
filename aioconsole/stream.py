@@ -3,7 +3,9 @@
 import os
 import sys
 import stat
+import weakref
 import asyncio
+from collections import deque
 
 from . import compat
 
@@ -125,19 +127,51 @@ class NonFileStreamWriter:
             loop = asyncio.get_event_loop()
         self.loop = loop
         self.stream = stream
+        self.buffer = deque()
+        self.write_task = None
+        self.task_finalizer = None
 
     def write(self, data):
+        if self.stream is None:
+            raise RuntimeError("This writer stream is already closed")
         if isinstance(data, bytes):
             data = data.decode()
-        self.stream.write(data)
+        self.buffer.append(data)
+        if self.write_task is not None and not self.write_task.done():
+            return
+        if self.write_task is not None and self.write_task.done():
+            self.write_task = None
+            self.task_finalizer()
+        self.write_task = asyncio.ensure_future(
+            _nonfile_stream_writer_task_target(self.buffer, self.stream)
+        )
+        self.task_finalizer = weakref.finalize(self, self.write_task.result)
 
     async def drain(self):
-        try:
-            flush = self.stream.flush
-        except AttributeError:
-            pass
-        else:
-            await self.loop.run_in_executor(None, flush)
+        if self.write_task is not None:
+            try:
+                await self.write_task
+            finally:
+                self.write_task = None
+                self.task_finalizer.detach()
+
+    def close(self):
+        self.stream = None
+
+    def is_closing(self):
+        return self.stream is None and self.write_task is not None
+
+    async def wait_closed(self):
+        await self.drain()
+
+
+async def _nonfile_stream_writer_task_target(data_buffer, stream):
+    loop = asyncio.get_event_loop()
+    while data_buffer:
+        data = data_buffer.popleft()
+        await loop.run_in_executor(None, stream.write, data)
+    if hasattr(stream, "flush"):
+        await loop.run_in_executor(None, stream.flush)
 
 
 async def open_standard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=None):

@@ -6,6 +6,7 @@ import pytest
 import asyncio
 from unittest.mock import Mock
 
+from aioconsole import compat
 from aioconsole.stream import create_standard_streams, ainput, aprint
 from aioconsole.stream import is_pipe_transport_compatible
 
@@ -13,10 +14,11 @@ from aioconsole.stream import is_pipe_transport_compatible
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on windows")
 @pytest.mark.asyncio
 async def test_create_standard_stream_with_pipe():
-    r, w = os.pipe()
-    stdin = open(r)
-    stdout = open(w, "w")
-    stderr = open(w, "w")
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    stdin = open(r1)
+    stdout = open(w1, "w")
+    stderr = open(w2, "w")
 
     assert is_pipe_transport_compatible(stdin)
     assert is_pipe_transport_compatible(stdout)
@@ -31,8 +33,7 @@ async def test_create_standard_stream_with_pipe():
 
     writer2.write("b\n")
     await writer2.drain()
-    data = await reader.readline()
-    assert data == b"b\n"
+    assert os.read(r2, 2) == b"b\n"
 
     reader._transport = None
     stdout.fileno = Mock(return_value=0)
@@ -63,8 +64,17 @@ async def test_create_standard_stream_with_non_pipe():
     assert data == b"b\n"
     assert stderr.getvalue() == "b\n"
 
-    writer2.stream = Mock(spec={})
-    await writer2.drain()
+    # Multiple writes
+    writer2.write("c\n")
+    writer2.write("d\n")
+    await asyncio.sleep(0.1)
+    writer2.write("e\n")
+    writer2.close()
+    assert writer2.is_closing()
+    await writer2.wait_closed()
+    assert stderr.getvalue() == "b\nc\nd\ne\n"
+    with pytest.raises(RuntimeError):
+        writer2.write("f\n")
 
     data = await reader.read(2)
     assert data == b"c\n"
@@ -104,9 +114,13 @@ async def test_aprint_with_standard_stream(monkeypatch):
 
 @pytest.mark.parametrize("flush", [False, True])
 @pytest.mark.asyncio
-async def test_aprint_with_flushing_stream(monkeypatch, flush):
+async def test_aprint_flush_argument(monkeypatch, flush):
     mock_stdio(monkeypatch)
     await aprint("a", flush=flush)
+    if not flush:
+        # Might or might not be there yet, depending on internal logic
+        assert sys.stdout.getvalue() in ("", "a\n")
+        await aprint("", end="", flush=True)
     assert sys.stdout.getvalue() == "a\n"
 
 
@@ -120,15 +134,26 @@ async def test_read_from_closed_pipe():
     stdin.write(b"hello\n")
     stdin.close()
 
+    f_stdin = open(stdin_r, "r")
+    f_stdout = open(stdout_w, "w")
+    f_stderr = open(stderr_w, "r")
+
     reader, writer1, writer2 = await create_standard_streams(
-        open(stdin_r, "r"), open(stdout_w, "w"), open(stderr_w, "r")
+        f_stdin, f_stdout, f_stderr
     )
 
     result = await ainput(">>> ", streams=(reader, writer1))
     assert result == "hello"
 
-    os.close(stdout_w)
-    os.close(stderr_w)
+    writer1.close()
+    if not compat.PY36:
+        await writer1.wait_closed()
+    f_stdout.close()
+
+    writer2.close()
+    if not compat.PY36:
+        await writer2.wait_closed()
+    f_stderr.close()
 
     assert open(stdout_r).read() == ">>> "
     assert open(stderr_r).read() == ""
@@ -137,10 +162,11 @@ async def test_read_from_closed_pipe():
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on windows")
 @pytest.mark.asyncio
 async def test_standard_stream_pipe_buffering():
-    r, w = os.pipe()
-    stdin = open(r)
-    stdout = open(w, "w")
-    stderr = open(w, "w")
+    r1, w1 = os.pipe()
+    r2, w2 = os.pipe()
+    stdin = open(r1)
+    stdout = open(w1, "w")
+    stderr = open(w2, "w")
 
     assert is_pipe_transport_compatible(stdin)
     assert is_pipe_transport_compatible(stdout)
