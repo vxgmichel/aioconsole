@@ -256,3 +256,9 @@ async def aprint(
 
     if flush:
         await writer.drain()
+
+async aslow_print(text, speed, newline=True):
+    for letter in text:
+        await aprint(letter, end="", flush=True)
+    if newline:
+        await aprint(end="")
