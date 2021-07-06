@@ -260,5 +260,6 @@ async def aprint(
 async def afancy_print(text, speed, newline=True):
     for letter in text:
         await aprint(letter, end="", flush=True)
+        await asyncio.sleep(speed)
     if newline:
         await aprint(end="")
