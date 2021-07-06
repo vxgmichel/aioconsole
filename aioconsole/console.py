@@ -82,7 +82,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             await stream.aprint(letter, end="", flush=True)
             await asyncio.sleep(speed)
         if newline:
-            await aprint(end="")
+            await stream.aprint(end="")
 
     @functools.wraps(stream.ainput)
     async def ainput(self, prompt="", *, streams=None, use_stderr=False, loop=None):
