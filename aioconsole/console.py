@@ -76,6 +76,14 @@ class AsynchronousConsole(code.InteractiveConsole):
     def help(self, obj):
         self.print(pydoc.render_doc(obj))
 
+    @functools.wraps(stream.afancy_print)
+    async def afancy_print(self, text, speed, newline=True):
+        for letter in text:
+            await stream.aprint(letter, end="", flush=True)
+            await asyncio.sleep(speed)
+        if newline:
+            await aprint(end="")
+
     @functools.wraps(stream.ainput)
     async def ainput(self, prompt="", *, streams=None, use_stderr=False, loop=None):
         # Get the console streams by default
