@@ -8,6 +8,7 @@ import asyncio
 from collections import deque
 
 from . import compat
+from .responses import FancyResponse
 
 
 def is_pipe_transport_compatible(pipe):
@@ -263,3 +264,10 @@ async def afancy_print(text, speed, newline=True):
         await asyncio.sleep(speed)
     if newline:
         await aprint("\n", end="")
+    response = FancyResponse()
+    return response.text
+    
+async def afancy_input(text):
+    text += " "
+    data = await ainput(await afancy_print(text, 0.10, newline=False))
+    return data
