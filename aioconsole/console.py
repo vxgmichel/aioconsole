@@ -13,6 +13,7 @@ import traceback
 from . import stream
 from . import compat
 from . import execute
+from .responses import FancyResponse
 
 EXTRA_MESSAGE = """\
 ---
@@ -83,6 +84,14 @@ class AsynchronousConsole(code.InteractiveConsole):
             await asyncio.sleep(speed)
         if newline:
             await stream.aprint("\n", end="")
+        response = FancyResponse()
+        return response.text
+
+    @functools.wraps(stream.afancy_input)
+    async def afancy_input(self, text):
+        text += " "
+        data = await stream.ainput(await stream.afancy_print(text, 0.10, newline=False))
+        return data
 
     @functools.wraps(stream.ainput)
     async def ainput(self, prompt="", *, streams=None, use_stderr=False, loop=None):
