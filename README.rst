@@ -25,7 +25,7 @@ Asynchronous console and interfaces for asyncio
 
 aioconsole_ provides:
 
-* asynchronous equivalents to `input`_, `print`_, `exec`_, `eval`, and `code.interact`_
+* asynchronous equivalents to `input`_, `print`_, `exec`_, `eval`_, and `code.interact`_
 * an interactive loop running the asynchronous python console
 * a way to customize and run command line interface using `argparse`_
 * `stream`_ support to serve interfaces instead of using standard streams
@@ -123,6 +123,7 @@ Vincent Michel: vxgmichel@gmail.com
 .. _input: https://docs.python.org/3/library/functions.html#input
 .. _print: https://docs.python.org/3/library/functions.html#print
 .. _exec: https://docs.python.org/3/library/functions.html#exec
+.. _eval: https://docs.python.org/3/library/functions.html#eval
 .. _code.interact: https://docs.python.org/3/library/code.html#code.interact
 .. _argparse: https://docs.python.org/dev/library/argparse.html
 .. _stream: https://docs.python.org/3/library/asyncio-stream.html
