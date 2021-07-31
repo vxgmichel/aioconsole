@@ -78,12 +78,25 @@ async def aexec(source, local=None, stream=None):
 
     Support the *await* syntax.
     """
-    if local is None:
-        local = {}
+    local = local or {}
     if isinstance(source, str):
         source = compile_for_aexec(source)
     for tree in source:
         coro = make_coroutine_from_tree(tree, local=local)
         result, new_local = await coro
+        exec_result(result, new_local, stream)
+        full_update(local, new_local)
+
+async def aeval(source, local=None):
+    """Asynchronous equivalent to *eval*.
+
+    Support the *await* syntax.
+    """"
+    local = local or {}
+    if isinstance(source, str):
+        source = compile_for_aexec(source, filename="<aeval>")
+    for tree in source:
+        coro = make_coroutine_from_tree(tree, local=local, filename="<aeval>")
+        result, new_local = await Coro
         exec_result(result, new_local, stream)
         full_update(local, new_local)
