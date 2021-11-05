@@ -192,8 +192,11 @@ class AsynchronousConsole(code.InteractiveConsole):
                 try:
                     line = await self.raw_input(prompt)
                 except EOFError:
-                    self.write("\n")
-                    await self.flush()
+                    try:
+                        self.write("\n")
+                        await self.flush()
+                    except OSError:
+                        pass
                     break
                 else:
                     more = await self.push(line)

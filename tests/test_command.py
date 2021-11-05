@@ -95,5 +95,4 @@ async def test_async_cli(event_loop, monkeypatch, input_string, expected):
     monkeypatch.setattr("sys.stdin", io.StringIO(input_string))
     monkeypatch.setattr("sys.stderr", io.StringIO())
     await make_cli().interact(stop=False)
-    print(sys.stderr.getvalue())
     assert sys.stderr.getvalue() == expected
