@@ -91,8 +91,14 @@ async def test_interact_syntax_error(event_loop, monkeypatch):
         # Skip line
         await reader.readline()
         await assert_stream(reader, "    a b")
-        await assert_stream(reader, "      ^", loose=True)
-        await assert_stream(reader, "SyntaxError: invalid syntax")
+        if sys.version_info < (3, 10):
+            await assert_stream(reader, "      ^", loose=True)
+            await assert_stream(reader, "SyntaxError: invalid syntax")
+        else:
+            await assert_stream(reader, "    ^^^", loose=True)
+            await assert_stream(
+                reader, "SyntaxError: invalid syntax. Perhaps you forgot a comma?"
+            )
         await assert_stream(reader, sys.ps1)
 
 
@@ -116,6 +122,23 @@ async def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
         writer.stream.close()
         # Wait for interact to finish
         await assert_stream(reader, sys.ps1)
+        await task
+        # Test
+        assert sys.stdout.getvalue() == ""
+
+
+@pytest.mark.asyncio
+async def test_broken_pipe(event_loop, monkeypatch, signaling):
+    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+        # Start interaction
+        banner = "A BANNER"
+        task = asyncio.ensure_future(interact(banner=banner, stop=False))
+        # Wait for banner
+        await assert_stream(reader, banner)
+        # Close stdin
+        writer.stream.close()
+        reader.stream.close()
+        # Wait for interact to finish
         await task
         # Test
         assert sys.stdout.getvalue() == ""
