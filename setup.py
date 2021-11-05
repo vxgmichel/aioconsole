@@ -19,7 +19,7 @@ Programming Language :: Python :: 3 :: Only
 
 setup(
     name="aioconsole",
-    version="0.3.3.dev0",
+    version="0.3.3",
     packages=["aioconsole"],
     entry_points={"console_scripts": ["apython = aioconsole:run_apython"]},
     setup_requires=["pytest-runner" if TESTING else ""],
