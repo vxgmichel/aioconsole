@@ -1,4 +1,4 @@
-"""Provide an asychronous equivalent to *input*."""
+"""Provide an asynchronous equivalent to *input*."""
 
 import os
 import sys
