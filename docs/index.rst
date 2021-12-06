@@ -199,7 +199,7 @@ The package also provides an ``AsychronousCli`` object. It is
 initialized with a dictionary of commands and can be scheduled with the
 coroutine ``async_cli.interact()``. A dedicated command line interface
 to the echo server is defined in `example/cli.py`_. In this case, the
-command dictonary is defined as:
+command dictionary is defined as:
 
 .. sourcecode:: python3
 

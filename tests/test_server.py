@@ -34,7 +34,7 @@ async def test_server(event_loop):
 async def test_uds_server(event_loop, tmpdir_factory):
     path = str(tmpdir_factory.mktemp("uds") / "my_uds")
 
-    # Not availble on windows
+    # Not available on windows
     if compat.platform == "win32":
         with pytest.raises(ValueError):
             await start_console_server(path=path, banner="test")
