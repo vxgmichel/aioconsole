@@ -6,6 +6,8 @@ import stat
 import weakref
 import asyncio
 from collections import deque
+from threading import Thread
+from concurrent.futures import Future
 
 from . import compat
 
@@ -24,6 +26,23 @@ def is_pipe_transport_compatible(pipe):
     if not (is_char or is_fifo or is_socket):
         return False
     return True
+
+
+async def run_as_daemon(func, *args):
+    future = Future()
+    future.set_running_or_notify_cancel()
+
+    def daemon():
+        try:
+            result = func(*args)
+        except Exception as e:
+            future.set_exception(e)
+        else:
+            future.set_result(result)
+
+    Thread(target=daemon, daemon=True).start()
+    await asyncio.wrap_future(future)
+    return future.result()
 
 
 def protect_standard_streams(stream):
@@ -98,14 +117,14 @@ class NonFileStreamReader:
         return self.eof
 
     async def readline(self):
-        data = await self.loop.run_in_executor(None, self.stream.readline)
+        data = await run_as_daemon(self.stream.readline)
         if isinstance(data, str):
             data = data.encode()
         self.eof = not data
         return data
 
     async def read(self, n=-1):
-        data = await self.loop.run_in_executor(None, self.stream.read, n)
+        data = await run_as_daemon(self.stream.read, n)
         if isinstance(data, str):
             data = data.encode()
         self.eof = not data
