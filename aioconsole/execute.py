@@ -63,13 +63,6 @@ def compile_for_aexec(
     coroutine = CORO_DEF + "\n" + indented + "\n"
     interactive = compile(coroutine, filename, mode, flags).body[0]
 
-    # Check EOF errors
-    try:
-        compile(source, filename, mode, flags)
-    except SyntaxError as exc:
-        if exc.msg == "unexpected EOF while parsing":
-            raise
-
     return [make_tree(statement, filename, mode) for statement in interactive.body]
 
 
