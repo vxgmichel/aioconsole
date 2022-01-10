@@ -11,7 +11,6 @@ import functools
 import traceback
 
 from . import stream
-from . import compat
 from . import execute
 
 EXTRA_MESSAGE = """\
@@ -26,8 +25,6 @@ try:
     help_function = help
 except NameError:
     help_function = None
-
-current_task = asyncio.Task.current_task if compat.PY36 else asyncio.current_task
 
 
 class AsynchronousCompiler(codeop.CommandCompiler):
@@ -126,7 +123,7 @@ class AsynchronousConsole(code.InteractiveConsole):
             task._wakeup(task._fut_waiter)
 
     def add_sigint_handler(self):
-        task = current_task(loop=self.loop)
+        task = asyncio.current_task(loop=self.loop)
         try:
             self.loop.add_signal_handler(signal.SIGINT, self.handle_sigint, task)
         except NotImplementedError:

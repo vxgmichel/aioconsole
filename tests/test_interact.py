@@ -72,7 +72,7 @@ async def test_interact_traceback(event_loop, monkeypatch):
         await assert_stream(reader, banner)
         await assert_stream(reader, sys.ps1 + "Traceback (most recent call last):")
         # Skip 3 lines
-        for _ in range(3):
+        for _ in range(4 if sys.version_info >= (3, 11) else 3):
             await reader.readline()
         # Check stderr
         await assert_stream(reader, "ZeroDivisionError: division by zero")
@@ -91,14 +91,18 @@ async def test_interact_syntax_error(event_loop, monkeypatch):
         # Skip line
         await reader.readline()
         await assert_stream(reader, "    a b")
-        if sys.version_info < (3, 10):
-            await assert_stream(reader, "      ^", loose=True)
-            await assert_stream(reader, "SyntaxError: invalid syntax")
-        else:
+        if (
+            sys.version_info >= (3, 10, 0)
+            and sys.version_info < (3, 10, 1)
+            or sys.version_info >= (3, 11)
+        ):
             await assert_stream(reader, "    ^^^", loose=True)
             await assert_stream(
                 reader, "SyntaxError: invalid syntax. Perhaps you forgot a comma?"
             )
+        else:
+            await assert_stream(reader, "      ^", loose=True)
+            await assert_stream(reader, "SyntaxError: invalid syntax")
         await assert_stream(reader, sys.ps1)
 
 
