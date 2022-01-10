@@ -24,8 +24,7 @@ async def test_server(event_loop):
     writer.write_eof()
     assert (await reader.readline()) == b">>> \n"
     writer.close()
-    if not compat.PY36:
-        await writer.wait_closed()
+    await writer.wait_closed()
     server.close()
     await server.wait_closed()
 
@@ -55,8 +54,7 @@ async def test_uds_server(event_loop, tmpdir_factory):
     writer.write_eof()
     assert (await reader.readline()) == b">>> \n"
     writer.close()
-    if not compat.PY36:
-        await writer.wait_closed()
+    await writer.wait_closed()
     server.close()
     await server.wait_closed()
 
