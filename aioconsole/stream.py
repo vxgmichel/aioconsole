@@ -35,7 +35,7 @@ async def run_as_daemon(func, *args):
     def daemon():
         try:
             result = func(*args)
-        except Exception as e:
+        except BaseException as e:
             future.set_exception(e)
         else:
             future.set_result(result)
