@@ -41,8 +41,7 @@ async def run_as_daemon(func, *args):
             future.set_result(result)
 
     Thread(target=daemon, daemon=True).start()
-    await asyncio.wrap_future(future)
-    return future.result()
+    return await asyncio.wrap_future(future)
 
 
 def protect_standard_streams(stream):
