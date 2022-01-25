@@ -2,6 +2,7 @@
 
 import ast
 import codeop
+from re import findall
 
 CORO_NAME = "__corofn"
 CORO_DEF = f"async def {CORO_NAME}(): "
@@ -59,8 +60,17 @@ def compile_for_aexec(
         flags |= codeop.PyCF_DONT_IMPLY_DEDENT
 
     # Avoid a syntax error by wrapping code with `async def`
-    indented = "\n".join(line and " " * 4 + line for line in source.split("\n"))
-    coroutine = CORO_DEF + "\n" + indented + "\n"
+    indented = ''
+    unclosed = ''
+    for line in source.split("\n"):
+        # Disabling indentation inside multiline strings
+        indented += (' ' * 4 if not unclosed and line else '') + line + '\n'
+        for q in findall('"""' '|' "'''", line):
+            if not unclosed:
+                unclosed = q
+            elif unclosed == q:
+                unclosed = ''
+    coroutine = CORO_DEF + "\n" + indented
     interactive = compile(coroutine, filename, mode, flags).body[0]
 
     return [make_tree(statement, filename, mode) for statement in interactive.body]
