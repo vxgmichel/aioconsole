@@ -32,16 +32,28 @@ async def run_as_daemon(func, *args):
     future = Future()
     future.set_running_or_notify_cancel()
 
+    # A bug in python 3.7 makes it a bad idea to set a BaseException
+    # in a wrapped future (see except statement in asyncio.Task.__wakeup)
+    # Instead, we'll wrap base exceptions into exceptions and unwrap them
+    # on the other side of the call.
+    class BaseExceptionWrapper(Exception):
+        pass
+
     def daemon():
         try:
             result = func(*args)
-        except BaseException as e:
+        except Exception as e:
             future.set_exception(e)
+        except BaseException as e:
+            future.set_exception(BaseExceptionWrapper(e))
         else:
             future.set_result(result)
 
     Thread(target=daemon, daemon=True).start()
-    return await asyncio.wrap_future(future)
+    try:
+        return await asyncio.wrap_future(future)
+    except BaseExceptionWrapper as exc:
+        raise exc.args[0]
 
 
 def protect_standard_streams(stream):
