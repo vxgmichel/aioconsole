@@ -3,6 +3,8 @@
 import ast
 import codeop
 from re import findall
+from io import StringIO
+from tokenize import generate_tokens, COMMENT, TokenError
 
 CORO_NAME = "__corofn"
 CORO_DEF = f"async def {CORO_NAME}(): "
@@ -51,6 +53,18 @@ def make_coroutine_from_tree(tree, filename="<aexec>", symbol="single", local={}
     return dct[CORO_NAME](**local)
 
 
+def remove_comment(line):
+    end = len(line)
+    try:
+        for token in generate_tokens(StringIO(line).readline):
+            if token.type == COMMENT:
+                end = token.start[1]
+                break
+    except TokenError:
+        pass
+    return line[:end]
+
+
 def compile_for_aexec(
     source, filename="<aexec>", mode="single", dont_imply_dedent=False, local={}
 ):
@@ -64,6 +78,7 @@ def compile_for_aexec(
     unclosed = ''
     for line in source.split("\n"):
         # Disabling indentation inside multiline strings
+        line = remove_comment(line)
         indented += (' ' * 4 if not unclosed and line else '') + line + '\n'
         for q in findall('"""' '|' "'''", line):
             if not unclosed:
