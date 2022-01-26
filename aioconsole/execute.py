@@ -30,8 +30,35 @@ def exec_result(obj, local, stream):
         print(repr(obj), file=stream)
 
 
+class ReturnChecker(ast.NodeVisitor):
+    def __init__(self, filename):
+        super().__init__()
+        self.filename = filename
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        return  # skip functions
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        return  # async functions too
+
+    def visit_Return(self, node: ast.Return):
+        raise SyntaxError(
+            "'return' outside function",
+            (self.filename, node.lineno, node.col_offset+1, None)
+        )
+
+    def visit_Yield(self, node: ast.Yield):
+        raise SyntaxError(
+            "'yield' outside function",
+            (self.filename, node.lineno, node.col_offset+1, None)
+        )
+
+
 def make_tree(statement, filename="<aexec>", symbol="single", local={}):
     """Helper for *aexec*."""
+    # Check for returns and yields
+    ReturnChecker(filename).visit(statement)
+
     # Create tree
     tree = ast.parse(CORO_CODE, filename, symbol)
     # Check expression statement
