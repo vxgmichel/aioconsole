@@ -45,7 +45,7 @@ async def test_create_standard_stream_with_pipe():
 
 
 @pytest.mark.asyncio
-async def test_create_standard_stream_with_non_pipe():
+async def test_create_standard_stream_with_non_pipe(monkeypatch):
     stdin = io.StringIO("a\nb\nc\nd\n")
     stdout = io.StringIO()
     stderr = io.StringIO()
@@ -84,6 +84,25 @@ async def test_create_standard_stream_with_non_pipe():
         assert data == b"d\n"
 
     assert reader.at_eof() is True
+
+    # Check exception handling in the daemon thread
+
+    class KeyboardInterruptLike(BaseException):
+        pass
+
+    def raise_keyboard_interrupt(*args):
+        raise KeyboardInterruptLike
+
+    def raise_os_error(*args):
+        raise OSError
+
+    monkeypatch.setattr(stdin, "readline", raise_os_error)
+    with pytest.raises(OSError):
+        data = await reader.readline()
+
+    monkeypatch.setattr(stdin, "read", raise_keyboard_interrupt)
+    with pytest.raises(KeyboardInterruptLike):
+        data = await reader.read()
 
 
 def mock_stdio(monkeypatch, input_text=""):
