@@ -21,6 +21,8 @@ testdata = {
     "modify": ({"b": 1}, "b=2", None, {"b": 2}),
     "multiple": ({}, "c=3;d=4;5", 5, {"c": 3, "d": 4}),
     "async": ({"coro": coro}, "await coro(6)", 6, {"coro": coro}),
+    "multiline string": ({}, '"""\n"""', "\n", {}),
+    "splitted string": ({}, '"a\\\nb"', "ab", {}),
 }
 
 
