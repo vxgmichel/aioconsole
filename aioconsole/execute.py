@@ -2,9 +2,8 @@
 
 import ast
 import codeop
-from re import findall
 from io import StringIO
-from tokenize import generate_tokens, COMMENT, TokenError
+from tokenize import generate_tokens, STRING, TokenError
 
 CORO_NAME = "__corofn"
 CORO_DEF = f"async def {CORO_NAME}(): "
@@ -53,16 +52,10 @@ def make_coroutine_from_tree(tree, filename="<aexec>", symbol="single", local={}
     return dct[CORO_NAME](**local)
 
 
-def remove_comment(line):
-    end = len(line)
-    try:
-        for token in generate_tokens(StringIO(line).readline):
-            if token.type == COMMENT:
-                end = token.start[1]
-                break
-    except TokenError:
-        pass
-    return line[:end]
+def get_non_indented_lines(source):
+    for token in generate_tokens(StringIO(source).readline):
+        if token.type == STRING:
+            yield from range(token.start[0], token.end[0])
 
 
 def compile_for_aexec(
@@ -74,18 +67,18 @@ def compile_for_aexec(
         flags |= codeop.PyCF_DONT_IMPLY_DEDENT
 
     # Avoid a syntax error by wrapping code with `async def`
-    indented = ''
-    unclosed = ''
-    for line in source.split("\n"):
-        # Disabling indentation inside multiline strings
-        line = remove_comment(line)
-        indented += (' ' * 4 if not unclosed and line else '') + line + '\n'
-        for q in findall('"""' '|' "'''", line):
-            if not unclosed:
-                unclosed = q
-            elif unclosed == q:
-                unclosed = ''
-    coroutine = CORO_DEF + "\n" + indented
+    # Disabling indentation inside multiline strings
+    try:
+        non_indented = set(  # sets are faster for `in` operation
+            get_non_indented_lines(source)
+        )
+    except TokenError:
+        non_indented = set()
+    indented = "\n".join(
+        (" " * 4 if i not in non_indented and line else "") + line
+        for i, line in enumerate(source.split("\n"))
+    )
+    coroutine = CORO_DEF + "\n" + indented + "\n"
     interactive = compile(coroutine, filename, mode, flags).body[0]
 
     return [make_tree(statement, filename, mode) for statement in interactive.body]
