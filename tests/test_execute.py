@@ -44,3 +44,9 @@ async def test_aexec(event_loop, local, code, expected_result, expected_local):
         assert stream.getvalue().strip() == repr(expected_result)
     assert local.pop("_") == expected_result
     assert local == expected_local
+
+
+@pytest.mark.asyncio
+async def test_incomplete_code():
+    with pytest.raises(SyntaxError):
+        await aexec("(")
