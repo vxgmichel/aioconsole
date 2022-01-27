@@ -55,42 +55,33 @@ async def test_incomplete_code():
 # Test return and yield handling
 
 
-async def exc_from(code):
-    try:
-        await aexec(code)
-    except Exception as e:
-        return e
-    else:
-        return None
-
-
 @pytest.mark.asyncio
 async def test_return_handling():
-    error = await exc_from("return None, {}")
+    with pytest.raises(SyntaxError) as context:
+        await aexec("return None, {}")
 
-    assert isinstance(error, SyntaxError)
-    assert error.msg == "'return' outside function"
+    assert context.value.msg == "'return' outside function"
 
 
 @pytest.mark.asyncio
 async def test_yield_handling():
-    error = await exc_from("for i in range(5): yield i")
+    with pytest.raises(SyntaxError) as context:
+        await aexec("for i in range(5): yield i")
 
-    assert isinstance(error, SyntaxError)
-    assert error.msg == "'yield' outside function"
+    assert context.value.msg == "'yield' outside function"
 
 
 @pytest.mark.asyncio
 async def test_yield_from_handling():
-    error = await exc_from("yield from range(5)")
+    with pytest.raises(SyntaxError) as context:
+        await aexec("yield from range(5)")
 
-    assert isinstance(error, SyntaxError)
-    assert error.msg == "'yield' outside function"
+    assert context.value.msg == "'yield' outside function"
 
 
 @pytest.mark.asyncio
 async def test_correct():
-    assert await exc_from("def x(): return") is None
-    assert await exc_from("async def x(): return") is None
-    assert await exc_from("def x(): yield") is None
-    assert await exc_from("async def x(): yield") is None
+    await aexec("def x(): return")
+    await aexec("async def x(): return")
+    await aexec("def x(): yield")
+    await aexec("async def x(): yield")
