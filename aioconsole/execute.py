@@ -53,9 +53,13 @@ def make_coroutine_from_tree(tree, filename="<aexec>", symbol="single", local={}
 
 
 def get_non_indented_lines(source):
-    for token in generate_tokens(StringIO(source).readline):
-        if token.type == STRING:
-            yield from range(token.start[0], token.end[0])
+    try:
+        for token in generate_tokens(StringIO(source).readline):
+            if token.type == STRING:
+                # .start and .end line numbers are one-indexed
+                yield from range(token.start[0], token.end[0])
+    except TokenError:
+        pass
 
 
 def compile_for_aexec(
@@ -68,12 +72,9 @@ def compile_for_aexec(
 
     # Avoid a syntax error by wrapping code with `async def`
     # Disabling indentation inside multiline strings
-    try:
-        non_indented = set(  # sets are faster for `in` operation
-            get_non_indented_lines(source)
-        )
-    except TokenError:
-        non_indented = set()
+    non_indented = set(  # sets are faster for `in` operation
+        get_non_indented_lines(source)
+    )
     indented = "\n".join(
         (" " * 4 if i not in non_indented and line else "") + line
         for i, line in enumerate(source.split("\n"))
