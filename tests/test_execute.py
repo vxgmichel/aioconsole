@@ -50,3 +50,38 @@ async def test_aexec(event_loop, local, code, expected_result, expected_local):
 async def test_incomplete_code():
     with pytest.raises(SyntaxError):
         await aexec("(")
+
+
+# Test return and yield handling
+
+
+@pytest.mark.asyncio
+async def test_return_handling():
+    with pytest.raises(SyntaxError) as context:
+        await aexec("return None, {}")
+
+    assert context.value.msg == "'return' outside function"
+
+
+@pytest.mark.asyncio
+async def test_yield_handling():
+    with pytest.raises(SyntaxError) as context:
+        await aexec("for i in range(5): yield i")
+
+    assert context.value.msg == "'yield' outside function"
+
+
+@pytest.mark.asyncio
+async def test_yield_from_handling():
+    with pytest.raises(SyntaxError) as context:
+        await aexec("yield from range(5)")
+
+    assert context.value.msg == "'yield' outside function"
+
+
+@pytest.mark.asyncio
+async def test_correct():
+    await aexec("def x(): return")
+    await aexec("async def x(): return")
+    await aexec("def x(): yield")
+    await aexec("async def x(): yield")
