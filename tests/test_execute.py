@@ -21,6 +21,8 @@ testdata = {
     "modify": ({"b": 1}, "b=2", None, {"b": 2}),
     "multiple": ({}, "c=3;d=4;5", 5, {"c": 3, "d": 4}),
     "async": ({"coro": coro}, "await coro(6)", 6, {"coro": coro}),
+    "multiline string": ({}, '"""\n"""', "\n", {}),
+    "splitted string": ({}, '"a\\\nb"', "ab", {}),
 }
 
 
@@ -42,3 +44,9 @@ async def test_aexec(event_loop, local, code, expected_result, expected_local):
         assert stream.getvalue().strip() == repr(expected_result)
     assert local.pop("_") == expected_result
     assert local == expected_local
+
+
+@pytest.mark.asyncio
+async def test_incomplete_code():
+    with pytest.raises(SyntaxError):
+        await aexec("(")

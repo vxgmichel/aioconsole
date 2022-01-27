@@ -2,6 +2,8 @@
 
 import ast
 import codeop
+from io import StringIO
+from tokenize import generate_tokens, STRING, TokenError
 
 CORO_NAME = "__corofn"
 CORO_DEF = f"async def {CORO_NAME}(): "
@@ -50,6 +52,16 @@ def make_coroutine_from_tree(tree, filename="<aexec>", symbol="single", local={}
     return dct[CORO_NAME](**local)
 
 
+def get_non_indented_lines(source):
+    try:
+        for token in generate_tokens(StringIO(source).readline):
+            if token.type == STRING:
+                # .start and .end line numbers are one-indexed
+                yield from range(token.start[0], token.end[0])
+    except TokenError:
+        pass
+
+
 def compile_for_aexec(
     source, filename="<aexec>", mode="single", dont_imply_dedent=False, local={}
 ):
@@ -59,7 +71,14 @@ def compile_for_aexec(
         flags |= codeop.PyCF_DONT_IMPLY_DEDENT
 
     # Avoid a syntax error by wrapping code with `async def`
-    indented = "\n".join(line and " " * 4 + line for line in source.split("\n"))
+    # Disabling indentation inside multiline strings
+    non_indented = set(  # sets are faster for `in` operation
+        get_non_indented_lines(source)
+    )
+    indented = "\n".join(
+        (" " * 4 if i not in non_indented and line else "") + line
+        for i, line in enumerate(source.split("\n"))
+    )
     coroutine = CORO_DEF + "\n" + indented + "\n"
     interactive = compile(coroutine, filename, mode, flags).body[0]
 
