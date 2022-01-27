@@ -44,14 +44,17 @@ class ReturnChecker(ast.NodeVisitor):
     def visit_Return(self, node: ast.Return):
         raise SyntaxError(
             "'return' outside function",
-            (self.filename, node.lineno, node.col_offset+1, None)
+            (self.filename, node.lineno, node.col_offset + 1, None),
         )
 
     def visit_Yield(self, node: ast.Yield):
         raise SyntaxError(
             "'yield' outside function",
-            (self.filename, node.lineno, node.col_offset+1, None)
+            (self.filename, node.lineno, node.col_offset + 1, None),
         )
+
+    def visit_YieldFrom(self, node: ast.YieldFrom):
+        self.visit_Yield(node)  # handle in the same way as regular yield
 
 
 def make_tree(statement, filename="<aexec>", symbol="single", local={}):
