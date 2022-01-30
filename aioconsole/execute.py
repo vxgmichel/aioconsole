@@ -109,10 +109,10 @@ def compile_for_aexec(
         (" " * 4 if i not in non_indented and line else "") + line
         for i, line in enumerate(source.split("\n"))
     )
-    coroutine = CORO_DEF + "\n" + indented + "\n"
+    coroutine = CORO_DEF + "\n    pass\n" + indented + "\n"
     interactive = compile(coroutine, filename, mode, flags).body[0]
 
-    return [make_tree(statement, filename, mode) for statement in interactive.body]
+    return [make_tree(statement, filename, mode) for statement in interactive.body[1:]]
 
 
 async def aexec(source, local=None, stream=None):

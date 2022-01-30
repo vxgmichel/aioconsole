@@ -52,6 +52,12 @@ async def test_incomplete_code():
         await aexec("(")
 
 
+@pytest.mark.asyncio
+async def test_unexpected_indent():
+    with pytest.raises(IndentationError):
+        await aexec(" 1")
+
+
 # Test return and yield handling
 
 
