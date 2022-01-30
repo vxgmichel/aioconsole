@@ -28,10 +28,15 @@ except NameError:
 
 
 class AsynchronousCompiler(codeop.CommandCompiler):
-    def __init__(self):
-        self.compiler = functools.partial(
-            execute.compile_for_aexec, dont_imply_dedent=True
-        )
+    def __call__(self, source, filename, symbol):
+        try:
+            code = super().__call__(source, filename, symbol)
+        except SyntaxError:
+            pass
+        else:
+            if code is None:
+                return None
+        return execute.compile_for_aexec(source, filename, symbol, True)
 
 
 class AsynchronousConsole(code.InteractiveConsole):
