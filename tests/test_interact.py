@@ -146,3 +146,15 @@ async def test_broken_pipe(event_loop, monkeypatch, signaling):
         await task
         # Test
         assert sys.stdout.getvalue() == ""
+
+
+@pytest.mark.asyncio
+async def test_interact_multiple_indented_lines(event_loop, monkeypatch):
+    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+        banner = "A BANNER"
+        writer.write("def x():\n    print(1)\n    print(2)\n\nx()\n")
+        await writer.drain()
+        writer.stream.close()
+        await interact(banner=banner, stop=False)
+        await assert_stream(reader, banner)
+        await assert_stream(reader, sys.ps1 + sys.ps2 * 3 + sys.ps1 + "1\n2")

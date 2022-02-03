@@ -107,7 +107,9 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     async def runcode(self, code):
         try:
-            await execute.aexec(code, self.locals, self)
+            await execute.aexec(
+                code, local=self.locals, stream=self, filename=self.filename
+            )
         except SystemExit:
             raise
         except BaseException:

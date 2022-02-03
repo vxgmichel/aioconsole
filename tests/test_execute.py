@@ -3,6 +3,7 @@ import asyncio
 
 import pytest
 from aioconsole import aexec
+from aioconsole.execute import compile_for_aexec
 
 
 # Helper
@@ -35,9 +36,22 @@ testdata = {
     ids=list(testdata.keys()),
 )
 @pytest.mark.asyncio
-async def test_aexec(event_loop, local, code, expected_result, expected_local):
+async def test_aexec_exec_mode(local, code, expected_result, expected_local):
     stream = io.StringIO()
     await aexec(code, local=local, stream=stream)
+    assert stream.getvalue() == ""
+    assert local == expected_local
+
+
+@pytest.mark.parametrize(
+    "local, code, expected_result, expected_local",
+    list(testdata.values()),
+    ids=list(testdata.keys()),
+)
+@pytest.mark.asyncio
+async def test_aexec_single_mode(local, code, expected_result, expected_local):
+    stream = io.StringIO()
+    await aexec(compile_for_aexec(code, "test", "single"), local=local, stream=stream)
     if expected_result is None:
         assert stream.getvalue() == ""
     else:
@@ -46,10 +60,35 @@ async def test_aexec(event_loop, local, code, expected_result, expected_local):
     assert local == expected_local
 
 
+def test_invalid_compile_modes():
+    with pytest.raises(ValueError):
+        compile_for_aexec("1\n", "test", "eval")
+    with pytest.raises(ValueError):
+        compile_for_aexec("1\n", "test", "unknown")
+
+
 @pytest.mark.asyncio
 async def test_incomplete_code():
     with pytest.raises(SyntaxError):
         await aexec("(")
+
+
+@pytest.mark.asyncio
+async def test_missing_newline():
+    # Missing newline in "exec" mode is OK
+    dct = {}
+    await aexec("def f():\n  return 1", dct)
+    assert dct["f"]() == 1
+    await aexec("def g(): return 2", dct)
+    assert dct["g"]() == 2
+
+    # Missing newline in "single" raises a SyntaxError
+    with pytest.raises(SyntaxError):
+        await aexec(
+            compile_for_aexec(
+                "def f():\n    return 1", "test", "single", dont_imply_dedent=True
+            )
+        )
 
 
 # Test return and yield handling
