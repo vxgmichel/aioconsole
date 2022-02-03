@@ -23,8 +23,8 @@ def full_update(dct, values):
     dct.update(values)
 
 
-def exec_result(obj, local, stream):
-    """Reproduce default exec behavior (print and builtins._)"""
+def exec_single_result(obj, local, stream):
+    """Reproduce the exec behavior in single mode (print and builtins._)"""
     local["_"] = obj
     if obj is not None:
         print(repr(obj), file=stream)
@@ -57,28 +57,35 @@ class ReturnChecker(ast.NodeVisitor):
         self.visit_Yield(node)  # handle in the same way as regular yield
 
 
-def make_tree(statement, filename="<aexec>", symbol="single", local={}):
+def make_tree(statement, filename, mode):
     """Helper for *aexec*."""
     # Check for returns and yields
     ReturnChecker(filename).visit(statement)
 
     # Create tree
-    tree = ast.parse(CORO_CODE, filename, symbol)
+    tree = ast.parse(CORO_CODE, filename, "single")
     # Check expression statement
     if isinstance(statement, ast.Expr):
         tree.body[0].body[0].value.elts[0] = statement.value
     else:
         tree.body[0].body.insert(0, statement)
-    # Check and return coroutine
-    exec(compile(tree, filename, symbol))
-    return tree
+    # Check the coroutine function
+    exec(compile(tree, filename, "single"))
+
+    if mode == "exec":
+        return ast.Module([tree])
+    if mode == "single":
+        return ast.Interactive([tree])
+    assert mode == "eval"
+    raise ValueError("Mode 'eval' is not supported")
 
 
-def make_coroutine_from_tree(tree, filename="<aexec>", symbol="single", local={}):
+def make_coroutine_from_tree(wrapped, filename, local):
     """Make a coroutine from a tree structure."""
     dct = {}
+    tree = wrapped.body[0]
     tree.body[0].args.args = list(map(make_arg, local))
-    exec(compile(tree, filename, symbol), dct)
+    exec(compile(tree, filename, "single"), dct)
     return dct[CORO_NAME](**local)
 
 
@@ -92,9 +99,7 @@ def get_non_indented_lines(source):
         pass
 
 
-def compile_for_aexec(
-    source, filename="<aexec>", mode="single", dont_imply_dedent=False, local={}
-):
+def compile_for_aexec(source, filename, mode, dont_imply_dedent=False, local={}):
     """Return a list of (coroutine object, abstract base tree)."""
     flags = ast.PyCF_ONLY_AST
     if dont_imply_dedent:
@@ -110,22 +115,29 @@ def compile_for_aexec(
         for i, line in enumerate(source.split("\n"))
     )
     coroutine = CORO_DEF + "\n" + indented + "\n"
-    interactive = compile(coroutine, filename, mode, flags).body[0]
 
-    return [make_tree(statement, filename, mode) for statement in interactive.body]
+    # Compilation is always performed in single mode
+    compiled = compile(coroutine, filename, "single", flags)
+    statements = compiled.body[0].body
+
+    # Use original source to detect missing newlines, depending on the mode
+    try:
+        compile(source, filename, mode, flags)
+    except SyntaxError:
+        raise
+
+    return [make_tree(statement, filename, mode) for statement in statements]
 
 
-async def aexec(source, local=None, stream=None):
-    """Asynchronous equivalent to *exec*.
-
-    Support the *await* syntax.
-    """
+async def aexec(source, local=None, stream=None, filename="<aexec>"):
+    """Asynchronous equivalent to *exec*."""
     if local is None:
         local = {}
     if isinstance(source, str):
-        source = compile_for_aexec(source)
+        source = compile_for_aexec(source, filename, "exec")
     for tree in source:
-        coro = make_coroutine_from_tree(tree, local=local)
+        coro = make_coroutine_from_tree(tree, filename, local=local)
         result, new_local = await coro
-        exec_result(result, new_local, stream)
+        if isinstance(tree, ast.Interactive):
+            exec_single_result(result, new_local, stream)
         full_update(local, new_local)
