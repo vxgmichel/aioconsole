@@ -16,7 +16,7 @@ from . import execute
 EXTRA_MESSAGE = """\
 ---
 This console is running in an asyncio event loop.
-It allows you to wait for coroutines using the '{0}' syntax.
+It allows you to wait for coroutines using the 'await' syntax.
 Try: await asyncio.sleep(1, result=3)
 ---"""
 

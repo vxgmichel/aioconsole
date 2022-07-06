@@ -4,6 +4,7 @@ import os
 import sys
 import ast
 import runpy
+import warnings
 import argparse
 import traceback
 
@@ -102,22 +103,35 @@ def parse_args(args=None):
     return namespace
 
 
+def load_readline():
+    try:
+        import readline  # noqa: F401
+        import rlcompleter  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def run_apython(args=None):
     namespace = parse_args(args)
 
-    if namespace.readline and not namespace.serve and compat.platform != "win32":
+    if (
+        namespace.readline
+        and not namespace.serve
+        and compat.platform != "win32"
+        and load_readline()
+    ):
 
-        try:
-            import readline
-            import rlcompleter
-        except ImportError:
-            readline, rlcompleter = None, None
+        # Run python interactive hook in order to configure binding and history support
+        interactive_hook = getattr(sys, "__interactivehook__", None)
+        if interactive_hook:
+            try:
+                interactive_hook()
+            except Exception as exc:
+                warnings.warn(f"Interactive hook failed: {exc!r}", stacklevel=2)
 
-        if readline:
-            if rlcompleter:
-                readline.parse_and_bind("tab: complete")
-            code = run_apython_in_subprocess(args, namespace.prompt_control)
-            sys.exit(code)
+        code = run_apython_in_subprocess(args, namespace.prompt_control)
+        sys.exit(code)
 
     try:
         sys._argv = sys.argv

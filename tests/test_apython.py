@@ -83,7 +83,7 @@ def use_readline(request, mock_readline, platform):
         # Readline tests hang on windows for some reason
         if sys.platform == "win32":
             pytest.xfail()
-        return [] if platform == "win32" else ["--prompt-control=▲"]
+        return []
     return ["--no-readline"]
 
 
@@ -96,6 +96,27 @@ def test_basic_apython_usage(capfd, use_readline):
     with patch("sys.stdin", new=io.StringIO("1+1\n")):
         with pytest.raises(SystemExit):
             apython.run_apython(["--banner=test"] + use_readline)
+    out, err = capfd.readouterr()
+    assert out == ""
+    assert err == "test\n>>> 2\n>>> \n"
+
+
+def test_missing_readline(capfd, use_readline):
+    sys.modules["readline"] = None
+    with patch("sys.stdin", new=io.StringIO("1+1\n")):
+        with pytest.raises(SystemExit):
+            apython.run_apython(["--banner=test"] + use_readline)
+    out, err = capfd.readouterr()
+    assert out == ""
+    assert err == "test\n>>> 2\n>>> \n"
+
+
+def test_interactive_hook_error(capfd, use_readline, platform):
+    sys.modules["readline"].parse_and_bind.side_effect = ZeroDivisionError()
+    with patch("sys.stdin", new=io.StringIO("1+1\n")):
+        with pytest.raises(SystemExit):
+            with pytest.warns(UserWarning):
+                apython.run_apython(["--banner=test"] + use_readline)
     out, err = capfd.readouterr()
     assert out == ""
     assert err == "test\n>>> 2\n>>> \n"
