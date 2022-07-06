@@ -104,6 +104,11 @@ def compile_for_aexec(source, filename, mode, dont_imply_dedent=False, local={})
     flags = ast.PyCF_ONLY_AST
     if dont_imply_dedent:
         flags |= codeop.PyCF_DONT_IMPLY_DEDENT
+        # This flag is not available for python before 3.10
+        try:
+            flags |= codeop.PyCF_ALLOW_INCOMPLETE_INPUT
+        except AttributeError:
+            pass
 
     # Avoid a syntax error by wrapping code with `async def`
     # Disabling indentation inside multiline strings
