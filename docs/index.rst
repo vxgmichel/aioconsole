@@ -5,12 +5,12 @@ aioconsole
    :target: http://aioconsole.readthedocs.io/
    :alt:
 
-.. image:: https://travis-ci.org/vxgmichel/aioconsole.svg?branch=master
-   :target: https://travis-ci.org/vxgmichel/aioconsole
+.. image:: https://github.com/vxgmichel/aioconsole/workflows/CI/badge.svg
+   :target: https://github.com/vxgmichel/aioconsole/actions?query=branch%3Amaster
    :alt:
 
-.. image:: https://coveralls.io/repos/github/vxgmichel/aioconsole/badge.svg?branch=master
-   :target: https://coveralls.io/github/vxgmichel/aioconsole?branch=master
+.. image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/vxgmichel/aioconsole
    :alt:
 
 .. image:: https://img.shields.io/pypi/v/aioconsole.svg
