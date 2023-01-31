@@ -63,6 +63,8 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.locals["print"] = self.print
         self.locals["help"] = self.help
         self.locals["ainput"] = self.ainput
+        # Internals
+        self._sigint_received = False
 
     @functools.wraps(print)
     def print(self, *args, **kwargs):
@@ -120,6 +122,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.buffer = []
 
     def handle_sigint(self, task):
+        self._sigint_received = True
         task.cancel()
         if task._fut_waiter._loop is not self.loop:
             task._wakeup(task._fut_waiter)
@@ -200,6 +203,11 @@ class AsynchronousConsole(code.InteractiveConsole):
                 else:
                     more = await self.push(line)
             except asyncio.CancelledError:
+                # Not our cancellation
+                if not self._sigint_received:
+                    raise
+                # Manage cancellation
+                self._sigint_received = False
                 self.write("\nKeyboardInterrupt\n")
                 await self.flush()
                 self.resetbuffer()
