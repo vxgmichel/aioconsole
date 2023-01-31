@@ -158,6 +158,8 @@ class AsynchronousConsole(code.InteractiveConsole):
             if handle_sigint:
                 self.add_sigint_handler()
             await self._interact(banner)
+            if stop:
+                raise SystemExit
         # Exit
         except SystemExit:
             if stop:
@@ -166,8 +168,6 @@ class AsynchronousConsole(code.InteractiveConsole):
         finally:
             if handle_sigint:
                 self.remove_sigint_handler()
-            if stop:
-                self.loop.stop()
 
     async def _interact(self, banner=None):
         # Get ps1 and ps2
