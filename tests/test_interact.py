@@ -91,11 +91,7 @@ async def test_interact_syntax_error(event_loop, monkeypatch):
         # Skip line
         await reader.readline()
         await assert_stream(reader, "    a b")
-        if (
-            sys.version_info >= (3, 10, 0)
-            and sys.version_info < (3, 10, 1)
-            or sys.version_info >= (3, 11)
-        ):
+        if sys.version_info >= (3, 10, 0) and sys.version_info < (3, 10, 1):
             await assert_stream(reader, "    ^^^", loose=True)
             await assert_stream(
                 reader, "SyntaxError: invalid syntax. Perhaps you forgot a comma?"
@@ -158,3 +154,16 @@ async def test_interact_multiple_indented_lines(event_loop, monkeypatch):
         await interact(banner=banner, stop=False)
         await assert_stream(reader, banner)
         await assert_stream(reader, sys.ps1 + sys.ps2 * 3 + sys.ps1 + "1\n2")
+
+
+@pytest.mark.asyncio
+async def test_interact_cancellation(event_loop, monkeypatch):
+    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+        banner = "A BANNER"
+        task = asyncio.ensure_future(interact(banner=banner, stop=False))
+        # Wait for banner
+        await assert_stream(reader, banner)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert task.cancelled
