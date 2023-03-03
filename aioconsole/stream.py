@@ -5,6 +5,7 @@ import sys
 import stat
 import weakref
 import asyncio
+import selectors
 from collections import deque
 from threading import Thread
 from concurrent.futures import Future
@@ -24,6 +25,14 @@ def is_pipe_transport_compatible(pipe):
     is_fifo = stat.S_ISFIFO(mode)
     is_socket = stat.S_ISSOCK(mode)
     if not (is_char or is_fifo or is_socket):
+        return False
+    # Fail early when the file descriptor cannot be registered.
+    # This happens with docker containers for instance.
+    # See issue #102: https://github.com/vxgmichel/aioconsole/issues/102
+    try:
+        with selectors.DefaultSelector() as selector:
+            selector.register(fileno, selectors.EVENT_READ | selectors.EVENT_WRITE)
+    except OSError:
         return False
     return True
 
