@@ -41,7 +41,6 @@ def _rlwrap(process, prompt_control, use_stderr=False):
 
         # Loop over prompts
         while process.poll() is None:
-
             # Get prompt
             try:
                 prompt = future.result()
