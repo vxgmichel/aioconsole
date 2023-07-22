@@ -18,7 +18,7 @@ def is_pipe_transport_compatible(pipe):
         return False
     try:
         fileno = pipe.fileno()
-    except OSError:
+    except (OSError, AttributeError):
         return False
     mode = os.fstat(fileno).st_mode
     is_char = stat.S_ISCHR(mode)
@@ -137,14 +137,20 @@ class NonFileStreamReader:
         return self.eof
 
     async def readline(self):
-        data = await run_as_daemon(self.stream.readline)
+        try:
+            data = await run_as_daemon(self.stream.readline)
+        except AttributeError:
+            raise RuntimeError("ainput(): lost sys.stdin")
         if isinstance(data, str):
             data = data.encode()
         self.eof = not data
         return data
 
     async def read(self, n=-1):
-        data = await run_as_daemon(self.stream.read, n)
+        try:
+            data = await run_as_daemon(self.stream.read, n)
+        except AttributeError:
+            raise RuntimeError("ainput(): lost sys.stdin")
         if isinstance(data, str):
             data = data.encode()
         self.eof = not data
@@ -257,8 +263,7 @@ async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
     args = sys.stdin, sys.stdout, sys.stderr
     key = args, loop
     if cache.get(key) is None:
-        connection = create_standard_streams(*args, loop=loop)
-        cache[key] = await connection
+        cache[key] = await create_standard_streams(*args, loop=loop)
     in_reader, out_writer, err_writer = cache[key]
     return in_reader, err_writer if use_stderr else out_writer
 

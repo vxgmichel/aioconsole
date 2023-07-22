@@ -7,7 +7,7 @@ import asyncio
 from unittest.mock import Mock
 
 from aioconsole.stream import create_standard_streams, ainput, aprint
-from aioconsole.stream import is_pipe_transport_compatible
+from aioconsole.stream import is_pipe_transport_compatible, get_standard_streams
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on windows")
@@ -105,8 +105,8 @@ async def test_create_standard_stream_with_non_pipe(monkeypatch):
         data = await reader.read()
 
 
-def mock_stdio(monkeypatch, input_text=""):
-    monkeypatch.setattr("sys.stdin", io.StringIO(input_text))
+def mock_stdio(monkeypatch, input_text="", disable_stdin=False):
+    monkeypatch.setattr("sys.stdin", None if disable_stdin else io.StringIO(input_text))
     monkeypatch.setattr("sys.stdout", io.StringIO())
     monkeypatch.setattr("sys.stderr", io.StringIO())
 
@@ -204,3 +204,24 @@ async def test_standard_stream_pipe_buffering():
     data = await reader.readline()
     assert data == b"b" * blob_size + b"\n"
     await task
+
+
+@pytest.mark.asyncio
+async def test_aprint_with_no_stdin(monkeypatch):
+    mock_stdio(monkeypatch, disable_stdin=True)
+    await aprint("test1")
+    assert sys.stdout.getvalue() == "test1\n"
+    assert sys.stderr.getvalue() == ""
+    with pytest.raises(RuntimeError) as ctx:
+        await ainput("test2")
+    assert str(ctx.value) == "ainput(): lost sys.stdin"
+    assert sys.stdout.getvalue() == "test1\ntest2"
+    assert sys.stderr.getvalue() == ""
+    # Test the methods specifically
+    reader, _ = await get_standard_streams()
+    with pytest.raises(RuntimeError) as ctx:
+        await reader.read(10)
+    assert str(ctx.value) == "ainput(): lost sys.stdin"
+    with pytest.raises(RuntimeError) as ctx:
+        await reader.readline()
+    assert str(ctx.value) == "ainput(): lost sys.stdin"
