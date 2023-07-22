@@ -49,7 +49,6 @@ def platform(request):
 def mock_readline(platform):
     with mock_module("readline"):
         with patch("aioconsole.rlwrap.ctypes") as m_ctypes:
-
             if platform == "darwin":
                 stdin = "__stdinp"
                 stderr = "__stderrp"

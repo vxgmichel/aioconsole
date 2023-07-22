@@ -121,7 +121,6 @@ def run_apython(args=None):
         and compat.platform != "win32"
         and load_readline()
     ):
-
         # Run python interactive hook in order to configure binding and history support
         interactive_hook = getattr(sys, "__interactivehook__", None)
         if interactive_hook:

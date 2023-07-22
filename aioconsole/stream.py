@@ -94,7 +94,6 @@ class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
 
 
 class StandardStreamReader(asyncio.StreamReader):
-
     __del__ = protect_standard_streams
 
     async def readuntil(self, separator=b"\n"):
@@ -116,7 +115,6 @@ class StandardStreamReader(asyncio.StreamReader):
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
-
     __del__ = protect_standard_streams
 
     def write(self, data):
