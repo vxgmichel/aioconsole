@@ -1,5 +1,6 @@
 import io
 import os
+import platform
 import sys
 import signal
 import asyncio
@@ -93,11 +94,21 @@ async def test_interact_syntax_error(event_loop, monkeypatch):
         await assert_stream(reader, "    a b")
         if sys.version_info >= (3, 10, 0) and sys.version_info < (3, 10, 1):
             await assert_stream(reader, "    ^^^", loose=True)
+        else:
+            await assert_stream(reader, "      ^", loose=True)
+        if (
+            sys.version_info >= (3, 10, 0)
+            and sys.version_info < (3, 10, 1)
+            or (
+                platform.python_implementation() == "PyPy"
+                and sys.version_info >= (3, 9)
+                and sys.version_info < (3, 10)
+            )
+        ):
             await assert_stream(
                 reader, "SyntaxError: invalid syntax. Perhaps you forgot a comma?"
             )
         else:
-            await assert_stream(reader, "      ^", loose=True)
             await assert_stream(reader, "SyntaxError: invalid syntax")
         await assert_stream(reader, sys.ps1)
 
