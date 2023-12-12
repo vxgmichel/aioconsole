@@ -50,12 +50,19 @@ async def start_console_server(
     prompt_control=None,
     *,
     loop=None,
+    shared_locals=False,
 ):
+    client_locals = dict(locals) if locals is not None else None
+
     def factory(streams):
-        client_locals = dict(locals) if locals is not None else None
+        console_locals = (
+            client_locals
+            if client_locals is None or shared_locals
+            else dict(client_locals)
+        )
         return console.AsynchronousConsole(
             streams=streams,
-            locals=client_locals,
+            locals=console_locals,
             filename=filename,
             prompt_control=prompt_control,
         )
