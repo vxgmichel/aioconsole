@@ -286,13 +286,20 @@ async def ainput(prompt="", *, streams=None, use_stderr=False, loop=None):
 
 
 async def aprint(
-    *values, sep=None, end="\n", flush=True, streams=None, use_stderr=False, loop=None
+    *values, sep=None, end="\n", flush=True, streams=None, stream=None, use_stderr=False, loop=None
 ):
     """Asynchronous equivalent to *print*."""
-    # Get standard streams
-    if streams is None:
-        streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
-    _, writer = streams
+
+    if streams is not None and stream is not None:
+        raise ValueError("Only one of `stream` and `streams` is accepted!")
+    
+    if stream:
+        writer = stream
+    else:
+        # Get standard streams
+        if streams is None
+            streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
+        _, writer =  streams
 
     print(*values, sep=sep, end=end, flush=False, file=writer)
 
