@@ -90,7 +90,7 @@ def make_cli(streams=None):
     "input_string, expected", list(testdata.values()), ids=list(testdata.keys())
 )
 @pytest.mark.asyncio
-async def test_async_cli(event_loop, monkeypatch, input_string, expected):
+async def test_async_cli(monkeypatch, input_string, expected):
     monkeypatch.setattr("sys.ps1", "[Hello!] ", raising=False)
     monkeypatch.setattr("sys.stdin", io.StringIO(input_string))
     monkeypatch.setattr("sys.stderr", io.StringIO())

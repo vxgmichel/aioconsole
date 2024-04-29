@@ -8,7 +8,7 @@ from aioconsole.server import start_console_server, print_server
 
 
 @pytest.mark.asyncio
-async def test_server(event_loop):
+async def test_server():
     server = await start_console_server(host="127.0.0.1", port=0, banner="test")
     address = server.sockets[0].getsockname()
 
@@ -30,7 +30,7 @@ async def test_server(event_loop):
 
 
 @pytest.mark.asyncio
-async def test_uds_server(event_loop, tmpdir_factory):
+async def test_uds_server(tmpdir_factory):
     path = str(tmpdir_factory.mktemp("uds") / "my_uds")
 
     # Not available on windows
@@ -60,7 +60,7 @@ async def test_uds_server(event_loop, tmpdir_factory):
 
 
 @pytest.mark.asyncio
-async def test_invalid_server(event_loop):
+async def test_invalid_server():
     with pytest.raises(ValueError):
         await start_console_server()
     with pytest.raises(ValueError):

@@ -13,19 +13,19 @@ from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 
 
 @contextmanager
-def stdcontrol(event_loop, monkeypatch):
+def stdcontrol(monkeypatch):
     # PS1
     monkeypatch.setattr("sys.ps1", "[Hello!]", raising=False)
     # Stdin control
     stdin_read, stdin_write = os.pipe()
     monkeypatch.setattr("sys.stdin", open(stdin_read))
-    writer = NonFileStreamWriter(open(stdin_write, "w"), loop=event_loop)
+    writer = NonFileStreamWriter(open(stdin_write, "w"))
     # Stdout control
     monkeypatch.setattr(sys, "stdout", io.StringIO())
     # Stderr control
     stderr_read, stderr_write = os.pipe()
     monkeypatch.setattr("sys.stderr", open(stderr_write, "w"))
-    reader = NonFileStreamReader(open(stderr_read), loop=event_loop)
+    reader = NonFileStreamReader(open(stderr_read))
     # Yield
     yield reader, writer
     # Check
@@ -40,8 +40,9 @@ async def assert_stream(stream, expected, loose=False):
 
 
 @pytest.fixture(params=["unix", "not-unix"])
-def signaling(request, monkeypatch, event_loop):
+async def signaling(request, monkeypatch):
     if request.param == "not-unix":
+        event_loop = asyncio.get_running_loop()
         m = Mock(side_effect=NotImplementedError)
         monkeypatch.setattr(event_loop, "add_signal_handler", m)
         monkeypatch.setattr(event_loop, "remove_signal_handler", m)
@@ -49,8 +50,8 @@ def signaling(request, monkeypatch, event_loop):
 
 
 @pytest.mark.asyncio
-async def test_interact_simple(event_loop, monkeypatch):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_interact_simple(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write("1+1\n")
         await writer.drain()
@@ -62,8 +63,8 @@ async def test_interact_simple(event_loop, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_interact_traceback(event_loop, monkeypatch):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_interact_traceback(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write("1/0\n")
         await writer.drain()
@@ -81,8 +82,8 @@ async def test_interact_traceback(event_loop, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_interact_syntax_error(event_loop, monkeypatch):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_interact_syntax_error(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, writer):
         writer.write("a b\n")
         await writer.drain()
         writer.stream.close()
@@ -114,8 +115,8 @@ async def test_interact_syntax_error(event_loop, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_interact_keyboard_interrupt(monkeypatch, signaling):
+    with stdcontrol(monkeypatch) as (reader, writer):
         # Start interaction
         banner = "A BANNER"
         task = asyncio.ensure_future(interact(banner=banner, stop=False))
@@ -139,8 +140,8 @@ async def test_interact_keyboard_interrupt(event_loop, monkeypatch, signaling):
 
 
 @pytest.mark.asyncio
-async def test_broken_pipe(event_loop, monkeypatch, signaling):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_broken_pipe(monkeypatch, signaling):
+    with stdcontrol(monkeypatch) as (reader, writer):
         # Start interaction
         banner = "A BANNER"
         task = asyncio.ensure_future(interact(banner=banner, stop=False))
@@ -156,8 +157,8 @@ async def test_broken_pipe(event_loop, monkeypatch, signaling):
 
 
 @pytest.mark.asyncio
-async def test_interact_multiple_indented_lines(event_loop, monkeypatch):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_interact_multiple_indented_lines(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, writer):
         banner = "A BANNER"
         writer.write("def x():\n    print(1)\n    print(2)\n\nx()\n")
         await writer.drain()
@@ -168,8 +169,8 @@ async def test_interact_multiple_indented_lines(event_loop, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_interact_cancellation(event_loop, monkeypatch):
-    with stdcontrol(event_loop, monkeypatch) as (reader, writer):
+async def test_interact_cancellation(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, writer):
         banner = "A BANNER"
         task = asyncio.ensure_future(interact(banner=banner, stop=False))
         # Wait for banner
