@@ -34,14 +34,19 @@ async def test_create_standard_stream_with_pipe():
     await writer2.drain()
     assert os.read(r2, 2) == b"b\n"
 
-    reader._transport = None
-    stdout.fileno = Mock(return_value=0)
-    get_extra_info = Mock(side_effect=OSError)
-    writer2._transport.get_extra_info = get_extra_info
+    # Mock transport and stdout
+    stdout.close()
+    stdout.close = Mock()
+    stdout_transport = writer1._transport
+    stdout_transport.close = Mock()
+
+    # Delete the objects
     del reader, writer1, writer2
     gc.collect()  # Force garbage collection - necessary for pypy
-    get_extra_info.assert_called_once_with("pipe")
-    stdout.fileno.assert_called_once_with()
+
+    # Check that the transport has been closed but not stdout
+    stdout_transport.close.assert_called_once_with()
+    assert not stdout.close.called
 
 
 @pytest.mark.asyncio

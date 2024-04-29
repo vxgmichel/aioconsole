@@ -13,6 +13,19 @@ from concurrent.futures import Future
 from . import compat
 
 
+class ProtectedPipe:
+    """Wrapper to protect a pipe from being closed."""
+
+    def __init__(self, pipe):
+        self.pipe = pipe
+
+    def fileno(self):
+        return self.pipe.fileno()
+
+    def close(self):
+        pass
+
+
 def is_pipe_transport_compatible(pipe):
     if compat.platform == "win32":
         return False
@@ -65,17 +78,6 @@ async def run_as_daemon(func, *args):
         raise exc.args[0]
 
 
-def protect_standard_streams(stream):
-    if stream._transport is None:
-        return
-    try:
-        fileno = stream._transport.get_extra_info("pipe").fileno()
-    except (ValueError, OSError):
-        return
-    if fileno < 3:
-        stream._transport._pipe = None
-
-
 class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
     def connection_made(self, transport):
         # The connection is already made
@@ -94,8 +96,6 @@ class StandardStreamReaderProtocol(asyncio.StreamReaderProtocol):
 
 
 class StandardStreamReader(asyncio.StreamReader):
-    __del__ = protect_standard_streams
-
     async def readuntil(self, separator=b"\n"):
         # Re-implement `readuntil` to work around self._limit.
         # The limit is still useful to prevent the internal buffer
@@ -115,7 +115,18 @@ class StandardStreamReader(asyncio.StreamReader):
 
 
 class StandardStreamWriter(asyncio.StreamWriter):
-    __del__ = protect_standard_streams
+    def __del__(self):
+        # No `__del__` method for StreamWriter in Python 3.10 and before
+        try:
+            parent_del = super().__del__
+        except AttributeError:
+            return
+        # Do not attempt to close the transport if the loop is closed
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        parent_del()
 
     def write(self, data):
         if isinstance(data, str):
@@ -224,16 +235,18 @@ async def open_standard_pipe_connection(pipe_in, pipe_out, pipe_err, *, loop=Non
     # Reader
     in_reader = StandardStreamReader(loop=loop)
     protocol = StandardStreamReaderProtocol(in_reader, loop=loop)
-    await loop.connect_read_pipe(lambda: protocol, pipe_in)
+    await loop.connect_read_pipe(lambda: protocol, ProtectedPipe(pipe_in))
 
     # Out writer
-    out_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_out)
-    out_transport, _ = await out_write_connect
+    out_transport, _ = await loop.connect_write_pipe(
+        lambda: protocol, ProtectedPipe(pipe_out)
+    )
     out_writer = StandardStreamWriter(out_transport, protocol, in_reader, loop)
 
     # Err writer
-    err_write_connect = loop.connect_write_pipe(lambda: protocol, pipe_err)
-    err_transport, _ = await err_write_connect
+    err_transport, _ = await loop.connect_write_pipe(
+        lambda: protocol, ProtectedPipe(pipe_err)
+    )
     err_writer = StandardStreamWriter(err_transport, protocol, in_reader, loop)
 
     # Set the write buffer limits to zero
