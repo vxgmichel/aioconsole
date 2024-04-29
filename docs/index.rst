@@ -6,10 +6,10 @@ aioconsole
    :alt:
 
 .. image:: https://github.com/vxgmichel/aioconsole/workflows/CI/badge.svg
-   :target: https://github.com/vxgmichel/aioconsole/actions?query=branch%3Amaster
+   :target: https://github.com/vxgmichel/aioconsole/actions?query=branch%3Amain
    :alt:
 
-.. image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/vxgmichel/aioconsole
    :alt:
 

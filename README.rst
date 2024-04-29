@@ -1,25 +1,8 @@
 aioconsole
 ==========
 
-.. image:: https://readthedocs.org/projects/aioconsole/badge/?version=latest
-   :target: http://aioconsole.readthedocs.io/
-   :alt:
+|docs-badge| |cov-badge| |ci-badge| |version-badge| |pyversion-badge|
 
-.. image:: https://github.com/vxgmichel/aioconsole/workflows/CI/badge.svg
-   :target: https://github.com/vxgmichel/aioconsole/actions?query=branch%3Amaster
-   :alt:
-
-.. image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/vxgmichel/aioconsole
-   :alt:
-
-.. image:: https://img.shields.io/pypi/v/aioconsole.svg
-   :target: https://pypi.python.org/pypi/aioconsole
-   :alt:
-
-.. image:: https://img.shields.io/pypi/pyversions/aioconsole.svg
-   :target: https://pypi.python.org/pypi/aioconsole
-   :alt:
 
 Asynchronous console and interfaces for asyncio
 
@@ -45,7 +28,7 @@ aioconsole_ is available on PyPI_ and GitHub_.
 Both of the following commands install the ``aioconsole`` package
 and the ``apython`` script.
 
-.. sourcecode:: console
+.. code:: console
 
     $ pip3 install aioconsole   # from PyPI
     $ python3 setup.py install  # or from the sources
@@ -78,7 +61,7 @@ Simple usage
 
 The following example demonstrates the use of ``await`` inside the console:
 
-.. sourcecode:: console
+.. code:: console
 
     $ apython
     Python 3.5.0 (default, Sep 7 2015, 14:12:03)
@@ -90,7 +73,7 @@ The following example demonstrates the use of ``await`` inside the console:
     Try: await asyncio.sleep(1, result=3, loop=loop)
     ---
 
-.. sourcecode:: python3
+.. code:: python3
 
     >>> await asyncio.sleep(1, result=3)
     # Wait one second...
@@ -126,8 +109,28 @@ Vincent Michel: vxgmichel@gmail.com
 .. _code.interact: https://docs.python.org/3/library/code.html#code.interact
 .. _argparse: https://docs.python.org/dev/library/argparse.html
 .. _stream: https://docs.python.org/3/library/asyncio-stream.html
-.. _example directory: https://github.com/vxgmichel/aioconsole/blob/master/example
+.. _example directory: https://github.com/vxgmichel/aioconsole/blob/main/example
 .. _documentation: http://aioconsole.readthedocs.io/
 .. _PyPI: aioconsole_
 .. _IPython: https://ipython.readthedocs.io
 .. _ptpython: https://github.com/prompt-toolkit/ptpython
+
+.. |docs-badge| image:: https://readthedocs.org/projects/aioconsole/badge/?version=latest
+   :target: http://aioconsole.readthedocs.io/
+   :alt:
+
+.. |ci-badge| image:: https://github.com/vxgmichel/aioconsole/workflows/CI/badge.svg
+   :target: https://github.com/vxgmichel/aioconsole/actions?query=branch%3Amain
+   :alt:
+
+.. |cov-badge| image:: https://codecov.io/gh/vxgmichel/aioconsole/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/vxgmichel/aioconsole
+   :alt:
+
+.. |version-badge| image:: https://img.shields.io/pypi/v/aioconsole.svg
+   :target: https://pypi.python.org/pypi/aioconsole
+   :alt:
+
+.. |pyversion-badge| image:: https://img.shields.io/pypi/pyversions/aioconsole.svg
+   :target: https://pypi.python.org/pypi/aioconsole
+   :alt:
