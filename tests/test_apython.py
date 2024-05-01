@@ -175,7 +175,7 @@ def test_apython_with_stdout_logs(capfd, use_readline):
     assert err == "test\n>>> 7\n>>> \n"
 
 
-def test_apython_server(capfd, event_loop, monkeypatch):
+def test_apython_server(capfd):
     def run_forever(self, orig=InteractiveEventLoop.run_forever):
         if self.console_server is not None:
             self.call_later(0, self.stop)

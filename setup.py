@@ -29,6 +29,7 @@ setup(
         "pytest-asyncio",
         "pytest-cov",
         "pytest-repeat",
+        'uvloop; python_implementation != "PyPy" and sys_platform != "win32"',
     ],
     license="GPLv3",
     python_requires=">=3.8",

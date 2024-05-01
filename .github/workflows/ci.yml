@@ -9,11 +9,11 @@ jobs:
   Quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - uses: pre-commit/action@v2.0.0
+      - uses: pre-commit/action@v3.0.1
 
   Tests:
     runs-on: ${{ matrix.os }}
@@ -26,9 +26,9 @@ jobs:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install setuptools
@@ -37,20 +37,21 @@ jobs:
       - name: Install test requirements
         run: pip install -r test-requirements.txt
       - name: Run tests
-        run: python setup.py test --addopts "--cov-report xml"
+        run: python setup.py test
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           env_vars: OS,PYTHON
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   Release:
     runs-on: ubuntu-latest
     needs: [Quality, Tests]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
       - name: Build source distribution
