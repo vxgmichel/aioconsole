@@ -22,6 +22,7 @@ setup(
     name="aioconsole",
     version="0.7.2.dev0",
     packages=["aioconsole"],
+    package_data={"aioconsole": ["py.typed"]},
     entry_points={"console_scripts": ["apython = aioconsole:run_apython"]},
     setup_requires=["pytest-runner" if TESTING else ""],
     tests_require=[
