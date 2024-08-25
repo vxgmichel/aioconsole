@@ -1,5 +1,6 @@
 """Provide an asynchronous equivalent *to exec*."""
 
+import asyncio
 import ast
 import codeop
 from io import StringIO
@@ -148,3 +149,43 @@ async def aexec(source, local=None, stream=None, filename="<aexec>"):
         if isinstance(tree, ast.Interactive):
             exec_single_result(result, new_local, stream)
         full_update(local, new_local)
+
+
+async def aeval(input_string: str, local_namespace: dict):
+    """Asynchronous equivalent to *eval*."""
+    # Save the state of the local namespace before executing the code
+    previous = {k: v for k, v in local_namespace.items()}
+
+    # Split the input string by lines to handle multiline input
+    lines = input_string.splitlines()
+
+    for i, line in enumerate(lines):
+        # Capture the result of the expression in a special variable '__result__'
+        if i == len(lines) - 1:
+            # Only modify the last line to capture the final result
+            modified_input = f"__result__ = {line}"
+        else:
+            modified_input = line
+
+        try:
+            # Try to execute the modified input to capture the result in '__result__'
+            await aexec(modified_input, local_namespace)
+        except SyntaxError:
+            # This might be a statement rather than an expression.
+            # In this case, execute the original input without modification.
+            await aexec(line, local_namespace)
+
+    # Attempt to retrieve the result of the expression from the local namespace
+    result = local_namespace.pop("__result__", None)
+
+    # Capture the state of the local namespace after execution
+    post = {k: v for k, v in local_namespace.items()}
+
+    # Check if the local namespace has changed.
+    # If not, the code might have been a statement rather than an expression
+    if previous == post:
+        # The result is a coroutine and wasn't assigned to a variable, await its result
+        if asyncio.iscoroutine(result) and result not in local_namespace.values():
+            result = await result
+
+    return result

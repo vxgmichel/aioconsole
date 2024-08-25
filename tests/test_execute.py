@@ -2,7 +2,7 @@ import io
 import asyncio
 
 import pytest
-from aioconsole import aexec
+from aioconsole import aexec, aeval
 from aioconsole.execute import compile_for_aexec
 
 
@@ -124,3 +124,87 @@ async def test_correct():
     await aexec("async def x(): return")
     await aexec("def x(): yield")
     await aexec("async def x(): yield")
+
+
+# Test exception handling in aeval
+
+
+@pytest.mark.asyncio
+async def test_aeval_syntax_error():
+    with pytest.raises(SyntaxError):
+        await aeval("1+", {})
+
+
+@pytest.mark.asyncio
+async def test_aeval_name_error():
+    with pytest.raises(NameError):
+        await aeval("undefined_variable", {})
+
+
+@pytest.mark.asyncio
+async def test_aeval_runtime_error():
+    with pytest.raises(ZeroDivisionError):
+        await aeval("1/0", {})
+
+
+# Test async handling
+
+
+@pytest.mark.asyncio
+async def test_aeval_async_function():
+    result = await aeval("await coro(5)", {"coro": coro})
+    assert result == 5
+
+
+@pytest.mark.asyncio
+async def test_aeval_coroutine_result():
+    result = await aeval("coro(5)", {"coro": coro})
+    assert result == 5
+
+
+# Test that statements do not modify the namespace unnecessarily
+
+
+@pytest.mark.asyncio
+async def test_aeval_statements():
+    namespace = {}
+    result = await aeval("a = 1", namespace)
+    assert result == 1
+    assert namespace == {"a": 1}
+
+
+@pytest.mark.asyncio
+async def test_aeval_if_statement():
+    namespace = {"a": 0}
+    result = await aeval("if a == 0: a = 1", namespace)
+    assert result is None  # 'if' statements don't produce a result
+    assert namespace == {"a": 1}
+
+
+# Test handling of special cases
+
+
+@pytest.mark.asyncio
+async def test_aeval_multiline_input():
+    namespace = {}
+    result = await aeval("x = 1\nx + 1", namespace)
+    assert result == 2
+    assert namespace == {"x": 1}
+
+
+@pytest.mark.asyncio
+async def test_aeval_function_definition():
+    namespace = {}
+    result = await aeval("def foo(): return 42", namespace)
+    assert result is None
+    assert "foo" in namespace
+    assert namespace["foo"]() == 42
+
+
+@pytest.mark.asyncio
+async def test_aeval_async_function_definition():
+    namespace = {}
+    result = await aeval("async def foo(): return 42", namespace)
+    assert result is None
+    assert "foo" in namespace
+    assert await namespace["foo"]() == 42

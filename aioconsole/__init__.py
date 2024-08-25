@@ -3,7 +3,7 @@
 It also includes an interactive event loop, and a command line interface.
 """
 
-from .execute import aexec
+from .execute import aexec, aeval
 from .console import AsynchronousConsole, interact
 from .stream import ainput, aprint, get_standard_streams
 from .events import InteractiveEventLoop, InteractiveEventLoopPolicy
@@ -17,6 +17,7 @@ __version__ = "0.7.2.dev0"
 
 __all__ = [
     "aexec",
+    "aeval",
     "ainput",
     "aprint",
     "AsynchronousConsole",
