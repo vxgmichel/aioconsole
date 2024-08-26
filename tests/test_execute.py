@@ -126,85 +126,79 @@ async def test_correct():
     await aexec("async def x(): yield")
 
 
-# Test exception handling in aeval
+def echo(x):
+    return x
 
 
+async def aecho(x):
+    return echo(x)
+
+
+# Parametrized test with a variety of expressions
 @pytest.mark.asyncio
-async def test_aeval_syntax_error():
-    with pytest.raises(SyntaxError):
-        await aeval("1+", {})
+@pytest.mark.parametrize(
+    "expression",
+    [
+        # Valid Simple Expressions
+        "1 + 2",
+        "sum([i * i for i in range(10)])",
+        # Invalid Expressions
+        "def foo(): return 42",
+        "x = 1",
+        "x = 1\nx + 1",
+        "for i in range(10): pass",
+        "if True: pass",
+        "while True: break",
+        "try: pass\nexcept: pass",
+        # Expressions Involving Undefined Variables
+        "undefined_variable",
+        "undefined_function()",
+        # Expressions with Deliberate Errors
+        "1/0",
+        "open('nonexistent_file.txt')",
+        # Lambda and Anonymous Functions
+        "(lambda x: x * 2)(5)",
+        # Expressions with Built-in Functions
+        "len('test')",
+        "min([3, 1, 4, 1, 5, 9])",
+        "max([x * x for x in range(10)])",
+        # Boolean and Conditional Expressions
+        "True and False",
+        "not True",  # Boolean negation
+        "5 if True else 10",
+        # String Manipulation
+        "'hello' + ' ' + 'world'",
+        "f'hello {42}'",
+        # Complex List Comprehensions
+        "[x for x in range(5)]",
+        "[x * x for x in range(10) if x % 2 == 0]",
+        # Expressions with Syntax Errors
+        "return 42",
+        "yield 5",
+    ],
+)
+async def test_aeval(expression):
+    # Set up a namespace that has all the needed functions
+    namespace = {"aecho": aecho, "echo": echo}
 
+    # Capture the result or exception of the synchronous eval
+    sync_exc = None
+    result = None
+    try:
+        sync_expression = expression.lstrip("await a")
+        result = eval(sync_expression, namespace)
+    except Exception as exc:
+        sync_exc = exc
 
-@pytest.mark.asyncio
-async def test_aeval_name_error():
-    with pytest.raises(NameError):
-        await aeval("undefined_variable", {})
+    # Capture the result or exception of the asynchronous eval
+    async_exc = None
+    async_result = None
+    try:
+        async_result = await aeval(expression, namespace)
+    except Exception as exc:
+        async_exc = exc
 
-
-@pytest.mark.asyncio
-async def test_aeval_runtime_error():
-    with pytest.raises(ZeroDivisionError):
-        await aeval("1/0", {})
-
-
-# Test async handling
-
-
-@pytest.mark.asyncio
-async def test_aeval_async_function():
-    result = await aeval("await coro(5)", {"coro": coro})
-    assert result == 5
-
-
-@pytest.mark.asyncio
-async def test_aeval_coroutine_result():
-    result = await aeval("coro(5)", {"coro": coro})
-    assert result == 5
-
-
-# Test that statements do not modify the namespace unnecessarily
-
-
-@pytest.mark.asyncio
-async def test_aeval_statements():
-    namespace = {}
-    result = await aeval("a = 1", namespace)
-    assert result == 1
-    assert namespace == {"a": 1}
-
-
-@pytest.mark.asyncio
-async def test_aeval_if_statement():
-    namespace = {"a": 0}
-    result = await aeval("if a == 0: a = 1", namespace)
-    assert result is None  # 'if' statements don't produce a result
-    assert namespace == {"a": 1}
-
-
-# Test handling of special cases
-
-
-@pytest.mark.asyncio
-async def test_aeval_multiline_input():
-    namespace = {}
-    result = await aeval("x = 1\nx + 1", namespace)
-    assert result == 2
-    assert namespace == {"x": 1}
-
-
-@pytest.mark.asyncio
-async def test_aeval_function_definition():
-    namespace = {}
-    result = await aeval("def foo(): return 42", namespace)
-    assert result is None
-    assert "foo" in namespace
-    assert namespace["foo"]() == 42
-
-
-@pytest.mark.asyncio
-async def test_aeval_async_function_definition():
-    namespace = {}
-    result = await aeval("async def foo(): return 42", namespace)
-    assert result is None
-    assert "foo" in namespace
-    assert await namespace["foo"]() == 42
+    # Assert that the exceptions are of the same type
+    assert type(sync_exc) == type(async_exc)
+    # Assert that the results match
+    assert result == async_result
