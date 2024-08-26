@@ -151,25 +151,25 @@ async def aexec(source, local=None, stream=None, filename="<aexec>"):
         full_update(local, new_local)
 
 
-async def aeval(input_string: str, local_namespace: dict = None):
-    """Asynchronous equivalent to *eval* that evaluates expressions."""
-    if local_namespace is None:
-        local_namespace = {}
+async def aeval(source, local=None):
+    """Asynchronous equivalent to *eval*."""
+    if local is None:
+        local = {}
 
     # Perform syntax check to ensure the input is a valid eval expression
     try:
-        ast.parse(input_string, mode="eval")
+        ast.parse(source, mode="eval")
     except SyntaxError:
         raise
 
-    # Use aexec to execute the input string within an async function context
-    wrapped_code = f"__result__ = {input_string}"
+    # Assign the result of the expression to a known variable
+    wrapped_code = f"__aeval_result__ = {source}"
 
     # Use aexec to evaluate the wrapped code within the given local namespace
-    await aexec(wrapped_code, local=local_namespace)
+    await aexec(wrapped_code, local=local)
 
     # Retrieve the result from the local namespace
-    result = local_namespace.get("__result__")
+    result = local.get("__aeval_result__")
     if asyncio.iscoroutine(result):
         result = await result
 
