@@ -137,56 +137,79 @@ async def aecho(x):
 # Parametrized test with a variety of expressions
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "expression",
+    "expression, local",
     [
         # Valid Simple Expressions
-        "1 + 2",
-        "sum([i * i for i in range(10)])",
+        ("1 + 2", None),
+        ("sum([i * i for i in range(10)])", None),
         # Invalid Expressions
-        "def foo(): return 42",
-        "x = 1",
-        "x = 1\nx + 1",
-        "for i in range(10): pass",
-        "if True: pass",
-        "while True: break",
-        "try: pass\nexcept: pass",
+        ("def foo(): return 42", None),
+        ("x = 1", None),
+        ("x = 1\nx + 1", None),
+        ("for i in range(10): pass", None),
+        ("if True: pass", None),
+        ("while True: break", None),
+        ("try: pass\nexcept: pass", None),
         # Expressions Involving Undefined Variables
-        "undefined_variable",
-        "undefined_function()",
+        ("undefined_variable", None),
+        ("undefined_function()", None),
         # Expressions with Deliberate Errors
-        "1/0",
-        "open('nonexistent_file.txt')",
+        ("1/0", None),
+        ("open('nonexistent_file.txt')", None),
         # Lambda and Anonymous Functions
-        "(lambda x: x * 2)(5)",
+        ("(lambda x: x * 2)(5)", None),
         # Expressions with Built-in Functions
-        "len('test')",
-        "min([3, 1, 4, 1, 5, 9])",
-        "max([x * x for x in range(10)])",
+        ("len('test')", None),
+        ("min([3, 1, 4, 1, 5, 9])", None),
+        ("max([x * x for x in range(10)])", None),
         # Boolean and Conditional Expressions
-        "True and False",
-        "not True",  # Boolean negation
-        "5 if True else 10",
+        ("True and False", None),
+        ("not True", None),  # Boolean negation
+        ("5 if True else 10", None),
         # String Manipulation
-        "'hello' + ' ' + 'world'",
-        "f'hello {42}'",
+        ("'hello' + ' ' + 'world'", None),
+        ("f'hello {42}'", None),
         # Complex List Comprehensions
-        "[x for x in range(5)]",
-        "[x * x for x in range(10) if x % 2 == 0]",
+        ("[x for x in range(5)]", None),
+        ("[x * x for x in range(10) if x % 2 == 0]", None),
         # Expressions with Syntax Errors
-        "return 42",
-        "yield 5",
+        ("return 42", None),
+        ("yield 5", None),
+        # Test with await
+        ("await aecho(5)", {"aecho": aecho, "echo": echo}),
+        # Test invalid local
+        ("...", []),
+        ("...", "string_instead_of_dict"),
+        ("...", 42),
+        ("...", set()),
+        ("...", ...),
+        ("...", 1.5),
+        ("...", object()),
+        ("...", asyncio),
+        ("...", lambda: ...),
+        ("...", {"__result__": 99}),
+        # Invalid expressions
+        ("", None),
+        (None, None),
+        (0, None),
+        ({}, None),
+        (object(), None),
+        (asyncio, None),
+        (..., None),
+        (lambda: ..., None),
     ],
 )
-async def test_aeval(expression):
-    # Set up a namespace that has all the needed functions
-    namespace = {"aecho": aecho, "echo": echo}
-
+async def test_aeval(expression, local):
     # Capture the result or exception of the synchronous eval
     sync_exc = None
     result = None
     try:
-        sync_expression = expression.lstrip("await a")
-        result = eval(sync_expression, namespace)
+        if isinstance(expression, str):
+            sync_expression = expression.lstrip("await a")
+        else:
+            sync_expression = expression
+
+        result = eval(sync_expression, local)
     except Exception as exc:
         sync_exc = exc
 
@@ -194,7 +217,7 @@ async def test_aeval(expression):
     async_exc = None
     async_result = None
     try:
-        async_result = await aeval(expression, namespace)
+        async_result = await aeval(expression, local)
     except Exception as exc:
         async_exc = exc
 
@@ -202,3 +225,21 @@ async def test_aeval(expression):
     assert type(sync_exc) == type(async_exc)
     # Assert that the results match
     assert result == async_result
+
+
+# Test calling an async function without awaiting it
+@pytest.mark.asyncio
+async def test_aeval_async_func_without_await():
+    expression = "asyncio.sleep(0)"
+    local = {"asyncio": asyncio}
+    result = await aeval(expression, local)
+    assert asyncio.iscoroutine(result)
+    await result
+
+
+@pytest.mark.asyncio
+async def test_aeval_valid_await_syntax():
+    expression = "await aecho(10)"
+    local = {"aecho": aecho}
+    result = await aeval(expression, local)
+    assert result == 10

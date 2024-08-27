@@ -1,6 +1,5 @@
 """Provide an asynchronous equivalent *to exec*."""
 
-import asyncio
 import ast
 import codeop
 from io import StringIO
@@ -156,6 +155,13 @@ async def aeval(source, local=None):
     if local is None:
         local = {}
 
+    if not isinstance(local, dict):
+        raise TypeError("globals must be a dict")
+
+    key = "__result__"
+    # Ensure that the result key is unique within the local namespace
+    # while key in local: key += "_"
+
     # Perform syntax check to ensure the input is a valid eval expression
     try:
         ast.parse(source, mode="eval")
@@ -163,14 +169,10 @@ async def aeval(source, local=None):
         raise
 
     # Assign the result of the expression to a known variable
-    wrapped_code = f"__aeval_result__ = {source}"
+    wrapped_code = f"{key} = {source}"
 
     # Use aexec to evaluate the wrapped code within the given local namespace
     await aexec(wrapped_code, local=local)
 
-    # Retrieve the result from the local namespace
-    result = local.get("__aeval_result__")
-    if asyncio.iscoroutine(result):
-        result = await result
-
-    return result
+    # Return the result from the local namespace
+    return local.pop(key)
