@@ -243,3 +243,11 @@ async def test_aeval_valid_await_syntax():
     local = {"aecho": aecho}
     result = await aeval(expression, local)
     assert result == 10
+
+
+@pytest.mark.asyncio
+async def test_aeval_coro_in_local():
+    expression = "await coro"
+    local = {"coro": aecho(10)}
+    result = await aeval(expression, local)
+    assert result == 10
