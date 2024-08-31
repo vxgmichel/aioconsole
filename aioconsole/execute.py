@@ -158,9 +158,10 @@ async def aeval(source, local=None):
     if not isinstance(local, dict):
         raise TypeError("globals must be a dict")
 
-    key = "__result__"
     # Ensure that the result key is unique within the local namespace
-    # while key in local: key += "_"
+    key = "__aeval_result__"
+    while key in local:
+        key += "_"
 
     # Perform syntax check to ensure the input is a valid eval expression
     try:
