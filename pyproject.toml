@@ -45,7 +45,7 @@ apython = "aioconsole:run_apython"
 Homepage = "https://github.com/vxgmichel/aioconsole"
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --cov aioconsole"
+addopts = "--strict-markers --cov aioconsole --strict-markers --count 2 -vv"
 testpaths = ["tests"]
 
 [tool.black]
