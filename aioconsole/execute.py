@@ -148,3 +148,32 @@ async def aexec(source, local=None, stream=None, filename="<aexec>"):
         if isinstance(tree, ast.Interactive):
             exec_single_result(result, new_local, stream)
         full_update(local, new_local)
+
+
+async def aeval(source, local=None):
+    """Asynchronous equivalent to *eval*."""
+    if local is None:
+        local = {}
+
+    if not isinstance(local, dict):
+        raise TypeError("globals must be a dict")
+
+    # Ensure that the result key is unique within the local namespace
+    key = "__aeval_result__"
+    while key in local:
+        key += "_"
+
+    # Perform syntax check to ensure the input is a valid eval expression
+    try:
+        ast.parse(source, mode="eval")
+    except SyntaxError:
+        raise
+
+    # Assign the result of the expression to a known variable
+    wrapped_code = f"{key} = {source}"
+
+    # Use aexec to evaluate the wrapped code within the given local namespace
+    await aexec(wrapped_code, local=local)
+
+    # Return the result from the local namespace
+    return local.pop(key)
