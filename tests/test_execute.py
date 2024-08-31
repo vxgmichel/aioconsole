@@ -199,6 +199,8 @@ async def aecho(x):
         (asyncio, None),
         (..., None),
         (lambda: ..., None),
+        # Conflicting name in local
+        ("x", {"x": 1, "__aeval_result__": 99}),
     ],
 )
 async def test_aeval(expression, local):
