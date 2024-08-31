@@ -19,7 +19,7 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
         locals=None,
         banner=None,
         serve=None,
-        prompt_control=None
+        prompt_control=None,
     ):
         self.console = None
         self.console_task = None

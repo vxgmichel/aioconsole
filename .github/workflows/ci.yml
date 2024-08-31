@@ -25,19 +25,17 @@ jobs:
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install setuptools
-        run: pip install -U setuptools
-        if: ${{ matrix.python-version == '3.12' }}
       - name: Install test requirements
-        run: pip install -r test-requirements.txt
+        run: pip install -e .[dev]
       - name: Run tests
-        run: python setup.py test
+        run: pytest
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
@@ -53,13 +51,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
-      - name: Build source distribution
-        run: python setup.py sdist
-      - name: Build wheel
+          python-version: 3.8
+      - name: Build wheel and source distribution
         run: |
-          pip install wheel
-          python setup.py bdist_wheel
+          pip install build
+          python -m build --sdist --wheel
       - name: Publish source package on PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

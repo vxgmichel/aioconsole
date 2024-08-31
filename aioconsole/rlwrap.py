@@ -21,7 +21,7 @@ def rlwrap_process(args, prompt_control, use_stderr=False):
         bufsize=0,
         universal_newlines=True,
         stdin=subprocess.PIPE,
-        **{"stderr" if use_stderr else "stdout": subprocess.PIPE}
+        **{"stderr" if use_stderr else "stdout": subprocess.PIPE},
     )
     # Readline wrapping
     return _rlwrap(process, prompt_control, use_stderr)
