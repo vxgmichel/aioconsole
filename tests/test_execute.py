@@ -127,10 +127,12 @@ async def test_correct():
 
 
 def echo(x):
+    """Sync function for aeval parameterized test."""
     return x
 
 
 async def aecho(x):
+    """Async function for aeval parameterized test."""
     return echo(x)
 
 
@@ -200,31 +202,27 @@ async def aecho(x):
     ],
 )
 async def test_aeval(expression, local):
-    # Capture the result or exception of the synchronous eval
-    sync_exc = None
-    result = None
-    try:
-        if isinstance(expression, str):
-            sync_expression = expression.lstrip("await a")
+
+    async def capture(func, *args, **kwargs):
+        try:
+            if asyncio.iscoroutinefunction(func):
+                result = await func(*args, **kwargs)
+            else:
+                result = func(*args, **kwargs)
+        except Exception as exc:
+            return (type(exc), None)
         else:
-            sync_expression = expression
+            return (None, result)
 
-        result = eval(sync_expression, local)
-    except Exception as exc:
-        sync_exc = exc
+    # Remove the await keyword from the expression for the synchronous evaluation
+    sync_expression = (
+        expression.replace("await a", "") if isinstance(expression, str) else expression
+    )
 
-    # Capture the result or exception of the asynchronous eval
-    async_exc = None
-    async_result = None
-    try:
-        async_result = await aeval(expression, local)
-    except Exception as exc:
-        async_exc = exc
-
-    # Assert that the exceptions are of the same type
-    assert type(sync_exc) == type(async_exc)
-    # Assert that the results match
-    assert result == async_result
+    # Capture and compare the results of the synchronous and asynchronous evaluations
+    sync_capture = await capture(eval, sync_expression, local)
+    async_capture = await capture(aeval, expression, local)
+    assert sync_capture == async_capture
 
 
 # Test calling an async function without awaiting it
