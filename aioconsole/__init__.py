@@ -12,6 +12,9 @@ from .command import AsynchronousCli
 from .server import start_interactive_server
 from .apython import run_apython
 
+
+__version__ = "0.7.2.dev0"
+
 __all__ = [
     "aexec",
     "ainput",

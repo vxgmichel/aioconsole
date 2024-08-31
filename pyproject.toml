@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools >= 69.5"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aioconsole"
+dynamic = ["version"]
+description = "Asynchronous console and interfaces for asyncio"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+authors = [
+    { name = "Vincent Michel", email = "vxgmichel@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-repeat",
+    'uvloop; python_implementation != "PyPy" and sys_platform != "win32"',
+]
+
+[tool.setuptools]
+packages = ["aioconsole"]
+
+[tool.setuptools.dynamic]
+version = {attr = "aioconsole.__version__"}
+
+[project.scripts]
+apython = "aioconsole:run_apython"
+
+[project.urls]
+Homepage = "https://github.com/vxgmichel/aioconsole"
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --cov aioconsole"
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 88
+target_version = ["py38", "py39", "py310", "py311", "py312"]
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:", "assert False"]
+
+[tool.ruff]
+ignore = ["E501", "F403"]
