@@ -76,7 +76,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         self.print(pydoc.render_doc(obj))
 
     @functools.wraps(stream.ainput)
-    async def ainput(self, prompt="", *, streams=None, use_stderr=False, loop=None):
+    async def ainput(self, prompt="", *, streams=None, use_stderr=False, loop=None) -> str:
         # Get the console streams by default
         if streams is None and use_stderr is False:
             streams = self.reader, self.writer
