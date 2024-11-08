@@ -330,7 +330,7 @@ Vincent Michel: vxgmichel@gmail.com
 .. _example/echo.py: https://github.com/vxgmichel/aioconsole/blob/master/example/echo.py
 .. _echo server from the asyncio documentation: https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-server-using-streams
 .. _asyncio.start\_server: https://docs.python.org/3.4/library/asyncio-stream.html#asyncio.start_server
-.. _eventlet.backdoor module: http://eventlet.net/doc/modules/backdoor.html#backdoor-python-interactive-interpreter-within-a-running-process
+.. _eventlet.backdoor module: http://eventlet.readthedocs.io/en/latest/modules/backdoor.html#backdoor-python-interactive-interpreter-within-a-running-process
 .. _example/cli.py: https://github.com/vxgmichel/aioconsole/blob/master/example/cli.py
 .. _ArgumentParser: https://docs.python.org/dev/library/argparse.html#argparse.ArgumentParser
 
