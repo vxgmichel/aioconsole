@@ -14,6 +14,37 @@ aioconsole_ provides:
 * `stream`_ support to serve interfaces instead of using standard streams
 * the ``apython`` script to access asyncio code at runtime without modifying the sources
 
+⚠️ Limitations
+--------------
+
+Better alternative to ``aioconsole.ainput()``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A common use case for aioconsole is the async alternative to the builtin `input`_ function.
+However, aioconsole_ was written in 2015 and since then the powerful prompt-toolkit_ library has gained better asyncio support.
+The recommended way to `prompt in an asyncio application <https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#prompt-in-an-asyncio-application>`_ is now to use the `prompt-toolkit`_ library:
+
+.. code:: python3
+
+   from prompt_toolkit import PromptSession
+   from prompt_toolkit.patch_stdout import patch_stdout
+
+   async def my_coroutine():
+      session = PromptSession()
+      while True:
+         with patch_stdout():
+               result = await session.prompt_async("Say something: ")
+         print(f"You said: {result}")
+
+
+Better python consoles with async support
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The python console exposed by `aioconsole`_ is quite limited compared to modern consoles such as `IPython`_ or `ptpython`_. Luckily, those projects gained greater asyncio support over the years. In particular, the following use cases overlap with `aioconsole`_ capabilities:
+
+- `Embedding a ptpython console in an asyncio program <https://github.com/prompt-toolkit/ptpython/blob/master/examples/asyncio-python-embed.py>`_
+- `Using the await syntax in an IPython console <https://ipython.readthedocs.io/en/stable/whatsnew/version7.html#autowait-asynchronous-repl>`_
+
 
 Requirements
 ------------
@@ -87,15 +118,6 @@ Documentation
 Find more examples in the documentation_ and the `example directory`_.
 
 
-Limitations
------------
-
-The python console exposed by `aioconsole`_ is quite limited compared to modern consoles such as `IPython`_ or `ptpython`_. Luckily, those projects gained greater asyncio support over the years. In particular, the following use cases overlap with `aioconsole`_ capabilities:
-
-- `Embedding a ptpython console in an asyncio program <https://github.com/prompt-toolkit/ptpython/blob/master/examples/asyncio-python-embed.py>`_
-- `Using the await syntax in an IPython console <https://ipython.readthedocs.io/en/stable/whatsnew/version7.html#autowait-asynchronous-repl>`_
-
-
 Contact
 -------
 
@@ -114,6 +136,7 @@ Vincent Michel: vxgmichel@gmail.com
 .. _PyPI: aioconsole_
 .. _IPython: https://ipython.readthedocs.io
 .. _ptpython: https://github.com/prompt-toolkit/ptpython
+.. _prompt-toolkit: https://python-prompt-toolkit.readthedocs.io
 
 .. |docs-badge| image:: https://readthedocs.org/projects/aioconsole/badge/?version=latest
    :target: http://aioconsole.readthedocs.io/
