@@ -124,7 +124,7 @@ class StandardStreamWriter(asyncio.StreamWriter):
         # Do not attempt to close the transport if the loop is closed
         try:
             asyncio.get_running_loop()
-        except RuntimeError:
+        except (RuntimeError, AttributeError):  # pragma: no cover
             return
         parent_del()
 
