@@ -13,7 +13,7 @@ from .server import start_interactive_server
 from .apython import run_apython
 
 
-__version__ = "0.8.2"
+__version__ = "0.8.3.dev0"
 
 __all__ = [
     "aexec",
