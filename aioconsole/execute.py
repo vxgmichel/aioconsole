@@ -99,9 +99,7 @@ def get_non_indented_lines(source):
         pass
 
 
-def compile_for_aexec(
-    source, filename, mode, dont_imply_dedent=False, local={}, **kwargs
-):
+def compile_for_aexec(source, filename, mode, dont_imply_dedent=False):
     """Return a list of (coroutine object, abstract base tree)."""
     flags = ast.PyCF_ONLY_AST
     if dont_imply_dedent:

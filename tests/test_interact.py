@@ -8,6 +8,7 @@ from unittest.mock import Mock
 from contextlib import contextmanager
 
 import pytest
+import pytest_asyncio
 from aioconsole import interact
 from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 
@@ -39,7 +40,7 @@ async def assert_stream(stream, expected, loose=False):
         assert expected_line.strip(s) == line.decode().strip(s)
 
 
-@pytest.fixture(params=["unix", "not-unix"])
+@pytest_asyncio.fixture(params=["unix", "not-unix"])
 async def signaling(request, monkeypatch):
     if request.param == "not-unix":
         event_loop = asyncio.get_running_loop()

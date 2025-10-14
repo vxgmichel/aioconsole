@@ -1,4 +1,5 @@
 import io
+import inspect
 import asyncio
 
 import pytest
@@ -207,7 +208,7 @@ async def test_aeval(expression, local):
 
     async def capture(func, *args, **kwargs):
         try:
-            if asyncio.iscoroutinefunction(func):
+            if inspect.iscoroutinefunction(func):
                 result = await func(*args, **kwargs)
             else:
                 result = func(*args, **kwargs)

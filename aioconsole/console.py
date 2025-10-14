@@ -3,6 +3,7 @@
 import sys
 import code
 import pydoc
+import types
 import codeop
 import signal
 import asyncio
@@ -27,11 +28,28 @@ except NameError:
     help_function = None
 
 
+class AsynchronousCompile(codeop.Compile):
+    def __call__(
+        self,
+        source: str,
+        filename: str,
+        symbol: str,
+        flags: int = 0,
+        incomplete_input: bool = True,
+        **kwargs: object,
+    ) -> types.CodeType:
+        """Python has gradually added more keyword arguments to codeop.Compile.__call__
+        over time. To keep compatibility with older versions, we ignore those arguments
+        and explicitely compile for our use case.
+        """
+        return execute.compile_for_aexec(
+            source, filename, symbol, dont_imply_dedent=True
+        )
+
+
 class AsynchronousCompiler(codeop.CommandCompiler):
     def __init__(self):
-        self.compiler = functools.partial(
-            execute.compile_for_aexec, dont_imply_dedent=True
-        )
+        self.compiler = AsynchronousCompile()
 
 
 class AsynchronousConsole(code.InteractiveConsole):
