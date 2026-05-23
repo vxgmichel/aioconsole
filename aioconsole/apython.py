@@ -92,7 +92,7 @@ def parse_args(args=None):
 
     namespace = parser.parse_args(args)
 
-    # If module is provided, filename is actually the fist arg
+    # If module is provided, filename is actually the first arg
     if namespace.module is not None and namespace.filename is not None:
         namespace.args.insert(0, namespace.filename)
 
