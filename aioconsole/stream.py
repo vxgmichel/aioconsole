@@ -286,7 +286,7 @@ async def ainput(prompt="", *, streams=None, use_stderr=False, loop=None):
         streams = await get_standard_streams(use_stderr=use_stderr, loop=loop)
     reader, writer = streams
     # Write prompt
-    writer.write(prompt.encode())
+    writer.write(str(prompt).encode())
     await writer.drain()
     # Get data
     data = await reader.readline()

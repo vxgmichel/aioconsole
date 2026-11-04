@@ -99,6 +99,7 @@ class AsynchronousConsole(code.InteractiveConsole):
         if streams is None and use_stderr is False:
             streams = self.reader, self.writer
         # Wrap the prompt with prompt control characters
+        prompt = str(prompt)
         if self.prompt_control and self.prompt_control not in prompt:
             prompt = self.prompt_control + prompt + self.prompt_control
         # Run ainput
