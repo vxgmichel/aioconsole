@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Asynchronous console and interfaces for asyncio"
 readme = {file = "README.rst", content-type = "text/x-rst"}
 license = {text = "GPL-3.0-or-later"}
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
     { name = "Vincent Michel", email = "vxgmichel@gmail.com" },
 ]
@@ -16,8 +16,6 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -53,7 +51,6 @@ testpaths = ["tests"]
 
 [tool.black]
 line-length = 88
-target_version = ["py38", "py39", "py310", "py311", "py312", "py313", "py314"]
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:", "assert False"]
