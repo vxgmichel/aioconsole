@@ -49,7 +49,7 @@ The python console exposed by `aioconsole`_ is quite limited compared to modern 
 Requirements
 ------------
 
-*  Python \>= 3.10
+*  Python \>= 3.10.3
 
 
 Installation
