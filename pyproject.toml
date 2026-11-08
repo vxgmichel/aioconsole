@@ -52,6 +52,10 @@ testpaths = ["tests"]
 [tool.black]
 line-length = 88
 
+[tool.coverage.run]
+# Measure `python -m aioconsole` subprocesses spawned by apython tests
+patch = ["subprocess"]
+
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:", "assert False"]
 
