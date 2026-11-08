@@ -15,9 +15,10 @@ from aioconsole.stream import is_pipe_transport_compatible, get_standard_streams
 async def test_create_standard_stream_with_pipe(is_uvloop):
     r1, w1 = os.pipe()
     r2, w2 = os.pipe()
-    stdin = open(r1)
-    stdout = open(w1, "w")
-    stderr = open(w2, "w")
+    # The file objects do not own the file descriptors, see clean-up below
+    stdin = open(r1, closefd=False)
+    stdout = open(w1, "w", closefd=False)
+    stderr = open(w2, "w", closefd=False)
 
     assert is_pipe_transport_compatible(stdin)
     assert is_pipe_transport_compatible(stdout)
@@ -35,7 +36,6 @@ async def test_create_standard_stream_with_pipe(is_uvloop):
     assert os.read(r2, 2) == b"b\n"
 
     # Mock stdout.close() to check if it has been called
-    stdout_actual_close = stdout.close
     stdout.close = Mock()
 
     # Close the transport and delete the object
@@ -46,12 +46,14 @@ async def test_create_standard_stream_with_pipe(is_uvloop):
     # Check that the transport has been closed but not stdout
     assert not stdout.close.called
 
-    # Weirdly enough, uvloop DID close the file descriptor.
-    # Probably because it used the file descriptor directly instead
-    # of the pipe object. However, this should not be an issue since
-    # file descriptors 0, 1, 2 do not seem to be affected by this.
+    # Unlike asyncio, uvloop closes the file descriptors of its pipe
+    # transports (at the latest when the loop is closed), regardless of
+    # `ProtectedPipe`. The actual standard streams are not affected though,
+    # since libuv never closes file descriptors 0, 1 and 2.
     if not is_uvloop:
-        stdout_actual_close()
+        for fd in (r1, w1, w2):
+            os.close(fd)
+    os.close(r2)
 
 
 @pytest.mark.asyncio
