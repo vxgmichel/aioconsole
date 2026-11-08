@@ -44,17 +44,11 @@ class InteractiveEventLoop(asyncio.SelectorEventLoop):
             server.print_server(self.console_server)
 
     def close(self):
+        # Cancelling also marks the exception of a finished console task
+        # (e.g. SystemExit) as retrieved, even if the task is already done
         if self.console_task and not self.is_running():
             asyncio.Future.cancel(self.console_task)
         super().close()
-
-    def __del__(self):
-        if self.console_task and self.console_task.done():
-            self.console_task.exception()
-        try:
-            super().__del__()
-        except AttributeError:
-            pass
 
 
 class InteractiveEventLoopPolicy(asyncio.DefaultEventLoopPolicy):

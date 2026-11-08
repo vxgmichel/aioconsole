@@ -1,6 +1,5 @@
 import io
 import os
-import platform
 import sys
 import signal
 import asyncio
@@ -9,7 +8,7 @@ from contextlib import contextmanager
 
 import pytest
 import pytest_asyncio
-from aioconsole import interact
+from aioconsole import interact, AsynchronousConsole
 from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 
 
@@ -94,25 +93,33 @@ async def test_interact_syntax_error(monkeypatch):
         # Skip line
         await reader.readline()
         await assert_stream(reader, "    a b")
-        if sys.version_info >= (3, 10, 0) and sys.version_info < (3, 10, 1):
-            await assert_stream(reader, "    ^^^", loose=True)
-        else:
-            await assert_stream(reader, "      ^", loose=True)
-        if (
-            sys.version_info >= (3, 10, 0)
-            and sys.version_info < (3, 10, 1)
-            or (
-                platform.python_implementation() == "PyPy"
-                and sys.version_info >= (3, 9)
-                and sys.version_info < (3, 10)
-            )
-        ):
-            await assert_stream(
-                reader, "SyntaxError: invalid syntax. Perhaps you forgot a comma?"
-            )
-        else:
-            await assert_stream(reader, "SyntaxError: invalid syntax")
+        await assert_stream(reader, "      ^", loose=True)
+        await assert_stream(reader, "SyntaxError: invalid syntax")
         await assert_stream(reader, sys.ps1)
+
+
+@pytest.mark.parametrize(
+    "source, exc_name",
+    [("1 +\n", "SyntaxError"), ("def f():\nreturn 1\n", "IndentationError")],
+)
+@pytest.mark.asyncio
+async def test_showsyntaxerror_with_filename(monkeypatch, source, exc_name):
+    for name in ("last_type", "last_value", "last_traceback"):
+        monkeypatch.setattr(sys, name, None, raising=False)
+    console = AsynchronousConsole(streams=(None, None))
+    console.writer = io.BytesIO()
+    try:
+        console.compile(source, "<console>", "single")
+    except SyntaxError:
+        console.showsyntaxerror("<other>")
+    else:
+        pytest.fail("Expected a syntax error")
+    output = console.writer.getvalue().decode()
+    assert 'File "<other>"' in output
+    assert "<console>" not in output
+    assert output.splitlines()[-1].startswith(f"{exc_name}:")
+    assert sys.last_type.__name__ == exc_name
+    assert sys.last_value.filename == "<other>"
 
 
 @pytest.mark.asyncio

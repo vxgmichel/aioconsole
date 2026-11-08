@@ -265,20 +265,12 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     def showsyntaxerror(self, filename=None):
         type, value, tb = sys.exc_info()
+        if filename and issubclass(type, SyntaxError):
+            # Stuff in the right filename (also covers IndentationError, TabError)
+            value.filename = filename
         sys.last_type = type
         sys.last_value = value
         sys.last_traceback = tb
-        if filename and type is SyntaxError:
-            # Work hard to stuff the correct filename in the exception
-            try:
-                msg, (dummy_filename, lineno, offset, line) = value.args
-            except ValueError:
-                # Not the format we expect; leave it alone
-                pass
-            else:
-                # Stuff in the right filename
-                value = SyntaxError(msg, (filename, lineno, offset, line))
-                sys.last_value = value
         lines = traceback.format_exception_only(type, value)
         self.write("".join(lines))
 
