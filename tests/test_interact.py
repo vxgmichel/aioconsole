@@ -165,6 +165,28 @@ async def test_broken_pipe(monkeypatch, signaling):
 
 
 @pytest.mark.asyncio
+async def test_interact_non_string_prompt(monkeypatch):
+    class Prompt:
+        def __init__(self, value):
+            self.value = value
+
+        def __str__(self):
+            return self.value
+
+    with stdcontrol(monkeypatch) as (reader, writer):
+        monkeypatch.setattr("sys.ps1", Prompt("[PS1]"))
+        monkeypatch.setattr("sys.ps2", Prompt("[PS2]"), raising=False)
+        banner = "A BANNER"
+        writer.write("if True:\n    print(1)\n\n")
+        await writer.drain()
+        writer.stream.close()
+        await interact(banner=banner, stop=False)
+        await assert_stream(reader, banner)
+        await assert_stream(reader, "[PS1][PS2][PS2]1")
+        await assert_stream(reader, "[PS1]")
+
+
+@pytest.mark.asyncio
 async def test_interact_multiple_indented_lines(monkeypatch):
     with stdcontrol(monkeypatch) as (reader, writer):
         banner = "A BANNER"
