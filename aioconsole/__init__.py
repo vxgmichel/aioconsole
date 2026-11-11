@@ -16,7 +16,7 @@ from .execute import aeval, aexec
 from .server import start_interactive_server
 from .stream import ainput, aprint, get_standard_streams
 
-__version__ = "0.8.3.dev0"
+__version__ = "0.9.0"
 
 __all__ = [
     "AsynchronousCli",
