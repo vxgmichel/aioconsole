@@ -1,8 +1,8 @@
 """Command line interface for echo server."""
 
-import fnmatch
-import asyncio
 import argparse
+import asyncio
+import fnmatch
 
 from aioconsole import AsynchronousCli, start_interactive_server
 from aioconsole.server import parse_server, print_server

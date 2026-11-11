@@ -1,6 +1,6 @@
+import argparse
 import io
 import sys
-import argparse
 
 import pytest
 

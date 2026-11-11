@@ -1,18 +1,17 @@
 """Provide an asynchronous equivalent to the python console."""
 
-import sys
-import code
-import pydoc
-import types
-import codeop
-import signal
 import asyncio
-import inspect
+import code
+import codeop
 import functools
+import inspect
+import pydoc
+import signal
+import sys
 import traceback
+import types
 
-from . import stream
-from . import execute
+from . import execute, stream
 
 EXTRA_MESSAGE = """\
 ---
@@ -190,13 +189,9 @@ class AsynchronousConsole(code.InteractiveConsole):
 
     async def _interact(self, banner=None):
         # Get ps1 and ps2
-        try:
-            sys.ps1
-        except AttributeError:
+        if not hasattr(sys, "ps1"):
             sys.ps1 = ">>> "
-        try:
-            sys.ps2
-        except AttributeError:
+        if not hasattr(sys, "ps2"):
             sys.ps2 = "... "
         # Print banner
         if banner is None:

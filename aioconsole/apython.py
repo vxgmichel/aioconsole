@@ -1,17 +1,14 @@
 """Provide the apython script."""
 
-import os
-import sys
-import ast
-import runpy
-import warnings
 import argparse
+import ast
+import os
+import runpy
+import sys
 import traceback
+import warnings
 
-from . import events
-from . import server
-from . import rlwrap
-from . import compat
+from . import compat, events, rlwrap, server
 
 ZERO_WIDTH_SPACE = "\u200b"
 
@@ -24,11 +21,7 @@ USAGE = """\
 usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
                [--banner BANNER] [--locals LOCALS]
                [-m MODULE | FILE] ...
-""".split(
-    "usage: "
-)[
-    1
-]
+""".removeprefix("usage: ")
 
 
 def exec_pythonstartup(locals_dict):

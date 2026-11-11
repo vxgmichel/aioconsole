@@ -1,14 +1,14 @@
 """Provide an asynchronous equivalent to *input*."""
 
-import os
-import sys
-import stat
-import weakref
 import asyncio
+import os
 import selectors
+import stat
+import sys
+import weakref
 from collections import deque
-from threading import Thread
 from concurrent.futures import Future
+from threading import Thread
 
 from . import compat
 
@@ -268,7 +268,7 @@ async def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     )
 
 
-async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
+async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):  # noqa: B006
     if loop is None:
         loop = asyncio.get_event_loop()
     args = sys.stdin, sys.stdout, sys.stderr
