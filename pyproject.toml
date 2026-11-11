@@ -62,7 +62,6 @@ exclude_also = ["if TYPE_CHECKING:", "assert False"]
 ignore = [
     "E501",
     "F403",
-    "B",
     "BLE",
     "RUF",
     "S",

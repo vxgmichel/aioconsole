@@ -268,7 +268,7 @@ async def create_standard_streams(stdin, stdout, stderr, *, loop=None):
     )
 
 
-async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):
+async def get_standard_streams(*, cache={}, use_stderr=False, loop=None):  # noqa: B006
     if loop is None:
         loop = asyncio.get_event_loop()
     args = sys.stdin, sys.stdout, sys.stderr

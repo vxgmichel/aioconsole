@@ -29,7 +29,7 @@ class AsynchronousCli(console.AsynchronousConsole):
         for key, (corofunc, parser) in self.commands.items():
             parser.prog = key
             parser.print_help = lambda file=sys.stderr, *, self=parser: type(
-                parser
+                self
             ).print_help(self, file)
 
     def get_default_banner(self):
