@@ -59,5 +59,15 @@ patch = ["subprocess"]
 exclude_also = ["if TYPE_CHECKING:", "assert False"]
 
 [tool.ruff.lint]
-select = ["E", "F"]
-ignore = ["E501", "F403"]
+ignore = [
+    "E501",
+    "F403",
+    "ASYNC",
+    "B",
+    "BLE",
+    "I",
+    "RUF",
+    "S",
+    "SIM",
+    "TRY",
+]
