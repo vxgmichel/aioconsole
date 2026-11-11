@@ -201,7 +201,7 @@ async def test_interact_multiple_indented_lines(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_interact_cancellation(monkeypatch):
-    with stdcontrol(monkeypatch) as (reader, writer):
+    with stdcontrol(monkeypatch) as (reader, _writer):
         banner = "A BANNER"
         task = asyncio.ensure_future(interact(banner=banner, stop=False))
         # Wait for banner

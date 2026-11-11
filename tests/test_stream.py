@@ -202,7 +202,7 @@ async def test_standard_stream_pipe_buffering(is_uvloop):
     if is_uvloop:
         pytest.skip("This test is flaky with uvloop for some reason.")
     r1, w1 = os.pipe()
-    r2, w2 = os.pipe()
+    _r2, w2 = os.pipe()
     stdin = open(r1)
     stdout = open(w1, "w")
     stderr = open(w2, "w")
@@ -211,7 +211,7 @@ async def test_standard_stream_pipe_buffering(is_uvloop):
     assert is_pipe_transport_compatible(stdout)
     assert is_pipe_transport_compatible(stderr)
 
-    reader, writer1, writer2 = await create_standard_streams(stdin, stdout, stderr)
+    reader, writer1, _writer2 = await create_standard_streams(stdin, stdout, stderr)
 
     blob_size = 4 * 1024 * 1024  # 4 MB
     writer1.write("a\n" + "b" * blob_size + "\n")

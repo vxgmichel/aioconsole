@@ -19,18 +19,18 @@ from .stream import ainput, aprint, get_standard_streams
 __version__ = "0.8.3.dev0"
 
 __all__ = [
-    "aexec",
-    "aeval",
-    "ainput",
-    "aprint",
+    "AsynchronousCli",
     "AsynchronousConsole",
-    "interact",
     "InteractiveEventLoop",
     "InteractiveEventLoopPolicy",
-    "set_interactive_policy",
-    "run_console",
-    "AsynchronousCli",
-    "start_interactive_server",
+    "aeval",
+    "aexec",
+    "ainput",
+    "aprint",
     "get_standard_streams",
+    "interact",
     "run_apython",
+    "run_console",
+    "set_interactive_policy",
+    "start_interactive_server",
 ]
