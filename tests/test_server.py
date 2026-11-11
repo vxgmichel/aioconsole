@@ -1,10 +1,10 @@
-import io
 import asyncio
+import io
 
 import pytest
 
 from aioconsole import compat
-from aioconsole.server import start_console_server, print_server
+from aioconsole.server import print_server, start_console_server
 
 
 @pytest.mark.asyncio

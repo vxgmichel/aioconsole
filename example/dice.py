@@ -1,8 +1,8 @@
 """Run a CLI to simulate dice throws."""
 
-import random
-import asyncio
 import argparse
+import asyncio
+import random
 
 from aioconsole import AsynchronousCli
 

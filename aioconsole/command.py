@@ -1,8 +1,8 @@
 """Provide an asynchronous equivalent to the python console."""
 
-import sys
 import argparse
 import shlex
+import sys
 
 from . import console
 

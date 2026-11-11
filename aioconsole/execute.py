@@ -3,7 +3,7 @@
 import ast
 import codeop
 from io import StringIO
-from tokenize import generate_tokens, STRING, TokenError
+from tokenize import STRING, TokenError, generate_tokens
 
 CORO_NAME = "__corofn"
 CORO_DEF = f"async def {CORO_NAME}(): "

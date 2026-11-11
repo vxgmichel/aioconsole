@@ -1,6 +1,6 @@
-import sys
 import asyncio
 import collections
+import sys
 
 
 async def handle_echo(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):

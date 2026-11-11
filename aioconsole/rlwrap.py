@@ -1,10 +1,10 @@
 """Provide a readline wrapper to control a subprocess."""
 
-import sys
+import builtins
 import ctypes
 import signal
-import builtins
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from . import compat

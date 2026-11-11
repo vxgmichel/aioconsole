@@ -1,13 +1,19 @@
-import os
-import io
-import gc
-import sys
-import pytest
 import asyncio
+import gc
+import io
+import os
+import sys
 from unittest.mock import Mock
 
-from aioconsole.stream import create_standard_streams, ainput, aprint
-from aioconsole.stream import is_pipe_transport_compatible, get_standard_streams
+import pytest
+
+from aioconsole.stream import (
+    ainput,
+    aprint,
+    create_standard_streams,
+    get_standard_streams,
+    is_pipe_transport_compatible,
+)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on windows")

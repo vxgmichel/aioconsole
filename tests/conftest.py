@@ -1,5 +1,6 @@
-import pytest
 import asyncio
+
+import pytest
 
 
 def import_uvloop():

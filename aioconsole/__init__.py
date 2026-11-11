@@ -3,14 +3,18 @@
 It also includes an interactive event loop, and a command line interface.
 """
 
-from .execute import aexec, aeval
-from .console import AsynchronousConsole, interact
-from .stream import ainput, aprint, get_standard_streams
-from .events import InteractiveEventLoop, InteractiveEventLoopPolicy
-from .events import set_interactive_policy, run_console
-from .command import AsynchronousCli
-from .server import start_interactive_server
 from .apython import run_apython
+from .command import AsynchronousCli
+from .console import AsynchronousConsole, interact
+from .events import (
+    InteractiveEventLoop,
+    InteractiveEventLoopPolicy,
+    run_console,
+    set_interactive_policy,
+)
+from .execute import aeval, aexec
+from .server import start_interactive_server
+from .stream import ainput, aprint, get_standard_streams
 
 __version__ = "0.8.3.dev0"
 

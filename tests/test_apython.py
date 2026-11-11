@@ -1,12 +1,11 @@
 import io
 import sys
 from contextlib import contextmanager
-
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 import pytest
 
-from aioconsole import InteractiveEventLoop, apython, rlwrap, compat
+from aioconsole import InteractiveEventLoop, apython, compat, rlwrap
 
 startupfile = """
 def hehe():

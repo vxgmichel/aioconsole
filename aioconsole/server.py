@@ -4,8 +4,7 @@ import asyncio
 import socket
 from functools import partial
 
-from . import compat
-from . import console
+from . import compat, console
 
 
 async def handle_connect(reader, writer, factory, banner=None):

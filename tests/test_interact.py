@@ -1,14 +1,15 @@
+import asyncio
 import io
 import os
-import sys
 import signal
-import asyncio
-from unittest.mock import Mock
+import sys
 from contextlib import contextmanager
+from unittest.mock import Mock
 
 import pytest
 import pytest_asyncio
-from aioconsole import interact, AsynchronousConsole
+
+from aioconsole import AsynchronousConsole, interact
 from aioconsole.stream import NonFileStreamReader, NonFileStreamWriter
 
 

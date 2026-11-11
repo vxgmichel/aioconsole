@@ -3,8 +3,7 @@
 import asyncio
 import functools
 
-from . import server
-from . import console
+from . import console, server
 
 
 class InteractiveEventLoop(asyncio.SelectorEventLoop):

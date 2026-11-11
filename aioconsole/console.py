@@ -1,18 +1,17 @@
 """Provide an asynchronous equivalent to the python console."""
 
-import sys
-import code
-import pydoc
-import types
-import codeop
-import signal
 import asyncio
-import inspect
+import code
+import codeop
 import functools
+import inspect
+import pydoc
+import signal
+import sys
 import traceback
+import types
 
-from . import stream
-from . import execute
+from . import execute, stream
 
 EXTRA_MESSAGE = """\
 ---

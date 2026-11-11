@@ -1,9 +1,10 @@
-import io
-import inspect
 import asyncio
+import inspect
+import io
 
 import pytest
-from aioconsole import aexec, aeval
+
+from aioconsole import aeval, aexec
 from aioconsole.execute import compile_for_aexec
 
 # Helper

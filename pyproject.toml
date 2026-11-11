@@ -65,7 +65,6 @@ ignore = [
     "ASYNC",
     "B",
     "BLE",
-    "I",
     "RUF",
     "S",
     "SIM",

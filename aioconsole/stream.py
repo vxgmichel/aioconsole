@@ -1,14 +1,14 @@
 """Provide an asynchronous equivalent to *input*."""
 
-import os
-import sys
-import stat
-import weakref
 import asyncio
+import os
 import selectors
+import stat
+import sys
+import weakref
 from collections import deque
-from threading import Thread
 from concurrent.futures import Future
+from threading import Thread
 
 from . import compat
 
