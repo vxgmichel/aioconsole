@@ -1,8 +1,7 @@
 """Sphinx configuration for aioconsole documentation."""
 
-VERSION = (
-    open("../aioconsole/__init__.py").read().split('__version__ = "')[1].split('"')[0]
-)
+with open("../aioconsole/__init__.py") as f:
+    VERSION = f.read().split('__version__ = "')[1].split('"')[0]
 
 project = "aioconsole"
 version = VERSION

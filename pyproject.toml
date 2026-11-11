@@ -67,6 +67,9 @@ ignore = [
     "BLE",
     "RUF",
     "S",
-    "SIM",
+    "SIM117",
     "TRY",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["SIM115"]
