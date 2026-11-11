@@ -6,7 +6,6 @@ import pytest
 from aioconsole import aexec, aeval
 from aioconsole.execute import compile_for_aexec
 
-
 # Helper
 
 

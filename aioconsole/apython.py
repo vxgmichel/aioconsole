@@ -24,11 +24,7 @@ USAGE = """\
 usage: apython [-h] [--serve [HOST:] PORT] [--no-readline]
                [--banner BANNER] [--locals LOCALS]
                [-m MODULE | FILE] ...
-""".split(
-    "usage: "
-)[
-    1
-]
+""".split("usage: ")[1]
 
 
 def exec_pythonstartup(locals_dict):

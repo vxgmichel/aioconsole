@@ -8,7 +8,6 @@ import pytest
 
 from aioconsole import InteractiveEventLoop, apython, rlwrap, compat
 
-
 startupfile = """
 def hehe():
     return 42
