@@ -62,7 +62,6 @@ exclude_also = ["if TYPE_CHECKING:", "assert False"]
 ignore = [
     "E501",
     "F403",
-    "ASYNC",
     "B",
     "BLE",
     "RUF",
@@ -72,4 +71,4 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["SIM115"]
+"tests/*" = ["ASYNC230", "SIM115"]
