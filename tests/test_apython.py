@@ -287,12 +287,109 @@ def test_apython_with_readline_and_pasted_block(capfd, mock_readline):
     assert err == "test\n>>> >>> 2\n>>> \n"
 
 
-@pytest.mark.parametrize("backend, enabled", [("readline", True), ("editline", False)])
-def test_enable_bracketed_paste(backend, enabled):
+@pytest.mark.parametrize(
+    "backend, editrc, uses_tracker",
+    [
+        ("readline", "", False),
+        ("editline", "", True),
+        ("editline", "python:bind -v\n", False),
+    ],
+)
+def test_enable_bracketed_paste(backend, editrc, uses_tracker, tmp_path, monkeypatch):
+    (tmp_path / "editrc").write_text(editrc)
+    monkeypatch.setenv("EDITRC", str(tmp_path / "editrc"))
     with mock_module("readline") as readline:
         readline.backend = backend
-        rlwrap.enable_bracketed_paste()
-    if enabled:
+        paste = rlwrap.enable_bracketed_paste()
+    assert isinstance(paste, rlwrap.LibeditPaste) == uses_tracker
+
+    if uses_tracker:
+        readline.set_completer.assert_called_once_with(paste.complete)
+    elif backend == "readline":
         readline.parse_and_bind.assert_called_once_with("set enable-bracketed-paste on")
     else:
         readline.parse_and_bind.assert_not_called()
+
+
+def test_libedit_paste():
+    readline = Mock()
+    completer = readline.get_completer.return_value
+    paste = rlwrap.LibeditPaste(readline)
+
+    assert readline.parse_and_bind.call_args_list == [
+        call(r"bind \\e[202^A ed-insert"),
+        call(r"bind \\e[203~ rl_complete"),
+        call(r"bind \\e[204~ ed-delete-prev-char"),
+        call(r"bind -s \\e[200~ \\e[202^A\\e[203~\\e[204~"),
+        call(r"bind \\e[201~ rl_complete"),
+    ]
+
+    # Paste start
+    assert paste.complete("a = " + paste.MARK, 0) is None
+    assert paste.pasting
+    readline.parse_and_bind.assert_called_with("bind ^I ed-insert")
+
+    # Paste end
+    assert paste.complete("a", 0) is None
+    assert not paste.pasting
+    readline.parse_and_bind.assert_called_with("bind ^I rl_complete")
+    completer.assert_not_called()
+
+    # Tab completion
+    assert paste.complete("imp", 0) == completer.return_value
+    completer.assert_called_once_with("imp", 0)
+
+
+def test_read_input_with_libedit_paste():
+    paste = rlwrap.LibeditPaste(Mock())
+    lines = iter([("a = (1,", True), ("", True), ("2)", False)])
+    prompts = []
+
+    def read_line(prompt, use_stderr=False):
+        prompts.append(prompt)
+        line, paste.pasting = next(lines)
+        return line
+
+    dest = io.StringIO()
+    with patch("aioconsole.rlwrap.input", read_line):
+        raw = rlwrap.read_input(">>> ", dest, paste)
+
+    assert raw == "a = (1,\n\n2)"
+    assert prompts == [">>> ", "... ", "... "]
+    assert dest.getvalue() == "\x1b[?2004h\x1b[?2004l"
+
+
+def test_read_input_with_interrupted_paste():
+    readline = Mock()
+    paste = rlwrap.LibeditPaste(readline)
+
+    def interrupt(prompt, use_stderr=False):
+        paste.start()
+        raise KeyboardInterrupt
+
+    with patch("aioconsole.rlwrap.input", interrupt):
+        with pytest.raises(KeyboardInterrupt):
+            rlwrap.read_input(">>> ", io.StringIO(), paste)
+
+    assert not paste.pasting
+    readline.parse_and_bind.assert_called_with("bind ^I rl_complete")
+
+
+def test_read_input_without_tracker():
+    dest = io.StringIO()
+
+    with patch("aioconsole.rlwrap.input", return_value="1 + 1"):
+        assert rlwrap.read_input(">>> ", dest) == "1 + 1"
+
+    assert dest.getvalue() == ""
+
+
+def test_read_input_with_tracker_but_no_paste():
+    dest = io.StringIO()
+    paste = rlwrap.LibeditPaste(Mock())
+
+    with patch("aioconsole.rlwrap.input", return_value="1 + 1"):
+        assert rlwrap.read_input(">>> ", dest, paste) == "1 + 1"
+
+    # Bracketed paste mode should be on while reading
+    assert dest.getvalue() == "\x1b[?2004h\x1b[?2004l"
