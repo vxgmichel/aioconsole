@@ -233,6 +233,41 @@ def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tmpdir):
     assert err == errstr
 
 
+@pytest.mark.skipif(
+    compat.platform == "win32", reason="apython does not run in a subprocess on windows"
+)
+def test_apython_indents_with_tab_on_libedit(monkeypatch):
+    monkeypatch.setattr(compat, "platform", "linux")
+    with mock_module("readline") as readline:
+        readline.backend = "editline"
+        with patch("aioconsole.apython.run_apython_in_subprocess", return_value=0):
+            with pytest.raises(SystemExit):
+                apython.run_apython([])
+
+    completer = readline.get_completer.return_value
+    (complete,) = readline.set_completer.call_args.args
+
+    # Indent if prefix is blank
+    assert complete("", 0) == "\t"
+    assert complete("", 1) is None
+    completer.assert_not_called()
+
+    # Other prefixes are still completed
+    assert complete("imp", 0) == completer.return_value
+    completer.assert_called_once_with("imp", 0)
+
+
+@pytest.mark.parametrize(
+    "backend, system", [("readline", "linux"), ("editline", "darwin")]
+)
+def test_fix_libedit_tab_indent_skips_on_working_backends(backend, system, monkeypatch):
+    monkeypatch.setattr(compat, "platform", system)
+    with mock_module("readline") as readline:
+        readline.backend = backend
+        apython.fix_libedit_tab_indent()
+    readline.set_completer.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "backend, doc, expected",
     [
