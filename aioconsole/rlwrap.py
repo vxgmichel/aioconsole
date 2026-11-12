@@ -71,6 +71,14 @@ def _rlwrap(process, prompt_control, use_stderr=False):
     return process.wait()
 
 
+def uses_libedit(readline):
+    # readline.backend is new in Python 3.13
+    backend = getattr(readline, "backend", None)
+    if backend is not None:
+        return backend == "editline"
+    return "libedit" in (readline.__doc__ or "")
+
+
 def wait_for_prompt(src, dest, prompt_control, buffersize=1):
     def read():
         value = src.read(buffersize)
