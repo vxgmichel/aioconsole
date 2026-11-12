@@ -1,4 +1,5 @@
 import io
+import json
 import sys
 from contextlib import contextmanager
 from unittest.mock import Mock, call, patch
@@ -250,3 +251,48 @@ def test_uses_libedit(backend, doc, expected):
     if backend:
         readline.backend = backend
     assert rlwrap.uses_libedit(readline) == expected
+
+
+def test_apython_with_prompt_control_and_pasted_block(capfd):
+    block = "def f():\n    a = 1\n\n    return a + 1\n\nf()"
+    input_string = "▲" + json.dumps(block) + "\n"
+    with patch("sys.stdin", new=io.StringIO(input_string)):
+        with pytest.raises(SystemExit):
+            apython.run_apython(
+                ["--banner=test", "--prompt-control=▲", "--no-readline"]
+            )
+    out, err = capfd.readouterr()
+    assert out == ""
+    assert err == "test\n▲>>> ▲2\n▲>>> ▲\n"
+
+
+def test_apython_with_readline_and_pasted_block(capfd, mock_readline):
+    if compat.platform == "win32":
+        pytest.xfail()
+
+    inputs = iter(["def f():\n    a = 1\n\n    return a + 1", "f()"])
+
+    def read_line(prompt, use_stderr=False):
+        sys.stderr.write(prompt)
+        try:
+            return next(inputs)
+        except StopIteration:
+            raise EOFError
+
+    with patch("aioconsole.rlwrap.input", read_line):
+        with pytest.raises(SystemExit):
+            apython.run_apython(["--banner=test"])
+    out, err = capfd.readouterr()
+    assert out == ""
+    assert err == "test\n>>> >>> 2\n>>> \n"
+
+
+@pytest.mark.parametrize("backend, enabled", [("readline", True), ("editline", False)])
+def test_enable_bracketed_paste(backend, enabled):
+    with mock_module("readline") as readline:
+        readline.backend = backend
+        rlwrap.enable_bracketed_paste()
+    if enabled:
+        readline.parse_and_bind.assert_called_once_with("set enable-bracketed-paste on")
+    else:
+        readline.parse_and_bind.assert_not_called()

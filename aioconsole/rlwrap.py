@@ -2,6 +2,7 @@
 
 import builtins
 import ctypes
+import json
 import signal
 import subprocess
 import sys
@@ -35,6 +36,10 @@ def _rlwrap(process, prompt_control, use_stderr=False):
     # Check prompt control
     assert len(prompt_control) == 1
 
+    # Only interactive terminals send bracketed pastes
+    if sys.stdin.isatty() and dest.isatty():
+        enable_bracketed_paste()
+
     # Run background task
     with ThreadPoolExecutor(1) as executor:
         future = executor.submit(wait_for_prompt, source, dest, prompt_control)
@@ -54,14 +59,17 @@ def _rlwrap(process, prompt_control, use_stderr=False):
 
             # Get user input
             try:
-                raw = input(prompt, use_stderr=use_stderr) + "\n"
+                raw = input(prompt, use_stderr=use_stderr)
             except KeyboardInterrupt:
                 process.send_signal(signal.SIGINT)
                 continue
             except EOFError:
                 break
             else:
-                process.stdin.write(raw)
+                # Send multi-line paste as a single escaped line.
+                if "\n" in raw or raw.startswith(prompt_control):
+                    raw = prompt_control + json.dumps(raw)
+                process.stdin.write(raw + "\n")
 
         # Close and wait process streams
         process.stdin.close()
@@ -77,6 +85,20 @@ def uses_libedit(readline):
     if backend is not None:
         return backend == "editline"
     return "libedit" in (readline.__doc__ or "")
+
+
+def enable_bracketed_paste():
+    try:
+        import readline
+    except ImportError:
+        return
+
+    # libedit doesn't support bracketed paste
+    if uses_libedit(readline):
+        return
+
+    # GNU readline tracks pastes itself
+    readline.parse_and_bind("set enable-bracketed-paste on")
 
 
 def wait_for_prompt(src, dest, prompt_control, buffersize=1):
