@@ -105,6 +105,24 @@ def load_readline():
     return True
 
 
+def fix_libedit_tab_indent():
+    # tab indent on Linux libedit triggers rlcompleter's history search
+    import readline
+
+    # rlcompleter works on macOS libedit
+    if compat.platform == "darwin" or not rlwrap.uses_libedit(readline):
+        return
+
+    completer = readline.get_completer()
+
+    def complete(text, state):
+        if text.strip():
+            return completer(text, state)
+        return "\t" if state == 0 else None
+
+    readline.set_completer(complete)
+
+
 def run_apython(args=None):
     namespace = parse_args(args)
 
@@ -121,6 +139,7 @@ def run_apython(args=None):
                 interactive_hook()
             except Exception as exc:
                 warnings.warn(f"Interactive hook failed: {exc!r}", stacklevel=2)
+        fix_libedit_tab_indent()
 
         code = run_apython_in_subprocess(args, namespace.prompt_control)
         sys.exit(code)
