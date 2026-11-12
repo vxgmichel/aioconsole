@@ -231,3 +231,22 @@ def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tmpdir):
     out, err = capfd.readouterr()
     assert out == outstr
     assert err == errstr
+
+
+@pytest.mark.parametrize(
+    "backend, doc, expected",
+    [
+        ("editline", None, True),
+        ("readline", None, False),
+        # Python 3.12 and older names the library in the docstring
+        (None, "Importing this module enables libedit editing.", True),
+        (None, "Importing this module enables readline editing.", False),
+        (None, None, False),
+    ],
+)
+def test_uses_libedit(backend, doc, expected):
+    readline = Mock(spec=["__doc__"] + (["backend"] if backend else []))
+    readline.__doc__ = doc
+    if backend:
+        readline.backend = backend
+    assert rlwrap.uses_libedit(readline) == expected
