@@ -33,6 +33,19 @@ def stdcontrol(monkeypatch):
     assert sys.stdout.getvalue() == ""
 
 
+def feed_inputs(monkeypatch, *inputs):
+    inputs = iter(inputs)
+
+    async def raw_input(self, prompt=""):
+        self.write(str(prompt))
+        try:
+            return next(inputs)
+        except StopIteration:
+            raise EOFError
+
+    monkeypatch.setattr(AsynchronousConsole, "raw_input", raw_input)
+
+
 async def assert_stream(stream, expected, loose=False):
     s = None if loose else "\n"
     for expected_line in expected.splitlines():
@@ -210,3 +223,50 @@ async def test_interact_cancellation(monkeypatch):
         with pytest.raises(asyncio.CancelledError):
             await task
         assert task.cancelled
+
+
+@pytest.mark.asyncio
+async def test_interact_block_with_blank_lines(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, _writer):
+        feed_inputs(
+            monkeypatch,
+            "def f():\n    a = 1\n\n    b = 2\n\n    return a + b\n\nf()\nf() * 2",
+        )
+        await interact(banner="A BANNER", stop=False)
+        await assert_stream(reader, "A BANNER")
+        await assert_stream(reader, "[Hello!]3")
+        await assert_stream(reader, "6")
+        await assert_stream(reader, "[Hello!]")
+
+
+@pytest.mark.asyncio
+async def test_interact_block_with_await(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, _writer):
+        feed_inputs(monkeypatch, "x = await asyncio.sleep(0, 4)\n\nx + 1")
+        await interact(banner="A BANNER", stop=False)
+        await assert_stream(reader, "A BANNER")
+        await assert_stream(reader, "[Hello!]5")
+
+
+@pytest.mark.asyncio
+async def test_interact_block_syntax_error(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, _writer):
+        feed_inputs(monkeypatch, "a = 1\n1 +* 2", "a")
+        await interact(banner="A BANNER", stop=False)
+        await assert_stream(reader, "A BANNER")
+        await assert_stream(reader, '[Hello!]  File "<console>", line 3')
+        await assert_stream(reader, "    1 +* 2")
+        await assert_stream(reader, "^", loose=True)
+        await assert_stream(reader, "SyntaxError: invalid syntax")
+        # Nothing in the block ran
+        await assert_stream(reader, "[Hello!]Traceback (most recent call last):")
+
+
+@pytest.mark.asyncio
+async def test_interact_incomplete_block(monkeypatch):
+    with stdcontrol(monkeypatch) as (reader, _writer):
+        monkeypatch.setattr("sys.ps2", "[PS2]", raising=False)
+        feed_inputs(monkeypatch, "x = (1,\n2,", ")", "x")
+        await interact(banner="A BANNER", stop=False)
+        await assert_stream(reader, "A BANNER")
+        await assert_stream(reader, "[Hello!][PS2][Hello!](1, 2)")

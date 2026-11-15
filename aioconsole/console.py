@@ -1,10 +1,12 @@
 """Provide an asynchronous equivalent to the python console."""
 
+import ast
 import asyncio
 import code
 import codeop
 import functools
 import inspect
+import json
 import pydoc
 import signal
 import sys
@@ -102,9 +104,13 @@ class AsynchronousConsole(code.InteractiveConsole):
         if self.prompt_control and self.prompt_control not in prompt:
             prompt = self.prompt_control + prompt + self.prompt_control
         # Run ainput
-        return await stream.ainput(
+        line = await stream.ainput(
             prompt, streams=streams, use_stderr=use_stderr, loop=loop
         )
+        # Decode multi-line paste
+        if self.prompt_control and line.startswith(self.prompt_control):
+            line = json.loads(line.removeprefix(self.prompt_control))
+        return line
 
     def get_default_banner(self):
         cprt = (
@@ -215,7 +221,10 @@ class AsynchronousConsole(code.InteractiveConsole):
                         pass
                     break
                 else:
-                    more = await self.push(line)
+                    if "\n" in line:
+                        more = await self.push_block(line)
+                    else:
+                        more = await self.push(line)
             except asyncio.CancelledError:
                 # Not our cancellation
                 if not self._sigint_received:
@@ -234,6 +243,30 @@ class AsynchronousConsole(code.InteractiveConsole):
         if not more:
             self.resetbuffer()
         return more
+
+    async def push_lines(self, block):
+        more = False
+        for line in block.split("\n"):
+            more = await self.push(line)
+        return more
+
+    async def push_block(self, block):
+        if self.buffer:
+            # The block continues at ps2
+            return await self.push_lines(block)
+
+        try:
+            code = self.compile(block, self.filename, "exec")
+        except (OverflowError, SyntaxError, ValueError):
+            self.showsyntaxerror(self.filename)
+            return False
+
+        if code is None:
+            # Incomplete block
+            return await self.push_lines(block)
+
+        await self.runcode([ast.Interactive(tree.body) for tree in code])
+        return False
 
     async def raw_input(self, prompt=""):
         return await self.ainput(prompt)
