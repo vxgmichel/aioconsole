@@ -4,6 +4,7 @@ import builtins
 import ctypes
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -147,6 +148,17 @@ class LibeditPaste:
         self.readline.parse_and_bind("bind ^I rl_complete")
 
 
+def prog_in_editrc(prog):
+    # libedit first matches substring then regex
+    if prog in "python":
+        return True
+
+    try:
+        return re.search(prog, "python") is not None
+    except re.error:
+        return False
+
+
 def libedit_uses_vi_mode():
     # readline doesn't report the editing mode
     path = os.environ.get("EDITRC", os.path.expanduser("~/.editrc"))
@@ -166,7 +178,7 @@ def libedit_uses_vi_mode():
         if ":" in command:
             prog, command = command.split(":", 1)
             # libedit applies the rule if prog matches the program name
-            if not prog or prog.lower() not in "python":
+            if not prog or not prog_in_editrc(prog):
                 continue
 
         if command != "bind":
