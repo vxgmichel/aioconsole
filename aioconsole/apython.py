@@ -131,7 +131,7 @@ def run_apython(args=None):
             reconfig = getattr(stream, "reconfigure", None)
             if reconfig is None:
                 continue
-            # UTF-8 is only required for rewrap pipes.
+            # UTF-8 is only required for rlwrap pipes.
             if stream.isatty():
                 continue
             reconfig(encoding="utf-8")
