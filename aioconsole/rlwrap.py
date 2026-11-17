@@ -19,7 +19,7 @@ def rlwrap_process(args, prompt_control, use_stderr=False):
     process = subprocess.Popen(
         args,
         bufsize=0,
-        universal_newlines=True,
+        encoding="utf-8",
         stdin=subprocess.PIPE,
         **{"stderr" if use_stderr else "stdout": subprocess.PIPE},
     )
