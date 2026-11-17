@@ -77,9 +77,6 @@ def mock_readline(platform):
 @pytest.fixture(params=["readline", "no-readline"])
 def use_readline(request, mock_readline, platform):
     if request.param == "readline":
-        # Readline tests hang on windows for some reason
-        if sys.platform == "win32":
-            pytest.xfail()
         return []
     return ["--no-readline"]
 
@@ -229,5 +226,6 @@ def test_apython_pythonstartup(capfd, use_readline, monkeypatch, tmpdir):
         with pytest.raises(SystemExit):
             apython.run_apython(["--banner=test"] + use_readline)
     out, err = capfd.readouterr()
-    assert out == outstr
+    # Windows translates newlines. Revert it.
+    assert out.replace("\r\n", "\n") == outstr
     assert err == errstr

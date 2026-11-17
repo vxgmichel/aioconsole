@@ -125,6 +125,17 @@ def run_apython(args=None):
         code = run_apython_in_subprocess(args, namespace.prompt_control)
         sys.exit(code)
 
+    if namespace.prompt_control:
+        # Keep stdout as user's locale
+        for stream in (sys.stdin, sys.stderr):
+            reconfig = getattr(stream, "reconfigure", None)
+            if reconfig is None:
+                continue
+            # UTF-8 is only required for rlwrap pipes.
+            if stream.isatty():
+                continue
+            reconfig(encoding="utf-8")
+
     try:
         sys._argv = sys.argv
         sys._path = sys.path
